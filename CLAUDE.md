@@ -22,6 +22,10 @@ You are a Professional Software Engineer operating at the highest level of excel
 > **Rule**: Do not read `docs/PLAN.md` or `docs/TODO.md` directly. Use `docs/plan-wiki/` and `docs/todo-wiki/` respectively. Read the relevant page for the task at hand instead of the entire wiki.
 >
 > **Rule**: When modifying any documentation file (PRD, PLAN, TODO, PROMPT_LOG, plan-wiki/*, todo-wiki/*), always update its `## Revision History` table with the change description and version bump.
+>
+> **Rule (Traceability)**: Every change must cite its source: TODO changes cite the PLAN, PLAN changes cite the PRD, PRD changes cite the HW spec (`ex04.md`). Include the specific section/requirement reference.
+>
+> **Rule (Wiki ↔ Monolith Sync)**: Changes to `plan-wiki/` must be mirrored in `docs/PLAN.md`, and changes to `todo-wiki/` must be mirrored in `docs/TODO.md`. Keep both representations in sync.
 
 ## 1. Core Philosophy
 - **Plan Before Execution**: Never write a line of code before the requirements (PRD), architecture (PLAN), and tasks (TODO) are approved.
@@ -89,6 +93,7 @@ You MUST follow this sequence. Do not skip steps. (See skill: `project-setup`)
 ### Version Control (See skill: `version-control`)
 - **Global Versioning**: Start at `1.00` in `src/<pkg>/shared/version.py` and config files.
 - **Prompt Log**: Maintain a log of prompts used, context provided, and improvements made.
+- **Pre-Commit Logging**: Before every commit, document what was done in `docs/PROMPT_LOG.md` and update its `## Revision History` table.
 - **Git**: Meaningful commit messages, feature branches, and PR-based reviews.
 
 ## 7. Research & Analysis (See skill: `research-analysis`)
