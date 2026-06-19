@@ -2,7 +2,7 @@
 
 [← Back to Home](./Home.md)
 
-**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-006]).
+**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
 
 ## Task Index
 
@@ -51,7 +51,7 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 | **Status** | Not Started |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — parser.py] |
-| **PRD Reference** | [PRD FR-1.2] |
+| **PRD Reference** | [PRD FR-1.1] graph.json parsing |
 | **Estimate** | 60 min |
 
 **Definition of Done**:

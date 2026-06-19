@@ -83,7 +83,7 @@ python3 -c "import json; json.load(open('config/rate_limits.json'))"
 
 - [ ] `pyproject.toml` has Ruff linter configuration
 - [ ] `pyproject.toml` has pytest configuration with coverage ≥ 85%
-- [ ] Dependencies listed: `langgraph`, `graphifyy`, `openai`, `anthropic`, `pydantic`
+- [ ] Dependencies listed: `langgraph`, `graphify`, `openai`, `anthropic`, `pydantic`
 - [ ] `uv sync` succeeds and creates virtual environment
 
 **Independent Verification**:
@@ -117,6 +117,7 @@ uv run pytest --version
   - `Suspect`
   - `InvestigationResult`
   - `ComparisonReport`
+  - `PipelineResult`
 - [ ] Every class has full docstring with I/O contract
 - [ ] All types use `dataclass` or `TypedDict`
 
@@ -135,7 +136,7 @@ uv run python -c "from ex04.shared.types import TokenMetrics, GraphData, RunMetr
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PLAN Reference** | [PLAN §3.1.1 Service Interfaces], [ADR-006] |
+| **PLAN Reference** | [PLAN §3.1.1 Service Interfaces], [ADR-005] |
 | **PRD Reference** | [PRD §5 Functional Requirements — contracts] |
 | **Estimate** | 60 min |
 
@@ -172,7 +173,7 @@ print('All interfaces importable — parallel work can begin')
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PLAN Reference** | [ADR-006 Contract-First Parallel Development] |
+| **PLAN Reference** | [ADR-005 Contract-First Parallel Development] |
 | **Estimate** | 60 min |
 
 **Why this task exists**: Mock implementations let developers test their modules **before** real implementations exist. Agent developer can work against `MockGraphService` while Graph is still being built ([PLAN §3.1.2]).

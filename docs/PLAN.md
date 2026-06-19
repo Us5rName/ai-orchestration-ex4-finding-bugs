@@ -438,6 +438,7 @@ class Ex04SDK:
     def investigate_bug(self, bug_report: str) -> InvestigationResult: ...
     def run_comparison(self, bug_report: str) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> EngineeringResult: ...
+    def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
 ### 3.3 Graph Service — Grphify Integration
@@ -760,6 +761,13 @@ class ComparisonMetrics:
     token_savings_pct: float
     file_read_savings_pct: float
     iteration_savings_pct: float
+
+class PipelineResult:
+    graph_result: GraphResult
+    vault_result: VaultResult
+    investigation: InvestigationResult
+    comparison: ComparisonReport
+    engineering: EngineeringResult
 ```
 
 ---
@@ -862,10 +870,10 @@ sequenceDiagram
 |---|---|
 | **Status** | Accepted |
 | **PRD Reference** | [PRD §5.1 FR-1] |
-| **Context** | Grphify is available as a CLI tool (`graphifyy`). It can be invoked via subprocess or potentially imported as a library. |
-| **Decision** | Invoke Grphify as an external CLI tool via subprocess. Parse its output files (`graph.json`, `GRAPH_REPORT.md`). |
-| **Rationale** | Grphify is a complex tool with its own subagent system. Running it as a subprocess keeps it isolated — its failures don't crash the main application. Also, the existing project structure has `graph-home` as a Grphify workspace, suggesting CLI usage. |
-| **Consequences** | Graph Service must handle subprocess execution and output parsing. Graph data format depends on Grphify's output schema. |
+| **Context** | Grphify is available as a CLI tool (`graphify`) and as an importable Python library (`from graphify.build import build_from_json`, etc.). It can be invoked via subprocess or imported directly. |
+| **Decision** | Invoke Grphify as an external CLI tool via subprocess to build the initial graph. Parse its output files (`graph.json`, `GRAPH_REPORT.md`). The library API (`graphify.query`, `graphify.analyze`) may be used for programmatic graph queries after the graph is built. |
+| **Rationale** | Running the initial graph build as a subprocess keeps Grphify's complex extraction pipeline isolated — its failures don't crash the main application. The existing project structure has `graph-home` as a Grphify workspace, suggesting CLI usage. After the graph exists, `graphify query` / `graphify path` / `graphify explain` can be called for targeted investigation. |
+| **Consequences** | Graph Service must handle subprocess execution and output parsing. Graph data format depends on Grphify's output schema (`graphify-out/graph.json`). The Agent Service can optionally use `graphify query` for graph-guided investigation. |
 
 ### ADR-004: Separate Comparison as Independent Module
 
@@ -878,7 +886,7 @@ sequenceDiagram
 | **Rationale** | Keeps the comparison experiment isolated and independently testable. Each runner can be executed separately for debugging. The MetricsCalculator provides clear separation of concerns. Aligns with [PRD §4.1 In Scope item 6]. |
 | **Consequences** | Both runners need access to Provider layer and may duplicate some agent logic. Mitigated by sharing node implementations where possible. |
 
-### ADR-006: Contract-First Parallel Development
+### ADR-005: Contract-First Parallel Development
 
 | Field | Value |
 |---|---|
@@ -889,7 +897,7 @@ sequenceDiagram
 | **Rationale** | Enables fully parallel development: Agent developer works against `MockGraphService` and `MockVaultService` while the real implementations are built simultaneously. Zero blocking between teams. Also improves testability — every module is testable with mocks from day one. |
 | **Consequences** | Slight overhead of maintaining interfaces. SDK becomes the sole wiring point. All `interface.py` files must be created before implementation phases begin ([TODO §2 Phase 1 — T1.04 defines all contracts]). |
 
-### ADR-007: Markdown-Based Vault Over Obsidian API
+### ADR-006: Markdown-Based Vault Over Obsidian API
 
 | Field | Value |
 |---|---|
@@ -1037,14 +1045,10 @@ classDiagram
     Ex04SDK --> VaultBuilder
     Ex04SDK --> WorkflowBuilder
     Ex04SDK --> ReverseEngineer
-    Ex04SDK --> NaiveRunner
-    Ex04SDK --> GraphGuidedRunner
     WorkflowBuilder --> GraphAnalyzer
     WorkflowBuilder --> VaultNavigator
-    GraphGuidedRunner --> GraphAnalyzer
-    GraphGuidedRunner --> VaultNavigator
-    OpenAIProvider --> APIGatekeeper
-    AnthropicProvider --> APIGatekeeper
+    APIGatekeeper --> OpenAIProvider
+    APIGatekeeper --> AnthropicProvider
     APIGatekeeper --> TokenTracker
     APIGatekeeper --> ConfigManager
     NaiveRunner --> APIGatekeeper
@@ -1180,8 +1184,8 @@ All configuration is externalized per [PRD NFR-4] and [PRD §6].
         "base_url": null
     },
     "graphify": {
-        "output_dir": "./artifacts",
-        "graph_home": "./graph-home"
+        "graph_home": "./graph-home",
+        "output_subdir": "graphify-out"  # Grphify always writes to <target>/graphify-out/
     },
     "vault": {
         "output_dir": "./obsidian"
@@ -1253,19 +1257,19 @@ code/
 │       ├── services/
 │       │   ├── graph/
 │       │   │   ├── __init__.py
-│       │   │   ├── interface.py  # [ADR-006] Contract for parallel dev
+│       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
 │       │   │   ├── runner.py     # [PRD FR-1.1] Grphify execution
-│       │   │   ├── parser.py     # [PRD FR-1.2] Graph parsing
+│       │   │   ├── parser.py     # [PRD FR-1.1] Graph parsing
 │       │   │   └── analyzer.py   # [PRD FR-1.4-1.5] Graph analysis
 │       │   ├── vault/
 │       │   │   ├── __init__.py
-│       │   │   ├── interface.py  # [ADR-006] Contract for parallel dev
+│       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
 │       │   │   ├── builder.py    # [PRD FR-2.2-2.3] Vault creation
 │       │   │   ├── navigator.py  # [PRD FR-2.5] Vault navigation
 │       │   │   └── note_manager.py  # [PRD FR-2.4] Note management
 │       │   ├── agent/
 │       │   │   ├── __init__.py
-│       │   │   ├── interface.py  # [ADR-006] Contract for parallel dev
+│       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
 │       │   │   ├── workflow.py   # [PRD FR-4.1] LangGraph assembly
 │       │   │   ├── state.py      # [PRD FR-4.3] State schema
 │       │   │   └── nodes/
@@ -1279,13 +1283,13 @@ code/
 │       │   │       └── verify.py      # [PRD FR-4.6] Verification
 │       │   ├── analysis/
 │       │   │   ├── __init__.py
-│       │   │   ├── interface.py  # [ADR-006] Contract for parallel dev
+│       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
 │       │   │   ├── reverse_engineer.py  # [PRD FR-3.1-3.2]
 │       │   │   ├── diagram_gen.py       # [PRD FR-3.3]
 │       │   │   └── bug_report.py        # [PRD FR-5.2]
 │       │   └── comparison/
 │       │       ├── __init__.py
-│       │       ├── interface.py  # [ADR-006] Contract for parallel dev
+│       │       ├── interface.py  # [ADR-005] Contract for parallel dev
 │       │       ├── naive_runner.py      # [PRD FR-6.1]
 │       │       ├── graph_guided_runner.py  # [PRD FR-6.2]
 │       │       ├── metrics.py           # [PRD FR-6.3]
@@ -1305,8 +1309,12 @@ code/
 │           └── types.py        # Shared data types
 ├── obsidian/                     # Obsidian vault
 ├── graph-home/                   # Grphify workspace
+│   ├── .graphify/
+│   │   └── repos/
+│   │       └── andela/
+│   │           └── buggy-python/
+│   └── graphify-out/             # Grphify output (graph.json, GRAPH_REPORT.md, etc.)
 ├── reports/                      # Analysis reports
-├── artifacts/                    # Generated artifacts
 ├── tests/
 │   ├── unit/
 │   └── integration/
@@ -1325,13 +1333,13 @@ Maps every PRD requirement to its architectural location:
 | PRD Requirement | Module | File |
 |---|---|---|
 | FR-1.1 Grphify execution | Graph Service | `services/graph/runner.py` |
-| FR-1.2 Parse graph.json | Graph Service | `services/graph/parser.py` |
-| FR-1.3 Community clustering | Graph Service | `services/graph/analyzer.py` |
-| FR-1.4 Entity relationships | Graph Service | `services/graph/parser.py` |
-| FR-1.5 God Node detection | Graph Service | `services/graph/analyzer.py` |
-| FR-2.1 Obsidian vault | Vault Service | `services/vault/builder.py` |
-| FR-2.2 index.md | Vault Service | `services/vault/builder.py` |
-| FR-2.3 hot.md | Vault Service | `services/vault/builder.py` |
+| FR-1.2 index.md production | Vault Service | `services/vault/builder.py` |
+| FR-1.3 hot.md production | Vault Service | `services/vault/builder.py` |
+| FR-1.4 Community clustering | Graph Service | `services/graph/analyzer.py` |
+| FR-1.5 Entity relationships | Graph Service | `services/graph/parser.py` |
+| FR-2.1 Active knowledge space | Vault Service | `services/vault/builder.py` |
+| FR-2.2 index.md navigation | Vault Service | `services/vault/builder.py` |
+| FR-2.3 hot.md focused context | Vault Service | `services/vault/builder.py` |
 | FR-2.4 Component notes | Vault Service | `services/vault/note_manager.py` |
 | FR-2.5 Internal links | Vault Service | `services/vault/note_manager.py` |
 | FR-3.1 Block diagram | Analysis Service | `services/analysis/diagram_gen.py` |

@@ -32,10 +32,10 @@
 |---|---|
 | **Status** | Accepted |
 | **PRD Reference** | [PRD §5.1 FR-1] |
-| **Context** | Grphify is available as a CLI tool (`graphifyy`). It can be invoked via subprocess or potentially imported as a library. |
-| **Decision** | Invoke Grphify as an external CLI tool via subprocess. Parse its output files (`graph.json`, `GRAPH_REPORT.md`). |
-| **Rationale** | Grphify is a complex tool with its own subagent system. Running it as a subprocess keeps it isolated — its failures don't crash the main application. Also, the existing project structure has `graph-home` as a Grphify workspace, suggesting CLI usage. |
-| **Consequences** | Graph Service must handle subprocess execution and output parsing. Graph data format depends on Grphify's output schema. |
+| **Context** | Grphify is available as a CLI tool (`graphify`) and as an importable Python library (`from graphify.build import build_from_json`, etc.). It can be invoked via subprocess or imported directly. |
+| **Decision** | Invoke Grphify as an external CLI tool via subprocess to build the initial graph. Parse its output files (`graph.json`, `GRAPH_REPORT.md`). The library API (`graphify.query`, `graphify.analyze`) may be used for programmatic graph queries after the graph is built. |
+| **Rationale** | Running the initial graph build as a subprocess keeps Grphify's complex extraction pipeline isolated — its failures don't crash the main application. The existing project structure has `graph-home` as a Grphify workspace, suggesting CLI usage. After the graph exists, `graphify query` / `graphify path` / `graphify explain` can be called for targeted investigation. |
+| **Consequences** | Graph Service must handle subprocess execution and output parsing. Graph data format depends on Grphify's output schema (`graphify-out/graph.json`). The Agent Service can optionally use `graphify query` for graph-guided investigation. |
 
 ## ADR-004: Separate Comparison as Independent Module
 
@@ -48,7 +48,7 @@
 | **Rationale** | Keeps the comparison experiment isolated and independently testable. Each runner can be executed separately for debugging. The MetricsCalculator provides clear separation of concerns. Aligns with [PRD §4.1 In Scope item 6]. |
 | **Consequences** | Both runners need access to Provider layer and may duplicate some agent logic. Mitigated by sharing node implementations where possible. |
 
-## ADR-006: Contract-First Parallel Development
+## ADR-005: Contract-First Parallel Development
 
 | Field | Value |
 |---|---|
@@ -59,7 +59,7 @@
 | **Rationale** | Enables fully parallel development: Agent developer works against `MockGraphService` and `MockVaultService` while the real implementations are built simultaneously. Zero blocking between teams. Also improves testability — every module is testable with mocks from day one. |
 | **Consequences** | Slight overhead of maintaining interfaces. SDK becomes the sole wiring point. All `interface.py` files must be created before implementation phases begin ([TODO §2 Phase 1 — T1.04 defines all contracts]). |
 
-## ADR-007: Markdown-Based Vault Over Obsidian API
+## ADR-006: Markdown-Based Vault Over Obsidian API
 
 | Field | Value |
 |---|---|

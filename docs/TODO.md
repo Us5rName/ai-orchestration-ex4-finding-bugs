@@ -176,7 +176,7 @@ python3 -c "import json; json.load(open('config/rate_limits.json'))"
 
 - [ ] `pyproject.toml` has Ruff linter configuration
 - [ ] `pyproject.toml` has pytest configuration with coverage ≥ 85%
-- [ ] Dependencies listed: `langgraph`, `graphifyy`, `openai`, `anthropic`, `pydantic`
+- [ ] Dependencies listed: `langgraph`, `graphify`, `openai`, `anthropic`, `pydantic`
 - [ ] `uv sync` succeeds and creates virtual environment
 
 **Independent Verification**:
@@ -228,7 +228,7 @@ uv run python -c "from ex04.shared.types import TokenMetrics, GraphData, RunMetr
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PLAN Reference** | [PLAN §3.1.1 Service Interfaces], [ADR-006] |
+| **PLAN Reference** | [PLAN §3.1.1 Service Interfaces], [ADR-005] |
 | **PRD Reference** | [PRD §5 Functional Requirements — contracts] |
 | **Estimate** | 60 min |
 
@@ -265,7 +265,7 @@ print('All interfaces importable — parallel work can begin')
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PLAN Reference** | [ADR-006 Contract-First Parallel Development] |
+| **PLAN Reference** | [ADR-005 Contract-First Parallel Development] |
 | **Estimate** | 60 min |
 
 **Why this task exists**: Mock implementations let developers test their modules **before** real implementations exist. Agent developer can work against `MockGraphService` while Graph is still being built ([PLAN §3.1.2]).
@@ -556,7 +556,7 @@ uv run python -c "from ex04.providers import ProviderInterface, ProviderFactory;
 
 ## 5. Phase 4 — Services
 
-**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-006]).
+**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
 
 ### T4.01 — Graph Service: Runner
 
@@ -592,7 +592,7 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 | **Status** | Not Started |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — parser.py] |
-| **PRD Reference** | [PRD FR-1.2] |
+| **PRD Reference** | [PRD FR-1.1] graph.json parsing |
 | **Estimate** | 60 min |
 
 **Definition of Done**:
@@ -1201,7 +1201,7 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 **Definition of Done**:
 
 - [ ] Grphify runs on `graph-home/.graphify/repos/andela/buggy-python`
-- [ ] `graph.json` produced in `artifacts/`
+- [ ] `graph.json` produced in `graph-home/graphify-out/`
 - [ ] `GRAPH_REPORT.md` produced
 - [ ] Graph data validated (non-empty entities and relationships)
 
@@ -1209,7 +1209,7 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 
 ```bash
 uv run python -c "from ex04.sdk import Ex04SDK; sdk = Ex04SDK.from_config('config/setup.json'); r = sdk.run_graphify('graph-home/.graphify/repos/andela/buggy-python'); print(r)"
-ls -la artifacts/graph.json
+ls -la graph-home/graphify-out/graph.json
 ```
 
 ---
