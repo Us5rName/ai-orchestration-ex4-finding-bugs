@@ -2,16 +2,79 @@
 
 [← Back to Home](./Home.md)
 
-**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
+**Goal**: Implement all domain services and shared layer contracts deferred from Phase 2. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
 
 ## Task Index
 
 | Task | Service | Link |
 |---|---|---|
+| T4.00–T4.002 | Shared Layer Implementations | See below |
 | T4.01–T4.03 | Graph Service | See below |
 | T4.04–T4.06 | Vault Service | See below |
 | T4.07–T4.15 | Agent Service | See below |
 | T4.16–T4.18 | Analysis Service | See below |
+
+---
+
+### Shared Layer Implementations (T4.00–T4.002)
+
+> **Rationale**: `ConfigManagerInterface` and `GatekeeperInterface` were defined as contracts in Phase 2 ([PLAN §3.9]) with "impl in P4" comments. All domain services depend on these. Implemented here as prerequisites before any service work.
+
+#### T4.00 — Config Manager Implementation
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
+| **PRD Reference** | [PRD NFR-4] configuration externalization |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [ ] `ConfigManager` implements `ConfigManagerInterface`
+- [ ] `load(path)` reads JSON config file and caches
+- [ ] `get(key_path)` supports dot-notation (e.g. `agent.max_iterations`)
+- [ ] `validate(config)` checks required fields
+- [ ] No hardcoded config values — all from `config/setup.json`
+- [ ] File ≤ 150 lines
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config --cov-report=term-missing
+```
+
+---
+
+#### T4.002 — Gatekeeper Implementation
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
+| **PRD Reference** | [PRD NFR-1] API call management |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [ ] `ApiGatekeeper` implements `GatekeeperInterface`
+- [ ] `send(provider, messages)` routes through `ProviderFactory`, enforces rate limits
+- [ ] Rate limits loaded from `config/rate_limits.json`
+- [ ] FIFO queue for overflow requests
+- [ ] Retry logic with configurable attempts/delay
+- [ ] `get_call_log()` returns timestamped call records
+- [ ] `get_queue_status()` returns queue depth and state
+- [ ] All LLM calls in agent nodes flow through gatekeeper
+- [ ] File ≤ 150 lines
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gatekeeper --cov-report=term-missing
+# Tests with mocked provider — no real API calls
+```
 
 ---
 
