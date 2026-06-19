@@ -430,7 +430,7 @@ class ProviderFactory:
 |---|---|
 | **Path** | `src/ex04/shared/` |
 | **Responsibility** | Cross-cutting concerns: gatekeeper, config, version, tokens |
-| **PRD Mapping** | [PRD §6 Non-Functional Requirements NFR-1 to NFR-9] |
+| **PRD Mapping** | [PRD §6 Non-Functional Requirements NFR-1 to NFR-10] |
 
 **Sub-modules**:
 

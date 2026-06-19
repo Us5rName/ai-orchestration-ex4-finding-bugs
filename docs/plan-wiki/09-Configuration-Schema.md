@@ -22,7 +22,7 @@ All configuration is externalized per [PRD NFR-4] and [PRD §6].
     },
     "graphify": {
         "graph_home": "./graph-home",
-        "output_subdir": "graphify-out"  // Grphify always writes to <target>/graphify-out/
+        "output_subdir": "graphify-out"  # Grphify always writes to <target>/graphify-out/
     },
     "vault": {
         "output_dir": "./obsidian"
