@@ -410,6 +410,43 @@ Changes to TODO:
 
 ---
 
+### Prompt 22 — Implement Phase 1: Foundation
+
+**Prompt**: "implement phase 1. remember to check the success criteria at the end."
+
+**Context**: Phase 1 (Foundation) establishes project structure, configuration, and tooling — no business logic yet. Six tasks: directory structure, config files, pyproject.toml, base data types, service interfaces, mock implementations.
+
+**Implementation details**:
+
+| Task | Description | Files Created |
+|---|---|---|
+| T1.01 | Project directory structure + stubs | 51 Python files (src/ex04/…, config/, tests/, obsidian/, graph-home/, reports/) |
+| T1.02 | Configuration files | config/setup.json, config/rate_limits.json, .env-example, .gitignore updated |
+| T1.03 | pyproject.toml | Updated: ruff config, pytest config (85% coverage), dependencies (langgraph, graphifyy, openai, anthropic, pydantic), hatch build for src layout |
+| T1.04 | Base data types | src/ex04/shared/types.py (102 lines), types_metrics.py (81 lines), types_results.py (89 lines) — split to respect 150-line limit |
+| T1.05 | Service interfaces | 5 ABCs: GraphServiceInterface, VaultServiceInterface, AgentServiceInterface, AnalysisServiceInterface, ComparisonServiceInterface |
+| T1.06 | Mock implementations | 6 mocks + __init__.py + 14 verification tests |
+
+**Validation results**:
+- `uv run ruff check .` — 0 violations
+- `uv run pytest tests/unit/test_mocks.py -v` — 14/14 passed
+- Test coverage — 97.4% (≥85% required)
+- File line limits — max 102 lines (all under 150)
+- All types importable from `ex04.shared.types`
+- All interfaces importable
+
+**Issues encountered and resolved**:
+1. `graphify>=0.8.40` not on PyPI — fixed to `graphifyy>=0.8.40` (package name on PyPI is `graphifyy`, import name is `graphify`)
+2. `uv sync` failed — resolved by adding `[tool.hatch.build.targets.wheel] packages = ["src/ex04"]` and `uv pip install -e .`
+3. `TokenMetrics().model_dump()` failed — dataclass, not Pydantic. Fixed to `asdict(TokenMetrics())`
+4. `types.py` was 222 lines (exceeds 150-line limit) — split into types.py, types_metrics.py, types_results.py with re-exports
+5. Cross-module type references in types_results.py — added `from ex04.shared.types_metrics import ComparisonReport, TokenMetrics`
+6. ProviderFactory.create/register uncovered (78%) — expected, requires Phase 3 provider implementations. Documented in todo-wiki/12-Revision-History.md v1.01.
+
+**Best practice established**: When splitting a large types file to respect the 150-line limit, keep the original import path working via re-exports in the main types.py. This avoids updating every downstream import across interfaces and tests.
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
