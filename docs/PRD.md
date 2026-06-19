@@ -102,6 +102,21 @@ When debugging an unfamiliar codebase, a naive agent that reads all source files
 | Ruff violations | 0 (project standard) |
 | Max file length | ≤ 150 lines (project standard) |
 
+### 2.3 Evaluation Philosophy
+
+> **ASSIGNMENT.md [§10]**: "מטלה זו אינה מיועדת לביצוע מכני של צעדים טכניים בלבד. היא נועדה לבחון כיצד אתם חוקרים מערכת, כיצד אתם מתעדים אותה, כיצד אתם מפעילים סוכן AI ככלי הנדסי, וכיצד אתם מוכיחים שעבודה מבוססת גרף והקשר ממוקד יעילה יותר מקריאה גולמית של קוד."
+
+The submission is evaluated on the **investigation process**, not only the fix. Graders assess:
+
+| Dimension | What is evaluated |
+|---|---|
+| **How you investigate** | Evidence of graph-guided reasoning — graph → vault → code snippets, not blind file reading |
+| **How you document** | Obsidian vault evolution before/after investigation; README captures the journey, not just the outcome |
+| **How you use the AI agent** | The agent is an engineering tool with controlled steps and measurable context reduction — not a black box |
+| **How you prove efficiency** | Quantified comparison (tokens, file reads, iterations) showing graph-guided work outperforms naive reading |
+
+A technically correct fix with no documented process does not satisfy the assignment. A well-documented investigation with a clear before/after at both the code and knowledge levels is the target.
+
 ---
 
 ## 3. Research Questions
