@@ -9,13 +9,13 @@ Maps every PRD requirement to its architectural location:
 | PRD Requirement | Module | File |
 |---|---|---|
 | FR-1.1 Grphify execution | Graph Service | `services/graph/runner.py` |
-| FR-1.2 Parse graph.json | Graph Service | `services/graph/parser.py` |
-| FR-1.3 Community clustering | Graph Service | `services/graph/analyzer.py` |
-| FR-1.4 Entity relationships | Graph Service | `services/graph/parser.py` |
-| FR-1.5 God Node detection | Graph Service | `services/graph/analyzer.py` |
-| FR-2.1 Obsidian vault | Vault Service | `services/vault/builder.py` |
-| FR-2.2 index.md | Vault Service | `services/vault/builder.py` |
-| FR-2.3 hot.md | Vault Service | `services/vault/builder.py` |
+| FR-1.2 index.md production | Vault Service | `services/vault/builder.py` |
+| FR-1.3 hot.md production | Vault Service | `services/vault/builder.py` |
+| FR-1.4 Community clustering | Graph Service | `services/graph/analyzer.py` |
+| FR-1.5 Entity relationships | Graph Service | `services/graph/parser.py` |
+| FR-2.1 Active knowledge space | Vault Service | `services/vault/builder.py` |
+| FR-2.2 index.md navigation | Vault Service | `services/vault/builder.py` |
+| FR-2.3 hot.md focused context | Vault Service | `services/vault/builder.py` |
 | FR-2.4 Component notes | Vault Service | `services/vault/note_manager.py` |
 | FR-2.5 Internal links | Vault Service | `services/vault/note_manager.py` |
 | FR-3.1 Block diagram | Analysis Service | `services/analysis/diagram_gen.py` |
