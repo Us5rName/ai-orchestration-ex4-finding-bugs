@@ -1,0 +1,33 @@
+{
+    "project": {
+        "name": "ex04",
+        "version": "1.00"
+    },
+    "provider": {
+        "name": "openai",
+        "model": "gpt-4o-mini",
+        "api_key_env": "OPENAI_API_KEY",
+        "base_url": null
+    },
+    "graphify": {
+        "graph_home": "./graph-home",
+        "output_subdir": "graphify-out"
+    },
+    "vault": {
+        "output_dir": "./obsidian"
+    },
+    "agent": {
+        "max_iterations": 5,
+        "max_suspects": 5,
+        "context_window_tokens": 8000
+    },
+    "comparison": {
+        "naive_file_limit": 20,
+        "guided_context_limit": 4000
+    },
+    "paths": {
+        "target_codebase": "./graph-home/.graphify/repos/andela/buggy-python",
+        "reports_dir": "./reports",
+        "artifacts_dir": "./artifacts"
+    }
+}

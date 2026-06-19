@@ -1,0 +1,14 @@
+{
+    "openai": {
+        "requests_per_minute": 60,
+        "requests_per_day": 10000,
+        "retry_attempts": 3,
+        "retry_delay_seconds": 5
+    },
+    "anthropic": {
+        "requests_per_minute": 50,
+        "requests_per_day": 5000,
+        "retry_attempts": 3,
+        "retry_delay_seconds": 5
+    }
+}
