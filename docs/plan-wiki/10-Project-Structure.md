@@ -9,7 +9,7 @@ code/
 ├── pyproject.toml
 ├── uv.lock
 ├── README.md
-├── ASSIGNMENT.md                 # Homework specification
+├── ex04.md                       # Homework specification
 ├── .env-example                  # Secret placeholders
 ├── config/
 │   ├── setup.json                # Application configuration

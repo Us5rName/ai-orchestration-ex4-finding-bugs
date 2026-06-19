@@ -12,7 +12,6 @@
 | T6.02 — Graph-Guided Runner | See below |
 | T6.03 — Metrics Calculator | See below |
 | T6.04 — Comparison Report Generator | See below |
-| T6.05 — Implement an Additional Extension | See below |
 
 ---
 
@@ -114,45 +113,6 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 ```bash
 uv run pytest tests/unit/services/comparison/test_report_gen.py -v
-```
-
----
-
-### T6.05 — Implement an Additional Extension
-
-| Attribute | Value |
-|---|---|
-| **Status** | Not Started |
-| **Priority** | P1 |
-| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.4/7.5/7.6] |
-| **PRD Reference** | [PRD FR-7.4], [PRD FR-7.5], [PRD FR-7.6] |
-| **Estimate** | 60 min |
-
-**Goal**: Implement at least one of the three extension candidates beyond the minimum (FR-7.1–7.3). Choose the one that best fits the investigation findings.
-
-**Options** (pick one):
-
-| Option | FR | What to build |
-|---|---|---|
-| Dynamic diff | FR-7.4 | Compare `hot.md` + `graph.json` snapshots before/after fix; output a focused change summary |
-| Orphan detection | FR-7.5 | Walk graph entities with no incoming edges; auto-generate documentation stubs for them |
-| Impact report | FR-7.6 | Given a node name, traverse reverse-dependency edges and list all entities that would be affected by a change |
-
-**Definition of Done**:
-
-- [ ] Chosen extension is implemented in its mapped file ([PLAN §11])
-- [ ] Extension is callable through the SDK
-- [ ] Unit tests cover the happy path and at least one error case
-- [ ] Output is included in `reports/` and referenced in README
-
-**Independent Verification**:
-
-```bash
-uv run pytest tests/unit/services/comparison/test_diff_gen.py -v      # FR-7.4
-# or
-uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v # FR-7.5
-# or
-uv run pytest tests/unit/services/analysis/test_impact_reporter.py -v # FR-7.6
 ```
 
 ---

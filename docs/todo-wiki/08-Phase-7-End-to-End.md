@@ -33,7 +33,6 @@
 - [ ] `graph.json` produced in `graph-home/graphify-out/`
 - [ ] `GRAPH_REPORT.md` produced
 - [ ] Graph data validated (non-empty entities and relationships)
-- [ ] **Note (C9)**: If BugsInPy was chosen instead of `andela/buggy-python`, verify the target codebase is cloned inside an isolated virtualenv or Docker container before running Grphify ([PRD C9])
 
 **Independent Verification**:
 
