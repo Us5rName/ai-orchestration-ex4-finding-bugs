@@ -20,3 +20,6 @@ ex04.pdf
 .idea/
 *.swp
 *.swo
+
+#Misc
+.coverage
