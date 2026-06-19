@@ -11,10 +11,10 @@ wheels/
 .venv/*
 
 # Environment files
-.env
+ASSIGNMENT.md
 .env.local
 .env.*.local
-
+ex04.pdf
 # IDE
 .vscode/
 .idea/
