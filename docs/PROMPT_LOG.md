@@ -181,6 +181,37 @@ Changes to TODO:
 
 ---
 
+### Prompt 9 — Turn TODO into Wiki
+
+**Prompt**: "The TODO is quite large. I want you to turn it into wiki, while not deleting original file.\nPlan was already turned into a wiki"
+
+**Context**: The `docs/TODO.md` is 1,577 lines — too large for comfortable navigation. User wanted the same wiki-style split that was already applied to PLAN via `docs/plan-wiki/`.
+
+**Implementation**:
+- Created `docs/todo-wiki/` directory following `docs/plan-wiki/` convention
+- Split TODO into 13 files: `Home.md` index + 12 section pages (`01-Phase-Overview.md` through `12-Revision-History.md`)
+- Each page has **← Back to Home** navigation link at top and source reference at bottom
+- All task tables, checkboxes, verification commands, and Mermaid diagrams preserved verbatim
+- Phase 4 (Services) grouped by sub-service (Graph, Vault, Agent, Analysis) with task index
+- Original `docs/TODO.md` left untouched
+
+**Output**: `docs/todo-wiki/` — 13 files, fully navigable wiki
+
+---
+
+### Prompt 10 — Log Prompts, Commit
+
+**Prompt**: "Add the prompts to the prompt log according to the instructions and commit your changes to a new branch in small readable commits"
+
+**Context**: Wiki files created in Prompt 9 needed prompt log entries and git commits.
+
+**Changes**:
+- Updated `docs/PROMPT_LOG.md` with Prompt 9 and Prompt 10 entries
+- Created feature branch for commit work
+- Committed wiki files and prompt log updates in small, atomic commits
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
