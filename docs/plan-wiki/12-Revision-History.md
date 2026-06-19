@@ -7,6 +7,7 @@
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.00 | 2026-06-19 | Lahav | Initial architecture plan |
+| 1.01 | 2026-06-19 | Lahav | Add FR-7.4/7.5/7.6 and NFR-10/C8/C9 to traceability matrix; update NFR range to NFR-10 ([PRD §5.7], [PRD §6], [PRD §10.1]) |
 
 ---
 

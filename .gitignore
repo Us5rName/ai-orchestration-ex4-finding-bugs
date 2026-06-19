@@ -20,3 +20,6 @@ wheels/
 .idea/
 *.swp
 *.swo
+
+# Assignment spec (kept locally, not tracked in repo)
+ASSIGNMENT.md
