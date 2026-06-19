@@ -146,6 +146,7 @@ class Ex04SDK:
     def investigate_bug(self, bug_report: str) -> InvestigationResult: ...
     def run_comparison(self, bug_report: str) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> EngineeringResult: ...
+    def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
 ## 3.3 Graph Service — Grphify Integration
@@ -468,6 +469,13 @@ class ComparisonMetrics:
     token_savings_pct: float
     file_read_savings_pct: float
     iteration_savings_pct: float
+
+class PipelineResult:
+    graph_result: GraphResult
+    vault_result: VaultResult
+    investigation: InvestigationResult
+    comparison: ComparisonReport
+    engineering: EngineeringResult
 ```
 
 ---
