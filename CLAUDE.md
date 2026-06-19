@@ -1,66 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
----
-
-## Commands
-
-```bash
-# Install dependencies
-uv sync
-
-# Lint (must pass with zero violations)
-uv run ruff check src/
-
-# Format
-uv run ruff format src/
-
-# Run all tests
-uv run pytest tests/
-
-# Run a single test file
-uv run pytest tests/unit/test_<module>.py
-
-# Run tests with coverage report
-uv run pytest --cov=src/ex04 --cov-report=term-missing tests/
-
-# Install the Grphify Claude Code skill (run once)
-uv run graphify install claude
-
-# Run Grphify on the target codebase (generates graph.json in graphify-out/)
-uv run graphify run ./graph-home/.graphify/repos/andela/buggy-python
-```
-
----
-
-## Architecture
-
-The system is built around three invariants that cut across every layer:
-
-1. **SDK is the only entry point.** `src/ex04/sdk/sdk.py` (`Ex04SDK`) is the single class consumers touch. CLI and REST layers call its methods and return results — they contain zero business logic.
-
-2. **Interface-first between services.** Services never import each other's concrete classes. They import only `*Interface` ABCs from `services/*/interface.py`. The SDK injects concrete implementations at startup. This means `AgentService`, `AnalysisService`, and `ComparisonService` can be developed and tested against mocks while `GraphService` and `VaultService` implementations are incomplete.
-
-3. **All LLM calls go through the Gatekeeper.** `src/ex04/shared/gatekeeper.py` enforces rate limits from `config/rate_limits.json` using a FIFO queue. Provider implementations (`openai_provider.py`, `anthropic_provider.py`) never call the API directly — they call through the gatekeeper. The active provider is selected at runtime by `ProviderFactory` from `config/setup.json`.
-
-**Key paths to understand the data flow:**
-
-| Path | Role |
-|---|---|
-| `config/setup.json` | Provider selection, vault/graph paths, agent iteration limits |
-| `config/rate_limits.json` | Per-provider API rate limits enforced by gatekeeper |
-| `graph-home/.graphify/repos/andela/buggy-python/` | Target codebase being investigated |
-| `graph-home/graphify-out/` | Grphify output: `graph.json`, `GRAPH_REPORT.md` |
-| `obsidian/` | Obsidian vault; `index.md` and `hot.md` are the AI agent's navigation anchors |
-
-**LangGraph debugging workflow** (assembled in `services/agent/workflow.py`):
-> knowledge load → bug analysis → suspect ranking → code inspection → root cause → fix → verify
-
-All node files are in `services/agent/nodes/` and share state via `services/agent/state.py` (`AgentState` TypedDict).
-
----
-
 # Project Persona: Professional Software Engineer (AI Edition)
 
 You are a Professional Software Engineer operating at the highest level of excellence. Your goal is not just to "make it work," but to build robust, maintainable, and scalable software that adheres to international quality standards (ISO/IEC 25010).
@@ -69,7 +6,7 @@ You are a Professional Software Engineer operating at the highest level of excel
 - **Course**: AI Orchestration, Exercise 04
 - **Goal**: Build a LangGraph-based AI agent that uses code graph analysis (Grphify) and knowledge management (Obsidian vault) to investigate bugs in unfamiliar codebases, then prove token savings vs. naive approaches.
 - **Package**: `ex04`
-- **Assignment Spec**: `ASSIGNMENT.md` — all grading criteria, deliverables, and constraints live here.
+- **Assignment Spec**: `ex04.md` — all grading criteria, deliverables, and constraints live here.
 
 ### Documentation Navigation
 `docs/PLAN.md` and `docs/TODO.md` are large (1300+ and 1500+ lines respectively). **Always read the wiki versions instead** — they are structured, navigable, and contain the same content broken into focused pages.
@@ -80,7 +17,7 @@ You are a Professional Software Engineer operating at the highest level of excel
 | `docs/plan-wiki/` | Architecture, C4 models, ADRs, API contracts (13 pages) | Before writing code or modifying interfaces. Start with `Home.md`. |
 | `docs/todo-wiki/` | 9-phase task plan with 50+ tasks (13 pages) | Task prioritization, dependencies. Start with `Home.md`. |
 | `docs/PROMPT_LOG.md` | AI-assisted development log | Maintaining transparency |
-| `ASSIGNMENT.md` | Assignment specification | Deliverable requirements, grading criteria |
+| `ex04.md` | Assignment specification | Deliverable requirements, grading criteria |
 
 > **Rule**: Do not read `docs/PLAN.md` or `docs/TODO.md` directly. Use `docs/plan-wiki/` and `docs/todo-wiki/` respectively. Read the relevant page for the task at hand instead of the entire wiki.
 >
