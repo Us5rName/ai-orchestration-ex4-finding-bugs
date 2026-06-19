@@ -22,10 +22,11 @@
    - [T1.04 — Create Base Data Types](#t104--create-base-data-types)
 3. [Phase 2 — Shared Layer](#3-phase-2--shared-layer)
    - [T2.01 — Implement Version Module](#t201--implement-version-module)
-   - [T2.02 — Implement Config Manager](#t202--implement-config-manager)
-   - [T2.03 — Implement API Gatekeeper](#t203--implement-api-gatekeeper)
-   - [T2.04 — Implement Token Tracker](#t204--implement-token-tracker)
-   - [T2.05 — Shared Layer __init__.py](#t205--shared-layer-initpy)
+   - [T2.02 — Implement Shared Types](#t202--implement-shared-types)
+   - [T2.03 — Implement Config Manager](#t203--implement-config-manager)
+   - [T2.04 — Implement API Gatekeeper](#t204--implement-api-gatekeeper)
+   - [T2.05 — Implement Token Tracker](#t205--implement-token-tracker)
+   - [T2.06 — Shared Layer __init__.py](#t206--shared-layer-initpy)
 4. [Phase 3 — Provider Layer](#4-phase-3--provider-layer)
    - [T3.01 — Implement Provider Interface](#t301--implement-provider-interface)
    - [T3.02 — Implement OpenAI Provider](#t302--implement-openai-provider)
@@ -319,7 +320,40 @@ uv run pytest tests/unit/shared/test_version.py -v
 
 ---
 
-### T2.02 — Implement Config Manager
+### T2.02 — Implement Shared Types
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — types.py] |
+| **PRD Reference** | [PRD NFR-4] no hardcoding, [PRD §5.6 FR-6] token metrics |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [ ] `src/ex04/shared/types.py` defines all shared data classes and TypedDicts:
+  - `TokenMetrics` with `input_tokens`, `output_tokens`, `total_tokens`, `provider`, `model`
+  - `GraphData` with `entities`, `relationships`, `communities`
+  - `RunMetrics` with `tokens_used`, `files_read`, `iterations`, `time_seconds`, `found_root_cause`
+  - `ComparisonMetrics` with `naive`, `guided`, `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
+  - `PipelineResult` with `graph_result`, `vault_result`, `investigation`, `comparison`, `engineering`
+  - `ProviderResponse` with `text`, `input_tokens`, `output_tokens`, `model`, `provider`, `timestamp`
+- [ ] All types use `dataclass` or `TypedDict` with type hints
+- [ ] Module-level docstring
+- [ ] Tests verify type construction and field presence
+- [ ] File ≤ 150 lines ([PRD NFR-3])
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_types.py -v --cov=ex04.shared.types --cov-report=term-missing
+# Expected: ≥ 85% coverage, all tests pass
+```
+
+---
+
+### T2.03 — Implement Config Manager
 
 | Attribute | Value |
 |---|---|
@@ -347,7 +381,7 @@ uv run pytest tests/unit/shared/test_config.py -v --cov=ex04.shared.config --cov
 
 ---
 
-### T2.03 — Implement API Gatekeeper
+### T2.04 — Implement API Gatekeeper
 
 | Attribute | Value |
 |---|---|
@@ -378,7 +412,7 @@ uv run pytest tests/unit/shared/test_gatekeeper.py -v --cov=ex04.shared.gatekeep
 
 ---
 
-### T2.04 — Implement Token Tracker
+### T2.05 — Implement Token Tracker
 
 | Attribute | Value |
 |---|---|
@@ -406,7 +440,7 @@ uv run pytest tests/unit/shared/test_token_tracker.py -v --cov=ex04.shared.token
 
 ---
 
-### T2.05 — Shared Layer `__init__.py`
+### T2.06 — Shared Layer `__init__.py`
 
 | Attribute | Value |
 |---|---|
@@ -1478,10 +1512,11 @@ graph TD
 
     subgraph P2["Phase 2: Shared"]
         T201[T2.01 Version]
-        T202[T2.02 Config]
-        T203[T2.03 Gatekeeper]
-        T204[T2.04 Tokens]
-        T205[T2.05 __init__]
+        T202[T2.02 Types]
+        T203[T2.03 Config]
+        T204[T2.04 Gatekeeper]
+        T205[T2.05 Tokens]
+        T206[T2.06 __init__]
     end
 
     subgraph P3["Phase 3: Providers"]

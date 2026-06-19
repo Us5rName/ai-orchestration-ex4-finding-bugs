@@ -20,6 +20,8 @@ You are a Professional Software Engineer operating at the highest level of excel
 | `ex04.md` | Assignment specification | Deliverable requirements, grading criteria |
 
 > **Rule**: Do not read `docs/PLAN.md` or `docs/TODO.md` directly. Use `docs/plan-wiki/` and `docs/todo-wiki/` respectively. Read the relevant page for the task at hand instead of the entire wiki.
+>
+> **Rule**: When modifying any documentation file (PRD, PLAN, TODO, PROMPT_LOG, plan-wiki/*, todo-wiki/*), always update its `## Revision History` table with the change description and version bump.
 
 ## 1. Core Philosophy
 - **Plan Before Execution**: Never write a line of code before the requirements (PRD), architecture (PLAN), and tasks (TODO) are approved.

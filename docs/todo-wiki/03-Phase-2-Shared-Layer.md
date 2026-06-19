@@ -9,10 +9,11 @@
 | Task | Link |
 |---|---|
 | T2.01 — Implement Version Module | See below |
-| T2.02 — Implement Config Manager | See below |
-| T2.03 — Implement API Gatekeeper | See below |
-| T2.04 — Implement Token Tracker | See below |
-| T2.05 — Shared Layer `__init__.py` | See below |
+| T2.02 — Implement Shared Types | See below |
+| T2.03 — Implement Config Manager | See below |
+| T2.04 — Implement API Gatekeeper | See below |
+| T2.05 — Implement Token Tracker | See below |
+| T2.06 — Shared Layer `__init__.py` | See below |
 
 ---
 
@@ -41,7 +42,40 @@ uv run pytest tests/unit/shared/test_version.py -v
 
 ---
 
-### T2.02 — Implement Config Manager
+### T2.02 — Implement Shared Types
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — types.py] |
+| **PRD Reference** | [PRD NFR-4] no hardcoding, [PRD §5.6 FR-6] token metrics |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [ ] `src/ex04/shared/types.py` defines all shared data classes and TypedDicts:
+  - `TokenMetrics` with `input_tokens`, `output_tokens`, `total_tokens`, `provider`, `model`
+  - `GraphData` with `entities`, `relationships`, `communities`
+  - `RunMetrics` with `tokens_used`, `files_read`, `iterations`, `time_seconds`, `found_root_cause`
+  - `ComparisonMetrics` with `naive`, `guided`, `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
+  - `PipelineResult` with `graph_result`, `vault_result`, `investigation`, `comparison`, `engineering`
+  - `ProviderResponse` with `text`, `input_tokens`, `output_tokens`, `model`, `provider`, `timestamp`
+- [ ] All types use `dataclass` or `TypedDict` with type hints
+- [ ] Module-level docstring
+- [ ] Tests verify type construction and field presence
+- [ ] File ≤ 150 lines ([PRD NFR-3])
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_types.py -v --cov=ex04.shared.types --cov-report=term-missing
+# Expected: ≥ 85% coverage, all tests pass
+```
+
+---
+
+### T2.03 — Implement Config Manager
 
 | Attribute | Value |
 |---|---|
@@ -69,7 +103,7 @@ uv run pytest tests/unit/shared/test_config.py -v --cov=ex04.shared.config --cov
 
 ---
 
-### T2.03 — Implement API Gatekeeper
+### T2.04 — Implement API Gatekeeper
 
 | Attribute | Value |
 |---|---|
@@ -100,7 +134,7 @@ uv run pytest tests/unit/shared/test_gatekeeper.py -v --cov=ex04.shared.gatekeep
 
 ---
 
-### T2.04 — Implement Token Tracker
+### T2.05 — Implement Token Tracker
 
 | Attribute | Value |
 |---|---|
@@ -128,7 +162,7 @@ uv run pytest tests/unit/shared/test_token_tracker.py -v --cov=ex04.shared.token
 
 ---
 
-### T2.05 — Shared Layer `__init__.py`
+### T2.06 — Shared Layer `__init__.py`
 
 | Attribute | Value |
 |---|---|

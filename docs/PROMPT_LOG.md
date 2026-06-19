@@ -447,8 +447,45 @@ Changes to TODO:
 
 ---
 
+### Prompt 23 — Audit Phase 2, Add Missing Types Task, Renumber
+
+**Prompt**: "what does phase 2 entail?" → "any other information that you need to get from the plan wiki for the phase?" → "that it's a good idea to put it before the other tasks, because they depend on it. what do you think?" → "please update in the wiki and in the actual file, and fix the numbering"
+
+**Context**: Reviewed Phase 2 (Shared Layer) tasks against PLAN wiki §3.9. Found that `types.py` (6 shared data classes) was defined in the Module Design but had no corresponding task in TODO.md. Additionally `ProviderResponse` from API Contract §8.2 was also missing.
+
+**Findings**:
+
+| Gap | Source | Impact |
+|---|---|---|
+| `types.py` missing from tasks | PLAN §3.9 | Gatekeeper, TokenTracker have no `TokenMetrics`, `ProviderResponse` to use |
+| `ProviderResponse` missing | API Contract §8.2 | Gatekeeper's `send()` has no return type defined |
+| Task ordering wrong | Dependency analysis | Types should be T2.02 (before Config, Gatekeeper, TokenTracker) |
+
+**Changes made**:
+
+| File | Change |
+|---|---|
+| `docs/TODO.md` | Added T2.02 (Shared Types), renumbered T2.02→T2.06, updated TOC, updated mermaid dependency diagram |
+| `docs/todo-wiki/03-Phase-2-Shared-Layer.md` | Added T2.02 (Shared Types), renumbered all tasks, updated task table |
+
+**New task order**:
+
+| Task | What | Depends On |
+|---|---|---|
+| T2.01 | Version Module | — |
+| T2.02 | **Shared Types** | — |
+| T2.03 | Config Manager | T2.02 |
+| T2.04 | API Gatekeeper | T2.02, T2.03 |
+| T2.05 | Token Tracker | T2.02 |
+| T2.06 | Shared `__init__.py` | all above |
+
+**Best practice established**: Always cross-reference the todo-wiki against the plan-wiki Module Design (§3.x) and API Contract (§8.x) before starting implementation. Missing types/tasks create blockers downstream.
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
+| 1.01 | 2026-06-19 | Added Prompt 23 — Phase 2 audit, added T2.02 Shared Types task, renumbered Phase 2 tasks |
