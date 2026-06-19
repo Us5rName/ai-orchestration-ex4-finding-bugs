@@ -34,6 +34,8 @@
    - [T3.04 — Implement Provider Factory](#t304--implement-provider-factory)
    - [T3.05 — Provider Layer __init__.py](#t305--provider-layer-initpy)
 5. [Phase 4 — Services](#5-phase-4--services)
+   - [T4.00 — Config Manager Implementation](#t400--config-manager-implementation)
+   - [T4.002 — Gatekeeper Implementation](#t4002--gatekeeper-implementation)
    - [T4.01 — Graph Service: Runner](#t401--graph-service-runner)
    - [T4.02 — Graph Service: Parser](#t402--graph-service-parser)
    - [T4.03 — Graph Service: Analyzer](#t403--graph-service-analyzer)
@@ -591,7 +593,67 @@ uv run python -c "from ex04.providers import ProviderInterface, ProviderFactory;
 
 ## 5. Phase 4 — Services
 
-**Goal**: Implement all domain services. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
+**Goal**: Implement all domain services and shared layer contracts deferred from Phase 2. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
+
+> **Rationale for T4.00–T4.002**: `ConfigManagerInterface` and `GatekeeperInterface` were defined as contracts in Phase 2 ([PLAN §3.9]) with "impl in P4" comments. All domain services depend on these. Implemented here as prerequisites before any service work.
+
+### T4.00 — Config Manager Implementation
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
+| **PRD Reference** | [PRD NFR-4] configuration externalization |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [ ] `ConfigManager` implements `ConfigManagerInterface`
+- [ ] `load(path)` reads JSON config file and caches
+- [ ] `get(key_path)` supports dot-notation (e.g. `agent.max_iterations`)
+- [ ] `validate(config)` checks required fields
+- [ ] No hardcoded config values — all from `config/setup.json`
+- [ ] File ≤ 150 lines
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config --cov-report=term-missing
+```
+
+---
+
+### T4.002 — Gatekeeper Implementation
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
+| **PRD Reference** | [PRD NFR-1] API call management |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [ ] `ApiGatekeeper` implements `GatekeeperInterface`
+- [ ] `send(provider, messages)` routes through `ProviderFactory`, enforces rate limits
+- [ ] Rate limits loaded from `config/rate_limits.json`
+- [ ] FIFO queue for overflow requests
+- [ ] Retry logic with configurable attempts/delay
+- [ ] `get_call_log()` returns timestamped call records
+- [ ] `get_queue_status()` returns queue depth and state
+- [ ] All LLM calls in agent nodes flow through gatekeeper
+- [ ] File ≤ 150 lines
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gatekeeper --cov-report=term-missing
+# Tests with mocked provider — no real API calls
+```
+
+---
 
 ### T4.01 — Graph Service: Runner
 
@@ -1569,6 +1631,8 @@ graph TD
     end
 
     subgraph P4["Phase 4: Services"]
+        T400[T4.00 Config Impl]
+        T4002[T4.002 Gatekeeper Impl]
         T401[T4.01 Graph Runner]
         T402[T4.02 Graph Parser]
         T403[T4.03 Graph Analyzer]
@@ -1588,6 +1652,11 @@ graph TD
         T417[T4.17 Diagrams]
         T418[T4.18 Bug Report]
     end
+
+    T400 --> T4002
+    T400 --> T401
+    T400 --> T404
+    T4002 --> T407
 
     subgraph P5["Phase 5: SDK+CLI"]
         T501[T5.01 SDK]
@@ -1637,11 +1706,17 @@ graph TD
 
 | Metric | Value |
 |---|---|
+<<<<<<< HEAD
 | Total tasks | 43 |
 | P0 (critical) | 37 |
 | P1 (important) | 6 |
+=======
+| Total tasks | 44 |
+| P0 (critical) | 39 |
+| P1 (important) | 5 |
+>>>>>>> 3c832f6 (docs: Phase 4 gap analysis — add T4.00 Config impl + T4.002 Gatekeeper impl)
 | Phases | 8 |
-| Estimated total implementation time | ~28 hours (excluding LLM API time) |
+| Estimated total implementation time | ~29.5 hours (excluding LLM API time) |
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
 
 ---
@@ -1651,4 +1726,8 @@ graph TD
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.00 | 2026-06-19 | Lahav | Initial task tracking document |
+<<<<<<< HEAD
 | 1.01 | 2026-06-19 | Lahav | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
+=======
+| 1.04 | 2026-06-19 | Lahav | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
+>>>>>>> 3c832f6 (docs: Phase 4 gap analysis — add T4.00 Config impl + T4.002 Gatekeeper impl)

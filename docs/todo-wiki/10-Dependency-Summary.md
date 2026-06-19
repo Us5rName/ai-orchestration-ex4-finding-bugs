@@ -28,6 +28,8 @@ graph TD
     end
 
     subgraph P4["Phase 4: Services"]
+        T400[T4.00 Config Impl]
+        T4002[T4.002 Gatekeeper Impl]
         T401[T4.01 Graph Runner]
         T402[T4.02 Graph Parser]
         T403[T4.03 Graph Analyzer]
@@ -47,6 +49,11 @@ graph TD
         T417[T4.17 Diagrams]
         T418[T4.18 Bug Report]
     end
+
+    T400 --> T4002
+    T400 --> T401
+    T400 --> T404
+    T4002 --> T407
 
     subgraph P5["Phase 5: SDK+CLI"]
         T501[T5.01 SDK]

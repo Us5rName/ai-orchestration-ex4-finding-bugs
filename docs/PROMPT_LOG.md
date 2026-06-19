@@ -567,6 +567,52 @@ Changes to TODO:
 
 ---
 
+### Prompt 26 — Phase 4 Planning: Codebase Assessment, Approach, Gap Analysis
+
+**Prompt**: "what does phase 4 entail?" → "any information you need from the plan?" → "before that, read you cauade.md and load the skills that will help you" → "yes. of course, without implementing the phase. you can also check the prompt log" → "discuss approach" → "switch to a new branch and update the docs"
+
+**Context**: Comprehensive codebase state assessment for Phase 4 implementation planning. Loaded 6 relevant skills (modular-design, sdk-architecture, tdd-testing, code-review-config, api-gatekeeper). Reviewed all Phase 1–3 deliverables, service interfaces, shared layer contracts, provider implementations, and configuration files.
+
+**Codebase state findings**:
+
+| Area | Status |
+|---|---|
+| Shared types | ✅ Fully implemented (types.py, types_metrics.py, types_results.py) |
+| Service interfaces | ✅ All 5 ABCs defined with Phase 4 implementation comments |
+| Shared contracts | 🔶 ABCs only — ConfigManagerInterface, GatekeeperInterface need Phase 4 impl |
+| Provider layer | ✅ Fully implemented (OpenAI, Anthropic, Factory, registry pattern) |
+| Service stubs | 🔶 All implementation files exist as single-line docstrings |
+| SDK | 🔶 Stub (docstring only) |
+
+**Gap identified**: `ConfigManagerInterface` and `GatekeeperInterface` contracts exist from Phase 2 with "impl in P4" comments, but no corresponding tasks in Phase 4 TODO. All domain services depend on Config; Agent nodes depend on Gatekeeper.
+
+**Approach agreed**:
+
+| Step | Task | Rationale |
+|---|---|---|
+| 1 | T4.00 — Config Manager impl | Everything needs config |
+| 2 | T4.002 — Gatekeeper impl | Agent nodes need LLM routing; depends on Config |
+| 3 | T4.01–T4.03 — Graph Service | No service dependencies, testable in isolation |
+| 4 | T4.04–T4.06 — Vault Service | No service dependencies, parallel with Graph |
+| 5 | T4.16–T4.18 — Analysis Service | Depends on Graph, simpler than Agent |
+| 6 | T4.07–T4.15 — Agent Service | Depends on Graph + Vault + Gatekeeper — last |
+
+**Documentation changes**:
+
+| File | Change |
+|---|---|
+| `docs/todo-wiki/05-Phase-4-Services.md` | Added T4.00, T4.002 with DoD, verification commands |
+| `docs/todo-wiki/10-Dependency-Summary.md` | Added T400, T4002 nodes + dependency edges |
+| `docs/todo-wiki/11-Statistics.md` | Updated totals: 42→44 tasks, 37→39 P0, ~28→~29.5h |
+| `docs/todo-wiki/12-Revision-History.md` | Added v1.04 entry |
+| `docs/TODO.md` | Mirrored all wiki changes (TOC, Phase 4 section, diagram, stats, revision) |
+| `docs/PROMPT_LOG.md` | Added this Prompt 26 entry |
+| Git | Created `phase4-services` branch |
+
+**Branch**: `phase4-services`
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
@@ -575,3 +621,4 @@ Changes to TODO:
 | 1.01 | 2026-06-19 | Added Prompt 23 — Phase 2 audit, added T2.02 Shared Types task, renumbered Phase 2 tasks |
 | 1.02 | 2026-06-19 | Added Prompt 24 — Phase 2 contract-first implementation, documentation updates, and git commits to phase2 branch (4 commits) |
 | 1.03 | 2026-06-19 | Added Prompt 25 — Phase 3 provider layer implementation, ProviderResponse contract update, 21 new provider tests |
+| 1.04 | 2026-06-19 | Added Prompt 26 — Phase 4 planning: codebase state assessment, approach discussion, gap analysis, documentation updates, branch creation |
