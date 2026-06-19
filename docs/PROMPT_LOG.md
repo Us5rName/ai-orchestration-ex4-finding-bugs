@@ -253,6 +253,163 @@ Changes to TODO:
 
 ---
 
+### Prompt 13 — Audit PLAN and PRD for Grphify Mistakes
+
+**Prompt**: "Please read the full plan file (not the wiki) and the full PRD file and tell me if there are any mistakes about it. I meant if graphify usage is correctly mentioned and described."
+
+**Context**: User had access to the Grphify agent skill and wanted to verify that PLAN.md and PRD.md accurately describe Grphify's actual behavior, outputs, and CLI usage.
+
+**Mistakes found**:
+1. **ADR-003**: CLI name `graphifyy` (wrong) — actual CLI is `graphify`; `graphifyy` is only the pip package name
+2. **ADR-003**: Dismissed library import entirely — Grphify has importable Python API (`from graphify.build import build_from_json`, `graphify query`, etc.)
+3. **Config**: `output_dir: "./artifacts"` doesn't map to any real Grphify parameter — Grphify writes to `<scan_root>/graphify-out/`
+4. **Missing outputs**: `graph.html`, `.graphify_analysis.json`, `.graphify_labels.json`, `cost.json` not documented
+5. **Obsidian ambiguity**: No decision on whether Vault Service uses Grphify's `export obsidian` or builds from scratch
+6. **Query capability**: `graphify query/path/explain` not leveraged as potential extension
+7. **`--directed` flag**: Not mentioned (preserves edge direction for bug investigation)
+
+**Output**: Detailed audit report with severity ratings for each issue
+
+---
+
+### Prompt 14 — Fix PLAN.md Mistakes
+
+**Prompt**: "Please fix the actual mistakes in the plan. no adr 005 is missing - it's a numbering issue."
+
+**Context**: User confirmed the Grphify audit findings and requested fixes in PLAN.md. Clarified that ADR-005 gap is intentional (numbering issue, not missing content).
+
+**Changes to `docs/PLAN.md`**:
+- **ADR numbering**: Renumbered ADR-006→005, ADR-007→006 (sequential 001-006)
+- **ADR-003**: Fixed CLI name `graphifyy` → `graphify`. Added hybrid approach: CLI for initial build, library API for investigation. Corrected output path to `graphify-out/graph.json`
+- **OOP Schema**: Removed `Ex04SDK --> NaiveRunner` and `Ex04SDK --> GraphGuidedRunner` (SDK must delegate through services). Fixed Gatekeeper direction: `APIGatekeeper --> Provider` (was reversed)
+- **SDK Module**: Added missing `full_pipeline()` method signature
+- **Shared Types**: Added `PipelineResult` type (was referenced but undefined)
+- **Config**: Replaced fictional `output_dir: "./artifacts"` with `output_subdir: "graphify-out"`
+- **Traceability Matrix**: Corrected all FR-1.x and FR-2.x mappings to match PRD numbering
+
+---
+
+### Prompt 15 — Update plan-wiki Sections
+
+**Prompt**: "Now update the relevant plan-wiki sections"
+
+**Context**: PLAN.md fixes needed to be mirrored in the corresponding plan-wiki pages.
+
+**Changes**:
+| Wiki File | Changes |
+|---|---|
+| `05-ADRs.md` | ADR-003 content fix, renumbered ADR-006→005, ADR-007→006 |
+| `06-OOP-Schema.md` | Fixed SDK direct calls, fixed Gatekeeper direction, added full_pipeline |
+| `03-Module-Design.md` | Added full_pipeline(), added PipelineResult type |
+| `09-Configuration-Schema.md` | Fixed graphify config |
+| `11-Traceability-Matrix.md` | Fixed FR numbering |
+
+---
+
+### Prompt 16 — Audit TODO.md for Stale References
+
+**Prompt**: "is there anything that needs to be updated in the big TODO.md file (not the wiki)?"
+
+**Context**: After fixing PLAN.md, needed to verify TODO.md doesn't have stale references to old ADR numbers, wrong package names, or incorrect paths.
+
+**Issues found and fixed in `docs/TODO.md`**:
+| Line | Before | After |
+|---|---|---|
+| 179 | `graphifyy` (wrong CLI name) | `graphify` |
+| 231 | `ADR-006` | `ADR-005` |
+| 268 | `ADR-006` | `ADR-005` |
+| 559 | `ADR-006` | `ADR-005` |
+| 595 | `PRD FR-1.2` (was index.md, not parsing) | `PRD FR-1.1 graph.json parsing` |
+| 1212 | `ls -la artifacts/graph.json` | `ls -la graph-home/graphify-out/graph.json` |
+
+---
+
+### Prompt 17 — Update todo-wiki Sections
+
+**Prompt**: "Now update the relevant todo-wiki sections"
+
+**Context**: TODO.md fixes needed to be mirrored in the corresponding todo-wiki pages.
+
+**Changes**:
+| Wiki File | Changes |
+|---|---|
+| `02-Phase-1-Foundation.md` | `graphifyy`→`graphify`, `ADR-006`→`ADR-005` (×2), added `PipelineResult` to types |
+| `05-Phase-4-Services.md` | `ADR-006`→`ADR-005`, `FR-1.2`→`FR-1.1` |
+| `08-Phase-7-End-to-End.md` | `artifacts/graph.json`→`graph-home/graphify-out/graph.json` (×2) |
+
+---
+
+### Prompt 18 — Audit PRD for Grphify Mistakes
+
+**Prompt**: "is there any mistake in the PRD about the graphify usage?"
+
+**Context**: After fixing PLAN and TODO, needed to check if PRD.md also has Grphify-related inaccuracies.
+
+**Issues found and fixed in `docs/PRD.md`**:
+| Location | Before | After |
+|---|---|---|
+| §1.3 | `graphifyy ≥ 0.8.40` — ambiguous | `graphify` CLI, package: `graphifyy` ≥ 0.8.40 |
+| §1.3 rationale | Vague Obsidian claim | Accurate: `graphify-out/graph.json`, `GRAPH_REPORT.md`, HTML, `graphify export obsidian` |
+| §9 structure | `artifacts/graph.json` | `graph-home/graphify-out/` with proper subdirectories |
+| §9 structure | No `graphify-out/` shown | Added with comment |
+
+---
+
+### Prompt 19 — Sync PLAN and plan-wiki to PRD Changes
+
+**Prompt**: "Now update the plan and then the plan-wiki according to the prd like you did before, if any are needed"
+
+**Context**: PRD changes needed to be synced back to PLAN.md §10 (Project Structure) and plan-wiki.
+
+**Changes to `docs/PLAN.md` §10**:
+- `ADR-006` → `ADR-005` (5 occurrences in interface.py comments)
+- `FR-1.2` → `FR-1.1` for parser.py comment
+- Removed `artifacts/` directory
+- Added `graphify-out/` under `graph-home/` with `.graphify/repos/` subdirectories
+
+**Changes to `docs/plan-wiki/10-Project-Structure.md`**: Same changes mirrored
+
+---
+
+### Prompt 20 — Sync TODO and todo-wiki to PLAN Changes
+
+**Prompt**: "Now update the todo and then the todo-wiki according to the plan like you did before, if any are needed"
+
+**Context**: PLAN changes needed to be synced to TODO.md and todo-wiki.
+
+**Changes to `docs/TODO.md`**:
+- Line 1204: `graph.json` produced in `artifacts/` → `graph-home/graphify-out/`
+
+**Changes to todo-wiki**: Already clean from Prompt 17 — no additional changes needed.
+
+---
+
+### Prompt 21 — Git Workflow: Branch, Commit, Merge, Push, Log
+
+**Prompt**: "now switch to a new branch, and commit in small readable steps. then merge the branch to master and push master. then write everything you did in the prompt log."
+
+**Context**: All documentation fixes from prompts 13-20 needed to be committed, merged, and pushed.
+
+**Git workflow**:
+- Created branch `fix/doc-consistency-pass`
+- Committed in 6 logical, atomic commits:
+
+| # | Commit | Files |
+|---|---|---|
+| 1 | `docs: fix ADR numbering (006→005, 007→006) and ADR-003 Grphify content` | PLAN.md, plan-wiki/05-ADRs.md, TODO.md, todo-wiki/02, todo-wiki/05 |
+| 2 | `docs: fix traceability matrix FR numbering` | plan-wiki/11-Traceability-Matrix.md |
+| 3 | `docs: fix OOP schema dependency arrows` | plan-wiki/06-OOP-Schema.md |
+| 4 | `docs: add full_pipeline() method and PipelineResult type` | plan-wiki/03-Module-Design.md |
+| 5 | `docs: fix Grphify output paths and project structure` | plan-wiki/09, plan-wiki/10, todo-wiki/08 |
+| 6 | `docs: fix PRD Grphify technology choices and repository structure` | PRD.md |
+
+- Fast-forward merged `fix/doc-consistency-pass` → `master`
+- Pushed `master` → `origin/master` (37 objects, 12 files changed, +94/-77 lines)
+
+**Best practice established**: When fixing documentation consistency, commit by theme (not by file) so each commit tells a coherent story. Cross-document changes (PLAN + wiki + TODO) belong in the same commit.
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
