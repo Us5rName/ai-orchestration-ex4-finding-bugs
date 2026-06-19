@@ -14,10 +14,10 @@
 
 **Prompt**: "Create a prd for ex04. the PRD must cite the hw. I chose to work with langgraph"
 
-**Context**: Starting SDLC Phase 1 — Requirements. User had `ex04.md` (homework spec) in the project root and needed a formal PRD that cites the homework throughout. User explicitly chose LangGraph (not CrewAI).
+**Context**: Starting SDLC Phase 1 — Requirements. User had `ASSIGNMENT.md` (homework spec, formerly `ex04.md`) in the project root and needed a formal PRD that cites the homework throughout. User explicitly chose LangGraph (not CrewAI).
 
 **Key decisions captured**:
-- PRD cites HW sections using `HW [§X]` format with direct Hebrew quotes from `ex04.md`
+- PRD cites HW sections using `HW [§X]` format with direct Hebrew quotes from `ASSIGNMENT.md`
 - Technology choices table documents LangGraph selection with HW [§6.1] rationale
 - Target codebase: `andela/buggy-python` (already cloned in `graph-home`)
 - 7 primary goals mapped to HW [§5.1-5.6]
