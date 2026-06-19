@@ -95,7 +95,7 @@ You MUST follow this sequence. Do not skip steps. (See skill: `project-setup`)
 - **Prompt Log**: Maintain a log of prompts used, context provided, and improvements made.
 - **Pre-Commit Logging**: Before every commit, document what was done in `docs/PROMPT_LOG.md` and update its `## Revision History` table.
 - **Git**: Meaningful commit messages, feature branches, and PR-based reviews.
-- **Commit Citations**: Every commit must cite the relevant doc(s) it implements.
+- **Commit Citations**: Every change must cite the relevant doc(s) it implements.
 
 ## 7. Research & Analysis (See skill: `research-analysis`)
 - **Sensitivity Analysis**: Conduct systematic parameter exploration (OAT, variance-based).
