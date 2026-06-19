@@ -1,615 +1,192 @@
-# Prompt Engineering Log — EX04
-
-| Field | Value |
-|---|---|
-| **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.00 |
-| **Date** | 2026-06-19 |
-
----
-
-## Session 2026-06-19
-
-### Prompt 1 — Create PRD
-
-**Prompt**: "Create a prd for ex04. the PRD must cite the hw. I chose to work with langgraph"
-
-**Context**: Starting SDLC Phase 1 — Requirements. User had `ASSIGNMENT.md` (homework spec, formerly `ex04.md`) in the project root and needed a formal PRD that cites the homework throughout. User explicitly chose LangGraph (not CrewAI).
-
-**Key decisions captured**:
-- PRD cites HW sections using `HW [§X]` format with direct Hebrew quotes from `ASSIGNMENT.md`
-- Technology choices table documents LangGraph selection with HW [§6.1] rationale
-- Target codebase: `andela/buggy-python` (already cloned in `graph-home`)
-- 7 primary goals mapped to HW [§5.1-5.6]
-- 36 functional requirements across 7 categories
-- 9 non-functional requirements from project standards
-
-**Output**: `docs/PRD.md` v1.00 — 12 sections, all citing HW
-
----
-
-### Prompt 2 — Create PLAN
-
-**Prompt**: "yes. Make sure to divide to independent modules and to make the project provider agnostic. In the plan, make sure to cite the PRD"
-
-**Context**: SDLC Phase 2 — Architecture. User wanted modular, provider-agnostic design with PRD citations throughout.
-
-**Key decisions captured**:
-- 9 independent modules: SDK, Graph, Vault, Agent, Analysis, Comparison, Provider, Shared
-- `ProviderInterface` ABC — no hardcoded vendor coupling
-- `ProviderFactory` creates providers from config (name + model + base_url + api_key)
-- 5 ADRs documenting architectural decisions
-- C4 model: Context, Container, Component diagrams
-- OOP class diagram with all classes
-- Traceability matrix mapping every PRD requirement to a file
-- All PRD citations use `[PRD §X.Y]` format
-
-**Output**: `docs/PLAN.md` v1.00 — 12 sections, full C4 model, all citing PRD
+# Prompt Engineering Log — EX04 [L1-625]
+ ## Session 2026-06-19 [L11-137]
+  ### Prompt 1 — Create PRD [L13-31]
+  ### Prompt 2 — Create PLAN [L31-51]
+  ### Prompt 3 — Create TODO [L51-68]
+  ### Prompt 4 — Add Table of Contents [L68-83]
+  ### Prompt 5 — Configurable Provider URL [L83-101]
+  ### Prompt 6 — Parallel Development [L101-137]
+ ## Standards Established [L137-486]
+  ### Prompt 7 — Turn PLAN into Wiki [L152-169]
+  ### Prompt 8 — Rename Wiki, Log Prompts, Commit [L169-184]
+  ### Prompt 9 — Turn TODO into Wiki [L184-202]
+  ### Prompt 10 — Log Prompts, Commit [L202-215]
+  ### Prompt 11 — Enhance CLAUDE.md with Project Context [L215-242]
+  ### Prompt 12 — Git Workflow: Branch, Merge, Push [L242-256]
+  ### Prompt 13 — Audit PLAN and PRD for Grphify Mistakes [L256-275]
+  ### Prompt 14 — Fix PLAN.md Mistakes [L275-292]
+  ### Prompt 15 — Update plan-wiki Sections [L292-309]
+  ### Prompt 16 — Audit TODO.md for Stale References [L309-327]
+  ### Prompt 17 — Update todo-wiki Sections [L327-342]
+  ### Prompt 18 — Audit PRD for Grphify Mistakes [L342-358]
+  ### Prompt 19 — Sync PLAN and plan-wiki to PRD Changes [L358-374]
+  ### Prompt 20 — Sync TODO and todo-wiki to PLAN Changes [L374-387]
+  ### Prompt 21 — Git Workflow: Branch, Commit, Merge, Push, Log [L387-413]
+  ### Prompt 22 — Implement Phase 1: Foundation [L413-450]
+  ### Prompt 23 — Audit Phase 2, Add Missing Types Task, Renumber [L450-486]
+ ## Session 2026-06-19 (continued) [L486-616]
+  ### Prompt 24 — Implement Phase 2 (Contract-First Approach) [L488-529]
+  ### Prompt 25 — Implement Phase 3: Provider Layer [L529-570]
+  ### Prompt 26 — Phase 4 Planning: Codebase Assessment, Approach, Gap Analysis [L570-616]
+ ## Session 2026-06-19 — Phase 4 Implementation (Partial) [L616-700]
+  ### Prompt 27 — Implement Phase 4: Config Manager & Gatekeeper [L618-660]
+  ### Prompt 28 — Implement Phase 4: Graph Service [L660-700]
+  ### Prompt 29 — Phase 4 Status Update & Next Agent Handoff [L700-720]
+  ### Prompt 30 — Audit & Fix Phase 4 [L720-760]
+  ### Prompt 31 — Fix Test Hang [L760-780]
 
 ---
 
-### Prompt 3 — Create TODO
+### Prompt 30 — Audit & Fix Phase 4
 
-**Prompt**: "Yes. Make sure you make every step independent - both in implementation and verification. Cite the plan."
+**Prompt**: "Read what he did in the journal, and start fixing, dry violations and line lengths semantically, or tests that weren't written well (ignored the API contract)."
 
-**Context**: SDLC Phase 3 — Task Tracking. User needed every task to be independently implementable and verifiable, with PLAN citations.
+**Context**: Audit Phase 4 code for CLAUDE.md violations and fix them.
 
-**Key decisions captured**:
-- 40 tasks across 8 phases
-- Each task has: Definition of Done, Independent Verification (exact commands), PLAN citation, PRD citation
-- Within-phase parallelism: tasks in same phase have zero cross-dependencies
-- Between-phase ordering only: Phase 1 → Phase 2 → ... → Phase 8
-- Verification commands are copy-paste ready
+**Issues found and fixed**:
 
-**Output**: `docs/TODO.md` v1.00 — 40 tasks, all independently verifiable
+| Issue | Severity | Fix | Files |
+|---|---|---|---|
+| Circular import (`gatekeeper` ↔ `providers/factory`) | 🔴 Critical | Lazy import of `ProviderFactory` inside `send()` | `gatekeeper.py` |
+| Ruff F401 (3 unused imports) | 🟡 | Removed unused imports | `test_runner.py`, `test_config_impl.py`, `test_gatekeeper_impl.py` |
+| Ruff B017 (blind exception assert) | 🟡 | Added `match` parameter to `pytest.raises` | `test_gatekeeper_send.py` |
+| Failing GraphRunner test | 🟡 | Pre-create `graph.json` in test fixture | `test_runner.py` |
+| `gatekeeper.py` 249 lines (>150) | 🟡 | Extracted `RateLimiter` to separate module | `gatekeeper.py` (147), `rate_limiter.py` (123) |
+| `test_types.py` 231 lines (>150) | 🟡 | Split into 3 focused test files | `test_graph_types.py` (74), `test_metrics_types.py` (67), `test_result_types.py` (84) |
+| `test_config_impl.py` 207 lines (>150) | 🟡 | Split into 3 focused test files | `test_config_load.py` (56), `test_config_get.py` (91), `test_config_validate.py` (57) |
+| `test_gatekeeper_impl.py` 205 lines (>150) | 🟡 | Split into 2 focused test files | `test_gatekeeper_load.py` (72), `test_gatekeeper_send.py` (148) |
+| `test_mocks.py` 154 lines (>150) | 🟡 | Split into 3 focused test files | `test_mock_graph_vault.py` (69), `test_mock_agent_analysis.py` (45), `test_mock_comparison_provider.py` (51) |
+| Hardcoded model in gatekeeper | 🟡 | Made `default_model` configurable via constructor | `gatekeeper.py` |
+| Tests access internal `_rate_limits` | 🟡 | Updated to use `_limiter.get_config()` | `test_gatekeeper_load.py` |
 
----
-
-### Prompt 4 — Add Table of Contents
-
-**Prompt**: "Add a table of contents to the PRD, PLAN and TODO in separate files"
-
-**Context**: Usability improvement — all three documents are long; needed quick navigation.
-
-**Changes**:
-- Added `## Table of Contents` section to `docs/PRD.md` (12 entries + sub-items)
-- Added `## Table of Contents` section to `docs/PLAN.md` (12 entries + sub-items)
-- Added `## Table of Contents` section to `docs/TODO.md` (40 tasks listed individually)
-
-**Output**: All three documents updated with internal anchor links
+**Validation results**:
+- `uv run ruff check src/ tests/` → 0 violations ✅
+- `uv run pytest` → 130 passed ✅
+- Coverage: 98.35% (required ≥85%) ✅
+- All files ≤150 lines ✅
 
 ---
 
-### Prompt 5 — Configurable Provider URL
+### Prompt 31 — Fix Test Hang
 
-**Prompt**: "can the provider URL be set as well? Cite the docs if you can"
+**Prompt**: "I see that each time the tests run they hang for a few seconds. what is the reason?"
 
-**Context**: User identified gap — `base_url` not configurable. Needed for custom endpoints (Ollama, proxy, local models).
+**Root cause**: `ApiGatekeeper.send()` calls `time.sleep(retry_delay)` between retry attempts. The default `retry_delay_seconds` is **5 seconds** with **3 retry attempts**, so `test_send_handles_provider_error` slept ~10 seconds before the exception propagated.
 
-**Answer**: Current design did NOT support configurable URLs. Only `name`, `model`, `api_key_env` in config.
+**Fix**: Changed `tests/unit/shared/test_gatekeeper_send.py` to use a temp rate-limits config with `retry_delay_seconds: 1` instead of the default 5. Also changed from `0` → `1` per user request (`0` is ambiguous — can mean "never").
 
-**Changes to PLAN**:
-- [PLAN §3.8] Added `base_url: str | None = None` to `ProviderInterface.chat()`
-- [PLAN §8.2] Updated API contract to include `base_url` parameter
-- [PLAN §9.1] Added `"base_url": null` to config schema
-- [PLAN §9.3] Added `OPENAI_BASE_URL` and `ANTHROPIC_BASE_URL` to .env-example
+**Before**: `rate_limits_path=""` (default 5s delay) → tests hang ~10s
+**After**: `rate_limits_path=_fast_retry_path()` (1s delay) → tests complete ~3s
 
-**Output**: PLAN updated — provider URL now fully configurable
+**Validation**: 130 passed in 3.16s, coverage 98.35%.
 
 ---
 
-### Prompt 6 — Parallel Development
+## Revision History
 
-**Prompt**: "can every module be run independently of the others? cite the docs in your answer"
+### Prompt 27 — Implement Phase 4: Config Manager & Gatekeeper
 
-Followed by: "The issue I'm trying to solve is to allow parallel development"
+**Prompt**: "Switch to a new branch and implement phase 4"
 
-**Context**: User identified that the current module dependency graph blocks parallel development — Agent depends on Graph + Vault + Provider, so Agent developer waits for 3 other modules.
-
-**Analysis provided**:
-- Shared, Provider, Graph, Vault → can run independently ✅
-- Agent, Analysis, Comparison → have cross-dependencies, cannot run independently ❌
-- Distinguished between "testable with mocks" vs "executable independently"
-
-**Solution implemented — Contract-First with Interface ABCs**:
-
-Changes to PLAN:
-- [PLAN §3] Rewrote module design section — all dependencies flow through `*Interface` ABCs
-- [PLAN §3.1] New dependency graph showing interface vs runtime separation
-- [PLAN §3.1.1] Service Interfaces table — 6 interfaces defined before implementation
-- [PLAN §3.1.2] Parallel development Gantt chart
-- [PLAN §3.2] SDK updated to use dependency injection (all services injected via constructor)
-- [PLAN §3.3-3.7] Each service now includes `interface.py` as first file
-- [ADR-006] New ADR documenting contract-first parallel development decision
-- [ADR-007] Renumbered old ADR-005
-- [PLAN §10] Project structure updated with all `interface.py` files
-
-Changes to TODO:
-- Added T1.05 — Define All Service Interfaces (Contract Layer) — gate for parallel work
-- Added T1.06 — Create Mock Implementations for All Services
-- Updated Phase 4 goal to emphasize interface-only imports
-- Updated statistics (42 tasks, parallel schedule noted)
-
-**Best practice established**: Always define `interface.py` ABC before implementation. Other modules import only the interface. SDK wires concrete implementations at runtime.
-
----
-
-## Standards Established
-
-| Standard | Description | Document |
-|---|---|---|
-| **HW Citation Format** | `HW [§X]` with Hebrew quote | PRD |
-| **PRD Citation Format** | `[PRD §X.Y]` or `[PRD FR-X.Y]` | PLAN, TODO |
-| **PLAN Citation Format** | `[PLAN §X.Y]` or `[ADR-XXX]` | TODO |
-| **Task Independence** | Every task has Definition of Done + Independent Verification commands | TODO |
-| **Contract-First** | `interface.py` ABC before implementation | PLAN §3, ADR-006 |
-| **Provider-Agnostic** | `ProviderInterface` ABC, configurable `base_url` | PLAN §3.8 |
-| **150-Line Limit** | No file exceeds 150 lines | PRD NFR-3 |
-| **Zero Ruff** | `ruff check` = 0 violations | PRD NFR-2 |
-
----
-
-### Prompt 7 — Turn PLAN into Wiki
-
-**Prompt**: "The plan is quite large. I want you to turn it into wiki, while not deleting original file. Later, the TODO will also be turned into a wiki"
-
-**Context**: The `docs/PLAN.md` is 1,370 lines — too large for comfortable navigation. User wanted a wiki-style split while preserving the original single-file document.
-
-**Implementation**:
-- Created `docs/wiki/` directory (later renamed to `docs/plan-wiki/`)
-- Split PLAN into 13 files: `Home.md` index + 12 section pages (`01-Architecture-Overview.md` through `12-Revision-History.md`)
-- Each page has **← Home / Prev → Next** navigation links at top and bottom
-- All Mermaid diagrams, tables, code blocks, and PRD citations preserved verbatim
-- Original `docs/PLAN.md` left untouched
-
-**Output**: `docs/plan-wiki/` — 13 files, fully navigable wiki
-
----
-
-### Prompt 8 — Rename Wiki, Log Prompts, Commit
-
-**Prompt**: "I changed the name of wiki to plan-wiki. Add the prompts to the prompt log according to the instructions and commit your changes to a new branch in small readable commits"
-
-**Context**: User renamed `docs/wiki/` → `docs/plan-wiki/`. Needed prompt log entries and git commits.
-
-**Changes**:
-- Updated `docs/PROMPT_LOG.md` with Prompt 7 and Prompt 8 entries
-- Created feature branch `docs/plan-wiki` for commit work
-- Committed wiki files and prompt log updates in small, atomic commits
-
-**Best practice established**: Large documentation files should be split into wiki format for navigability while keeping the original as source of record.
-
----
-
-### Prompt 9 — Turn TODO into Wiki
-
-**Prompt**: "The TODO is quite large. I want you to turn it into wiki, while not deleting original file.\nPlan was already turned into a wiki"
-
-**Context**: The `docs/TODO.md` is 1,577 lines — too large for comfortable navigation. User wanted the same wiki-style split that was already applied to PLAN via `docs/plan-wiki/`.
-
-**Implementation**:
-- Created `docs/todo-wiki/` directory following `docs/plan-wiki/` convention
-- Split TODO into 13 files: `Home.md` index + 12 section pages (`01-Phase-Overview.md` through `12-Revision-History.md`)
-- Each page has **← Back to Home** navigation link at top and source reference at bottom
-- All task tables, checkboxes, verification commands, and Mermaid diagrams preserved verbatim
-- Phase 4 (Services) grouped by sub-service (Graph, Vault, Agent, Analysis) with task index
-- Original `docs/TODO.md` left untouched
-
-**Output**: `docs/todo-wiki/` — 13 files, fully navigable wiki
-
----
-
-### Prompt 10 — Log Prompts, Commit
-
-**Prompt**: "Add the prompts to the prompt log according to the instructions and commit your changes to a new branch in small readable commits"
-
-**Context**: Wiki files created in Prompt 9 needed prompt log entries and git commits.
-
-**Changes**:
-- Updated `docs/PROMPT_LOG.md` with Prompt 9 and Prompt 10 entries
-- Created feature branch for commit work
-- Committed wiki files and prompt log updates in small, atomic commits
-
----
-
-### Prompt 11 — Enhance CLAUDE.md with Project Context
-
-**Prompt**: "Do you have suggestion on things to add to claude.md now that the todo and plan wiki and the prd exist?"
-
-**Context**: PRD, PLAN, TODO, plan-wiki, and todo-wiki all existed. `CLAUDE.md` was a generic process/rules document with no project-specific context. An agent reading it wouldn't know what this project actually is.
-
-**Suggestions provided**:
-- Add project identity (course, goal, package name, assignment spec reference)
-- Add documentation navigation table mapping each doc to purpose and when to consult
-- Explicitly direct agents to read wiki versions instead of large PLAN.md/TODO.md
-- Add deliverables checklist from assignment spec
-- Add project-specific rules (LLM providers, LangGraph, Grphify, comparison methodology)
-- Add configuration sources table
-- Add error escalation protocol
-- Reference traceability matrix
-
-**Changes**:
-- Added section `## 0. Project Context` to `CLAUDE.md` with:
-  - Project identity (course, goal, package, assignment spec)
-  - Documentation Navigation table with wiki-first guidance
-  - Explicit rule: "Do not read `docs/PLAN.md` or `docs/TODO.md` directly"
-- Existing sections 1–8 left untouched
-
-**Best practice established**: `CLAUDE.md` should be a navigation guide + guardrails, not a duplicate of wiki content. Point to docs, don't repeat them.
-
----
-
-### Prompt 12 — Git Workflow: Branch, Merge, Push
-
-**Prompt**: "switch to a new branch, and merge. push to origin, merge to master and then push master to origin."
-
-**Context**: Needed to commit CLAUDE.md changes, push feature branch, merge to master, and push master.
-
-**Changes**:
-- Committed `CLAUDE.md` on `phase-1-foundation` branch
-- Pushed `phase-1-foundation` → `origin/phase-1-foundation`
-- Merged `phase-1-foundation` into `master` (fast-forward)
-- Pushed `master` → `origin/master`
-
----
-
-### Prompt 13 — Audit PLAN and PRD for Grphify Mistakes
-
-**Prompt**: "Please read the full plan file (not the wiki) and the full PRD file and tell me if there are any mistakes about it. I meant if graphify usage is correctly mentioned and described."
-
-**Context**: User had access to the Grphify agent skill and wanted to verify that PLAN.md and PRD.md accurately describe Grphify's actual behavior, outputs, and CLI usage.
-
-**Mistakes found**:
-1. **ADR-003**: CLI name `graphifyy` (wrong) — actual CLI is `graphify`; `graphifyy` is only the pip package name
-2. **ADR-003**: Dismissed library import entirely — Grphify has importable Python API (`from graphify.build import build_from_json`, `graphify query`, etc.)
-3. **Config**: `output_dir: "./artifacts"` doesn't map to any real Grphify parameter — Grphify writes to `<scan_root>/graphify-out/`
-4. **Missing outputs**: `graph.html`, `.graphify_analysis.json`, `.graphify_labels.json`, `cost.json` not documented
-5. **Obsidian ambiguity**: No decision on whether Vault Service uses Grphify's `export obsidian` or builds from scratch
-6. **Query capability**: `graphify query/path/explain` not leveraged as potential extension
-7. **`--directed` flag**: Not mentioned (preserves edge direction for bug investigation)
-
-**Output**: Detailed audit report with severity ratings for each issue
-
----
-
-### Prompt 14 — Fix PLAN.md Mistakes
-
-**Prompt**: "Please fix the actual mistakes in the plan. no adr 005 is missing - it's a numbering issue."
-
-**Context**: User confirmed the Grphify audit findings and requested fixes in PLAN.md. Clarified that ADR-005 gap is intentional (numbering issue, not missing content).
-
-**Changes to `docs/PLAN.md`**:
-- **ADR numbering**: Renumbered ADR-006→005, ADR-007→006 (sequential 001-006)
-- **ADR-003**: Fixed CLI name `graphifyy` → `graphify`. Added hybrid approach: CLI for initial build, library API for investigation. Corrected output path to `graphify-out/graph.json`
-- **OOP Schema**: Removed `Ex04SDK --> NaiveRunner` and `Ex04SDK --> GraphGuidedRunner` (SDK must delegate through services). Fixed Gatekeeper direction: `APIGatekeeper --> Provider` (was reversed)
-- **SDK Module**: Added missing `full_pipeline()` method signature
-- **Shared Types**: Added `PipelineResult` type (was referenced but undefined)
-- **Config**: Replaced fictional `output_dir: "./artifacts"` with `output_subdir: "graphify-out"`
-- **Traceability Matrix**: Corrected all FR-1.x and FR-2.x mappings to match PRD numbering
-
----
-
-### Prompt 15 — Update plan-wiki Sections
-
-**Prompt**: "Now update the relevant plan-wiki sections"
-
-**Context**: PLAN.md fixes needed to be mirrored in the corresponding plan-wiki pages.
-
-**Changes**:
-| Wiki File | Changes |
-|---|---|
-| `05-ADRs.md` | ADR-003 content fix, renumbered ADR-006→005, ADR-007→006 |
-| `06-OOP-Schema.md` | Fixed SDK direct calls, fixed Gatekeeper direction, added full_pipeline |
-| `03-Module-Design.md` | Added full_pipeline(), added PipelineResult type |
-| `09-Configuration-Schema.md` | Fixed graphify config |
-| `11-Traceability-Matrix.md` | Fixed FR numbering |
-
----
-
-### Prompt 16 — Audit TODO.md for Stale References
-
-**Prompt**: "is there anything that needs to be updated in the big TODO.md file (not the wiki)?"
-
-**Context**: After fixing PLAN.md, needed to verify TODO.md doesn't have stale references to old ADR numbers, wrong package names, or incorrect paths.
-
-**Issues found and fixed in `docs/TODO.md`**:
-| Line | Before | After |
-|---|---|---|
-| 179 | `graphifyy` (wrong CLI name) | `graphify` |
-| 231 | `ADR-006` | `ADR-005` |
-| 268 | `ADR-006` | `ADR-005` |
-| 559 | `ADR-006` | `ADR-005` |
-| 595 | `PRD FR-1.2` (was index.md, not parsing) | `PRD FR-1.1 graph.json parsing` |
-| 1212 | `ls -la artifacts/graph.json` | `ls -la graph-home/graphify-out/graph.json` |
-
----
-
-### Prompt 17 — Update todo-wiki Sections
-
-**Prompt**: "Now update the relevant todo-wiki sections"
-
-**Context**: TODO.md fixes needed to be mirrored in the corresponding todo-wiki pages.
-
-**Changes**:
-| Wiki File | Changes |
-|---|---|
-| `02-Phase-1-Foundation.md` | `graphifyy`→`graphify`, `ADR-006`→`ADR-005` (×2), added `PipelineResult` to types |
-| `05-Phase-4-Services.md` | `ADR-006`→`ADR-005`, `FR-1.2`→`FR-1.1` |
-| `08-Phase-7-End-to-End.md` | `artifacts/graph.json`→`graph-home/graphify-out/graph.json` (×2) |
-
----
-
-### Prompt 18 — Audit PRD for Grphify Mistakes
-
-**Prompt**: "is there any mistake in the PRD about the graphify usage?"
-
-**Context**: After fixing PLAN and TODO, needed to check if PRD.md also has Grphify-related inaccuracies.
-
-**Issues found and fixed in `docs/PRD.md`**:
-| Location | Before | After |
-|---|---|---|
-| §1.3 | `graphifyy ≥ 0.8.40` — ambiguous | `graphify` CLI, package: `graphifyy` ≥ 0.8.40 |
-| §1.3 rationale | Vague Obsidian claim | Accurate: `graphify-out/graph.json`, `GRAPH_REPORT.md`, HTML, `graphify export obsidian` |
-| §9 structure | `artifacts/graph.json` | `graph-home/graphify-out/` with proper subdirectories |
-| §9 structure | No `graphify-out/` shown | Added with comment |
-
----
-
-### Prompt 19 — Sync PLAN and plan-wiki to PRD Changes
-
-**Prompt**: "Now update the plan and then the plan-wiki according to the prd like you did before, if any are needed"
-
-**Context**: PRD changes needed to be synced back to PLAN.md §10 (Project Structure) and plan-wiki.
-
-**Changes to `docs/PLAN.md` §10**:
-- `ADR-006` → `ADR-005` (5 occurrences in interface.py comments)
-- `FR-1.2` → `FR-1.1` for parser.py comment
-- Removed `artifacts/` directory
-- Added `graphify-out/` under `graph-home/` with `.graphify/repos/` subdirectories
-
-**Changes to `docs/plan-wiki/10-Project-Structure.md`**: Same changes mirrored
-
----
-
-### Prompt 20 — Sync TODO and todo-wiki to PLAN Changes
-
-**Prompt**: "Now update the todo and then the todo-wiki according to the plan like you did before, if any are needed"
-
-**Context**: PLAN changes needed to be synced to TODO.md and todo-wiki.
-
-**Changes to `docs/TODO.md`**:
-- Line 1204: `graph.json` produced in `artifacts/` → `graph-home/graphify-out/`
-
-**Changes to todo-wiki**: Already clean from Prompt 17 — no additional changes needed.
-
----
-
-### Prompt 21 — Git Workflow: Branch, Commit, Merge, Push, Log
-
-**Prompt**: "now switch to a new branch, and commit in small readable steps. then merge the branch to master and push master. then write everything you did in the prompt log."
-
-**Context**: All documentation fixes from prompts 13-20 needed to be committed, merged, and pushed.
-
-**Git workflow**:
-- Created branch `fix/doc-consistency-pass`
-- Committed in 6 logical, atomic commits:
-
-| # | Commit | Files |
-|---|---|---|
-| 1 | `docs: fix ADR numbering (006→005, 007→006) and ADR-003 Grphify content` | PLAN.md, plan-wiki/05-ADRs.md, TODO.md, todo-wiki/02, todo-wiki/05 |
-| 2 | `docs: fix traceability matrix FR numbering` | plan-wiki/11-Traceability-Matrix.md |
-| 3 | `docs: fix OOP schema dependency arrows` | plan-wiki/06-OOP-Schema.md |
-| 4 | `docs: add full_pipeline() method and PipelineResult type` | plan-wiki/03-Module-Design.md |
-| 5 | `docs: fix Grphify output paths and project structure` | plan-wiki/09, plan-wiki/10, todo-wiki/08 |
-| 6 | `docs: fix PRD Grphify technology choices and repository structure` | PRD.md |
-
-- Fast-forward merged `fix/doc-consistency-pass` → `master`
-- Pushed `master` → `origin/master` (37 objects, 12 files changed, +94/-77 lines)
-
-**Best practice established**: When fixing documentation consistency, commit by theme (not by file) so each commit tells a coherent story. Cross-document changes (PLAN + wiki + TODO) belong in the same commit.
-
----
-
-### Prompt 22 — Implement Phase 1: Foundation
-
-**Prompt**: "implement phase 1. remember to check the success criteria at the end."
-
-**Context**: Phase 1 (Foundation) establishes project structure, configuration, and tooling — no business logic yet. Six tasks: directory structure, config files, pyproject.toml, base data types, service interfaces, mock implementations.
+**Context**: Phase 4 — Services. Implement all domain services and shared layer contracts.
 
 **Implementation details**:
 
-| Task | Description | Files Created |
-|---|---|---|
-| T1.01 | Project directory structure + stubs | 51 Python files (src/ex04/…, config/, tests/, obsidian/, graph-home/, reports/) |
-| T1.02 | Configuration files | config/setup.json, config/rate_limits.json, .env-example, .gitignore updated |
-| T1.03 | pyproject.toml | Updated: ruff config, pytest config (85% coverage), dependencies (langgraph, graphifyy, openai, anthropic, pydantic), hatch build for src layout |
-| T1.04 | Base data types | src/ex04/shared/types.py (102 lines), types_metrics.py (81 lines), types_results.py (89 lines) — split to respect 150-line limit |
-| T1.05 | Service interfaces | 5 ABCs: GraphServiceInterface, VaultServiceInterface, AgentServiceInterface, AnalysisServiceInterface, ComparisonServiceInterface |
-| T1.06 | Mock implementations | 6 mocks + __init__.py + 14 verification tests |
+| Task | Status | Files | Tests | Notes |
+|---|---|---|---|---|
+| **T4.00** — ConfigManager | ✅ Done | `src/ex04/shared/config.py` | 15/15 passed | Replaced ABC with concrete impl. `load()`, `get()`, `validate()`. File: 126 lines (<150). |
+| **T4.002** — ApiGatekeeper | ✅ Done | `src/ex04/shared/gatekeeper.py` | 13/13 passed | Rate limiting, FIFO queue, retry logic, call logging. File: ~180 lines (exceeds 150 — needs fix). |
+| **T4.01** — GraphRunner | ✅ Done | `src/ex04/services/graph/runner.py` | 4/5 passed | Subprocess execution. 1 test failing (see below). |
+| **T4.02** — GraphParser | ✅ Done | `src/ex04/services/graph/parser.py` | 7/7 passed | Parses graph.json → GraphData. |
+| **T4.03** — GraphAnalyzer | ✅ Done | `src/ex04/services/graph/analyzer.py` | 6/6 passed | God nodes, centrality, communities. |
+| **T4.04–T4.06** — Vault Service | 🔶 Not started | — | — | Next tasks. |
+| **T4.16–T4.18** — Analysis Service | 🔶 Not started | — | — | Next tasks. |
+| **T4.07–T4.15** — Agent Service | 🔶 Not started | — | — | Last (depends on Graph + Vault + Gatekeeper). |
 
-**Validation results**:
-- `uv run ruff check .` — 0 violations
-- `uv run pytest tests/unit/test_mocks.py -v` — 14/14 passed
-- Test coverage — 97.4% (≥85% required)
-- File line limits — max 102 lines (all under 150)
-- All types importable from `ex04.shared.types`
-- All interfaces importable
+**Validation**:
+- `uv run ruff check` — 0 violations on modified files
+- ConfigManager: 15/15 tests pass, 98% module coverage
+- Gatekeeper: 13/13 tests pass
+- GraphService: 17/18 tests pass (1 runner test failing)
 
-**Issues encountered and resolved**:
-1. `graphify>=0.8.40` not on PyPI — fixed to `graphifyy>=0.8.40` (package name on PyPI is `graphifyy`, import name is `graphify`)
-2. `uv sync` failed — resolved by adding `[tool.hatch.build.targets.wheel] packages = ["src/ex04"]` and `uv pip install -e .`
-3. `TokenMetrics().model_dump()` failed — dataclass, not Pydantic. Fixed to `asdict(TokenMetrics())`
-4. `types.py` was 222 lines (exceeds 150-line limit) — split into types.py, types_metrics.py, types_results.py with re-exports
-5. Cross-module type references in types_results.py — added `from ex04.shared.types_metrics import ComparisonReport, TokenMetrics`
-6. ProviderFactory.create/register uncovered (78%) — expected, requires Phase 3 provider implementations. Documented in todo-wiki/12-Revision-History.md v1.01.
-
-**Best practice established**: When splitting a large types file to respect the 150-line limit, keep the original import path working via re-exports in the main types.py. This avoids updating every downstream import across interfaces and tests.
+**Issues encountered**:
+1. Circular import in config.py — fixed by putting both interface and impl in same file
+2. Gatekeeper file exceeds 150 lines — needs refactoring (extract helper methods or split)
+3. GraphRunner `test_execute_creates_output_dir` — failing because runner checks graph.json exists after subprocess.run, but mock doesn't create it. Fix needed: create graph.json in test before calling execute().
 
 ---
 
-### Prompt 23 — Audit Phase 2, Add Missing Types Task, Renumber
+### Prompt 28 — Implement Phase 4: Graph Service
 
-**Prompt**: "what does phase 2 entail?" → "any other information that you need to get from the plan wiki for the phase?" → "that it's a good idea to put it before the other tasks, because they depend on it. what do you think?" → "please update in the wiki and in the actual file, and fix the numbering"
+**Prompt**: Continue Phase 4 with Graph Service
 
-**Context**: Reviewed Phase 2 (Shared Layer) tasks against PLAN wiki §3.9. Found that `types.py` (6 shared data classes) was defined in the Module Design but had no corresponding task in TODO.md. Additionally `ProviderResponse` from API Contract §8.2 was also missing.
+**Implementation details**:
 
-**Findings**:
+| Task | Status | Files | Tests | Notes |
+|---|---|---|---|---|
+| **T4.01** — GraphRunner | ✅ Done | `src/ex04/services/graph/runner.py` | 4/5 passed | Subprocess execution via `graphify` CLI. |
+| **T4.02** — GraphParser | ✅ Done | `src/ex04/services/graph/parser.py` | 7/7 passed | Parses nodes→Entity, edges→Relationship, communities→Community. |
+| **T4.03** — GraphAnalyzer | ✅ Done | `src/ex04/services/graph/analyzer.py` | 6/6 passed | BFS community detection, degree centrality ranking. |
 
-| Gap | Source | Impact |
-|---|---|---|
-| `types.py` missing from tasks | PLAN §3.9 | Gatekeeper, TokenTracker have no `TokenMetrics`, `ProviderResponse` to use |
-| `ProviderResponse` missing | API Contract §8.2 | Gatekeeper's `send()` has no return type defined |
-| Task ordering wrong | Dependency analysis | Types should be T2.02 (before Config, Gatekeeper, TokenTracker) |
-
-**Changes made**:
-
-| File | Change |
-|---|---|
-| `docs/TODO.md` | Added T2.02 (Shared Types), renumbered T2.02→T2.06, updated TOC, updated mermaid dependency diagram |
-| `docs/todo-wiki/03-Phase-2-Shared-Layer.md` | Added T2.02 (Shared Types), renumbered all tasks, updated task table |
-
-**New task order**:
-
-| Task | What | Depends On |
-|---|---|---|
-| T2.01 | Version Module | — |
-| T2.02 | **Shared Types** | — |
-| T2.03 | Config Manager | T2.02 |
-| T2.04 | API Gatekeeper | T2.02, T2.03 |
-| T2.05 | Token Tracker | T2.02 |
-| T2.06 | Shared `__init__.py` | all above |
-
-**Best practice established**: Always cross-reference the todo-wiki against the plan-wiki Module Design (§3.x) and API Contract (§8.x) before starting implementation. Missing types/tasks create blockers downstream.
+**Test approach**: Used temp directories with mock JSON files — simple and realistic. Only needed `@patch("subprocess.run")` for runner tests.
 
 ---
 
-## Session 2026-06-19 (continued)
+### Prompt 29 — Phase 4 Status Update & Next Agent Handoff
 
-### Prompt 24 — Implement Phase 2 (Contract-First Approach)
+**Status**: Phase 4 partially complete. Next agent should continue from here.
 
-**Context**: Phase 2 — Shared Layer. The user wanted to implement Phase 2 using a contract-first approach where interfaces/contracts are defined in Phase 2 but actual implementations happen in later phases.
+**Current branch**: `phase4-services`
 
-**Purpose**: Implement Phase 2 with contracts only, not full implementations. Document which phase implements each contract.
+**Completed tasks**:
+- ✅ T4.00 — ConfigManager (15/15 tests)
+- ✅ T4.002 — ApiGatekeeper (13/13 tests)
+- ✅ T4.01 — GraphRunner (4/5 tests — 1 fix needed)
+- ✅ T4.02 — GraphParser (7/7 tests)
+- ✅ T4.03 — GraphAnalyzer (6/6 tests)
 
-**Key decisions**:
-- Version module: implemented fully (trivial, no deferral)
-- Shared types: already implemented in separate files (types.py, types_metrics.py, types_results.py) — kept as-is
-- Config Manager: `ConfigManagerInterface` ABC only — actual impl in **Phase 4**
-- API Gatekeeper: `GatekeeperInterface` ABC only — actual impl in **Phase 4**
-- Token Tracker: `TokenTrackerInterface` ABC only — actual impl in **Phase 6**
-- `__init__.py`: exports all types + interfaces
+**Remaining tasks** (in priority order):
+1. Fix GraphRunner test: `test_execute_creates_output_dir` — create graph.json in test before calling execute()
+2. Fix Gatekeeper file: exceeds 150 lines — extract helper methods or split
+3. **T4.04–T4.06** — Vault Service (builder, navigator, note_manager)
+4. **T4.16–T4.18** — Analysis Service (reverse_engineer, diagram_gen, bug_report)
+5. **T4.07–T4.15** — Agent Service (state, workflow, 7 nodes)
 
-**Files created/modified**:
-- `src/ex04/shared/version.py` — `__version__ = "1.00"`
-- `src/ex04/shared/config.py` — `ConfigManagerInterface` ABC
-- `src/ex04/shared/gatekeeper.py` — `GatekeeperInterface` ABC
-- `src/ex04/shared/token_tracker.py` — `TokenTrackerInterface` ABC
-- `src/ex04/shared/__init__.py` — exports all types + interfaces
-- `tests/unit/shared/test_version.py` — 3 tests
-- `tests/unit/shared/test_types.py` — 22 tests
-- `tests/unit/shared/test_config.py` — 9 tests
-- `tests/unit/shared/test_gatekeeper.py` — 7 tests
-- `tests/unit/shared/test_token_tracker.py` — 10 tests
-- `docs/todo-wiki/03-Phase-2-Shared-Layer.md` — updated with contract-first approach
-- `docs/todo-wiki/02-Phase-1-Foundation.md` — added Contract → Implementation Mapping
-- `docs/todo-wiki/12-Revision-History.md` — updated to v1.02
-- `src/ex04/providers/interface.py` — added Phase 3 implementation comment
-- `src/ex04/services/graph/interface.py` — added Phase 4 implementation comment
-- `src/ex04/services/vault/interface.py` — added Phase 4 implementation comment
-- `src/ex04/services/agent/interface.py` — added Phase 4 implementation comment
-- `src/ex04/services/analysis/interface.py` — added Phase 4 implementation comment
-- `src/ex04/services/comparison/interface.py` — added Phase 6 implementation comment
+**Key patterns to follow**:
+- TDD: write tests first (RED), implement (GREEN), verify
+- Temp directories with mock JSON for filesystem tests
+- Only patch `subprocess.run` for subprocess-based tests
+- Keep files ≤150 lines
+- Zero ruff violations
+- All config from JSON files, nothing hardcoded
 
-**Validation**: 48/48 tests pass, ruff 0 violations, shared layer 100% coverage.
+**Files created for test directories** (empty, need content):
+- `tests/unit/services/vault/` — needs test files
+- `tests/unit/services/analysis/` — needs test files
+- `tests/unit/services/agent/nodes/` — needs test files
 
-**Best practice established**: Add phase implementation comments to every interface stub so developers know exactly which phase to implement it. Document coverage gaps with explicit phase mappings.
+**Interface contracts already defined** (Phase 2):
+- `src/ex04/services/graph/interface.py` — GraphServiceInterface
+- `src/ex04/services/vault/interface.py` — VaultServiceInterface
+- `src/ex04/services/agent/interface.py` — AgentServiceInterface
+- `src/ex04/services/analysis/interface.py` — AnalysisServiceInterface
 
----
-
-### Prompt 25 — Implement Phase 3: Provider Layer
-
-**Context**: Phase 3 — Provider Layer. The user wanted to implement the provider-agnostic LLM abstraction with OpenAI and Anthropic providers, following T3.01–T3.05 from TODO.md.
-
-**Purpose**: Build a provider-agnostic LLM abstraction with `ProviderInterface` ABC, `Message` TypedDict, `ProviderResponse` dataclass, `ProviderFactory`, and concrete implementations for OpenAI and Anthropic.
-
-**Key decisions**:
-- `ProviderResponse` dataclass updated in `shared/types_results.py`: replaced `content`/`raw` fields with `text`/`provider`/`timestamp` to match API Contract §8.2 and TODO T3.01 spec
-- `Message` TypedDict defined in `interface.py` with `role` and `content` keys
-- `ProviderFactory` uses registry pattern with automatic registration at import time
-- Factory validates API key environment variables before instantiation
-- OpenAI provider uses `openai` SDK + `tiktoken` for token counting
-- Anthropic provider uses `anthropic` SDK + native `count_tokens()` for token counting
-- All external API calls designed to flow through Gatekeeper (implemented in Phase 4)
-- `tiktoken>=0.7.0` added to `pyproject.toml` dependencies
-- All tests use mocked clients — no real API calls
-
-**Files created/modified**:
-- `pyproject.toml` — added `tiktoken>=0.7.0` dependency
-- `uv.lock` — updated lockfile with tiktoken + regex dependencies
-- `src/ex04/shared/types_results.py` — updated `ProviderResponse`: `content`→`text`, `raw`→`provider`+`timestamp`
-- `src/ex04/providers/interface.py` — `ProviderInterface` ABC with proper types, `Message` TypedDict, removed `ProviderFactory`
-- `src/ex04/providers/factory.py` — `ProviderFactory` with registry pattern and API key validation
-- `src/ex04/providers/openai_provider.py` — OpenAI implementation using `openai` SDK + `tiktoken`
-- `src/ex04/providers/anthropic_provider.py` — Anthropic implementation using `anthropic` SDK
-- `src/ex04/providers/__init__.py` — public exports via `__all__`
-- `tests/mocks/mock_provider.py` — updated to use new `ProviderResponse` fields
-- `tests/unit/shared/test_types.py` — updated `ProviderResponse` tests for new fields
-- `tests/unit/test_mocks.py` — updated `result.content`→`result.text`
-- `tests/unit/providers/__init__.py` — test package init
-- `tests/unit/providers/test_interface.py` — 15 tests for `Message`, `ProviderResponse`, `ProviderInterface`
-- `tests/unit/providers/test_factory.py` — 6 tests for factory creation, validation, registry
-- `tests/unit/providers/test_openai_provider.py` — 4 tests for OpenAI provider with mocked client
-- `tests/unit/providers/test_anthropic_provider.py` — 4 tests for Anthropic provider with mocked client
-
-**Validation**: 83/83 tests pass, ruff 0 violations, 100% global coverage.
-
-**Best practice established**: Update shared dataclasses before provider implementations to ensure all consumers use the same contract. Use registry pattern for factory to avoid circular imports — providers register themselves at import time.
-
----
-
-### Prompt 26 — Phase 4 Planning: Codebase Assessment, Approach, Gap Analysis
-
-**Prompt**: "what does phase 4 entail?" → "any information you need from the plan?" → "before that, read you cauade.md and load the skills that will help you" → "yes. of course, without implementing the phase. you can also check the prompt log" → "discuss approach" → "switch to a new branch and update the docs"
-
-**Context**: Comprehensive codebase state assessment for Phase 4 implementation planning. Loaded 6 relevant skills (modular-design, sdk-architecture, tdd-testing, code-review-config, api-gatekeeper). Reviewed all Phase 1–3 deliverables, service interfaces, shared layer contracts, provider implementations, and configuration files.
-
-**Codebase state findings**:
-
-| Area | Status |
-|---|---|
-| Shared types | ✅ Fully implemented (types.py, types_metrics.py, types_results.py) |
-| Service interfaces | ✅ All 5 ABCs defined with Phase 4 implementation comments |
-| Shared contracts | 🔶 ABCs only — ConfigManagerInterface, GatekeeperInterface need Phase 4 impl |
-| Provider layer | ✅ Fully implemented (OpenAI, Anthropic, Factory, registry pattern) |
-| Service stubs | 🔶 All implementation files exist as single-line docstrings |
-| SDK | 🔶 Stub (docstring only) |
-
-**Gap identified**: `ConfigManagerInterface` and `GatekeeperInterface` contracts exist from Phase 2 with "impl in P4" comments, but no corresponding tasks in Phase 4 TODO. All domain services depend on Config; Agent nodes depend on Gatekeeper.
-
-**Approach agreed**:
-
-| Step | Task | Rationale |
-|---|---|---|
-| 1 | T4.00 — Config Manager impl | Everything needs config |
-| 2 | T4.002 — Gatekeeper impl | Agent nodes need LLM routing; depends on Config |
-| 3 | T4.01–T4.03 — Graph Service | No service dependencies, testable in isolation |
-| 4 | T4.04–T4.06 — Vault Service | No service dependencies, parallel with Graph |
-| 5 | T4.16–T4.18 — Analysis Service | Depends on Graph, simpler than Agent |
-| 6 | T4.07–T4.15 — Agent Service | Depends on Graph + Vault + Gatekeeper — last |
-
-**Documentation changes**:
-
-| File | Change |
-|---|---|
-| `docs/todo-wiki/05-Phase-4-Services.md` | Added T4.00, T4.002 with DoD, verification commands |
-| `docs/todo-wiki/10-Dependency-Summary.md` | Added T400, T4002 nodes + dependency edges |
-| `docs/todo-wiki/11-Statistics.md` | Updated totals: 42→44 tasks, 37→39 P0, ~28→~29.5h |
-| `docs/todo-wiki/12-Revision-History.md` | Added v1.04 entry |
-| `docs/TODO.md` | Mirrored all wiki changes (TOC, Phase 4 section, diagram, stats, revision) |
-| `docs/PROMPT_LOG.md` | Added this Prompt 26 entry |
-| Git | Created `phase4-services` branch |
-
-**Branch**: `phase4-services`
+**Existing stub files** (need implementation):
+- `src/ex04/services/vault/builder.py`
+- `src/ex04/services/vault/navigator.py`
+- `src/ex04/services/vault/note_manager.py`
+- `src/ex04/services/analysis/reverse_engineer.py`
+- `src/ex04/services/analysis/diagram_gen.py`
+- `src/ex04/services/analysis/bug_report.py`
+- `src/ex04/services/agent/state.py`
+- `src/ex04/services/agent/workflow.py`
+- `src/ex04/services/agent/nodes/knowledge.py`
+- `src/ex04/services/agent/nodes/analysis.py`
+- `src/ex04/services/agent/nodes/suspect.py`
+- `src/ex04/services/agent/nodes/inspect.py`
+- `src/ex04/services/agent/nodes/rootcause.py`
+- `src/ex04/services/agent/nodes/fix.py`
+- `src/ex04/services/agent/nodes/verify.py`
 
 ---
 
@@ -622,3 +199,6 @@ Changes to TODO:
 | 1.02 | 2026-06-19 | Added Prompt 24 — Phase 2 contract-first implementation, documentation updates, and git commits to phase2 branch (4 commits) |
 | 1.03 | 2026-06-19 | Added Prompt 25 — Phase 3 provider layer implementation, ProviderResponse contract update, 21 new provider tests |
 | 1.04 | 2026-06-19 | Added Prompt 26 — Phase 4 planning: codebase state assessment, approach discussion, gap analysis, documentation updates, branch creation |
+| 1.05 | 2026-06-19 | Added Prompt 27 — Phase 4 partial implementation: ConfigManager, Gatekeeper, Graph Service (runner/parser/analyzer). 51/52 tests pass. 1 test fix needed. |
+| 1.06 | 2026-06-19 | Added Prompt 30 — Audit and fix Phase 4: circular import, Ruff violations, line counts, failing test, hardcoded values. 130/130 tests pass, 98.35% coverage, 0 Ruff violations, all files ≤150 lines. |
+| 1.07 | 2026-06-19 | Added Prompt 31 — Fix test hang: gatekeeper retry sleep (5s default → 1s in tests). Tests complete ~3s instead of hanging. |
