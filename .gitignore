@@ -21,5 +21,10 @@ ex04.pdf
 *.swp
 *.swo
 
+<<<<<<< HEAD
 #Misc
 .coverage
+=======
+# Assignment spec (kept locally, not tracked in repo)
+ASSIGNMENT.md
+>>>>>>> 5bb4f5f (Merge pull request #1 from Us5rName/docs/init-claude-md-and-rename-spec)

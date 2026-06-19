@@ -60,6 +60,7 @@
    - [T6.02 — Graph-Guided Runner](#t602--graph-guided-runner)
    - [T6.03 — Metrics Calculator](#t603--metrics-calculator)
    - [T6.04 — Comparison Report Generator](#t604--comparison-report-generator)
+   - [T6.05 — Implement an Additional Extension](#t605--implement-an-additional-extension)
 8. [Phase 7 — End-to-End Execution](#8-phase-7--end-to-end-execution)
    - [T7.01 — Run Grphify on Target Codebase](#t701--run-grphify-on-target-codebase)
    - [T7.02 — Build Obsidian Vault](#t702--build-obsidian-vault)
@@ -1218,6 +1219,45 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 
 ---
 
+### T6.05 — Implement an Additional Extension
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.4/7.5/7.6] |
+| **PRD Reference** | [PRD FR-7.4], [PRD FR-7.5], [PRD FR-7.6] |
+| **Estimate** | 60 min |
+
+**Goal**: Implement at least one of the three extension candidates beyond the minimum (FR-7.1–7.3). Choose the one that best fits the investigation findings.
+
+**Options** (pick one):
+
+| Option | FR | What to build |
+|---|---|---|
+| Dynamic diff | FR-7.4 | Compare `hot.md` + `graph.json` snapshots before/after fix; output a focused change summary |
+| Orphan detection | FR-7.5 | Walk graph entities with no incoming edges; auto-generate documentation stubs for them |
+| Impact report | FR-7.6 | Given a node name, traverse reverse-dependency edges and list all entities that would be affected by a change |
+
+**Definition of Done**:
+
+- [ ] Chosen extension is implemented in its mapped file ([PLAN §11])
+- [ ] Extension is callable through the SDK
+- [ ] Unit tests cover the happy path and at least one error case
+- [ ] Output is included in `reports/` and referenced in README
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_diff_gen.py -v      # FR-7.4
+# or
+uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v # FR-7.5
+# or
+uv run pytest tests/unit/services/analysis/test_impact_reporter.py -v # FR-7.6
+```
+
+---
+
 ## 8. Phase 7 — End-to-End Execution
 
 **Goal**: Run the full pipeline on the target codebase.
@@ -1238,6 +1278,7 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 - [ ] `graph.json` produced in `graph-home/graphify-out/`
 - [ ] `GRAPH_REPORT.md` produced
 - [ ] Graph data validated (non-empty entities and relationships)
+- [ ] **Note (C9)**: If BugsInPy was chosen instead of `andela/buggy-python`, verify the target codebase is cloned inside an isolated virtualenv or Docker container before running Grphify ([PRD C9])
 
 **Independent Verification**:
 
@@ -1558,6 +1599,7 @@ graph TD
         T602[T6.02 Guided]
         T603[T6.03 Metrics]
         T604[T6.04 Report]
+        T605[T6.05 Extension]
     end
 
     subgraph P7["Phase 7: E2E"]
@@ -1595,9 +1637,9 @@ graph TD
 
 | Metric | Value |
 |---|---|
-| Total tasks | 42 |
+| Total tasks | 43 |
 | P0 (critical) | 37 |
-| P1 (important) | 5 |
+| P1 (important) | 6 |
 | Phases | 8 |
 | Estimated total implementation time | ~28 hours (excluding LLM API time) |
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
@@ -1609,3 +1651,4 @@ graph TD
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.00 | 2026-06-19 | Lahav | Initial task tracking document |
+| 1.01 | 2026-06-19 | Lahav | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
