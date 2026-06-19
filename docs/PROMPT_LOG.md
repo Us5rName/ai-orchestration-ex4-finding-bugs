@@ -526,6 +526,47 @@ Changes to TODO:
 
 ---
 
+### Prompt 25 — Implement Phase 3: Provider Layer
+
+**Context**: Phase 3 — Provider Layer. The user wanted to implement the provider-agnostic LLM abstraction with OpenAI and Anthropic providers, following T3.01–T3.05 from TODO.md.
+
+**Purpose**: Build a provider-agnostic LLM abstraction with `ProviderInterface` ABC, `Message` TypedDict, `ProviderResponse` dataclass, `ProviderFactory`, and concrete implementations for OpenAI and Anthropic.
+
+**Key decisions**:
+- `ProviderResponse` dataclass updated in `shared/types_results.py`: replaced `content`/`raw` fields with `text`/`provider`/`timestamp` to match API Contract §8.2 and TODO T3.01 spec
+- `Message` TypedDict defined in `interface.py` with `role` and `content` keys
+- `ProviderFactory` uses registry pattern with automatic registration at import time
+- Factory validates API key environment variables before instantiation
+- OpenAI provider uses `openai` SDK + `tiktoken` for token counting
+- Anthropic provider uses `anthropic` SDK + native `count_tokens()` for token counting
+- All external API calls designed to flow through Gatekeeper (implemented in Phase 4)
+- `tiktoken>=0.7.0` added to `pyproject.toml` dependencies
+- All tests use mocked clients — no real API calls
+
+**Files created/modified**:
+- `pyproject.toml` — added `tiktoken>=0.7.0` dependency
+- `uv.lock` — updated lockfile with tiktoken + regex dependencies
+- `src/ex04/shared/types_results.py` — updated `ProviderResponse`: `content`→`text`, `raw`→`provider`+`timestamp`
+- `src/ex04/providers/interface.py` — `ProviderInterface` ABC with proper types, `Message` TypedDict, removed `ProviderFactory`
+- `src/ex04/providers/factory.py` — `ProviderFactory` with registry pattern and API key validation
+- `src/ex04/providers/openai_provider.py` — OpenAI implementation using `openai` SDK + `tiktoken`
+- `src/ex04/providers/anthropic_provider.py` — Anthropic implementation using `anthropic` SDK
+- `src/ex04/providers/__init__.py` — public exports via `__all__`
+- `tests/mocks/mock_provider.py` — updated to use new `ProviderResponse` fields
+- `tests/unit/shared/test_types.py` — updated `ProviderResponse` tests for new fields
+- `tests/unit/test_mocks.py` — updated `result.content`→`result.text`
+- `tests/unit/providers/__init__.py` — test package init
+- `tests/unit/providers/test_interface.py` — 15 tests for `Message`, `ProviderResponse`, `ProviderInterface`
+- `tests/unit/providers/test_factory.py` — 6 tests for factory creation, validation, registry
+- `tests/unit/providers/test_openai_provider.py` — 4 tests for OpenAI provider with mocked client
+- `tests/unit/providers/test_anthropic_provider.py` — 4 tests for Anthropic provider with mocked client
+
+**Validation**: 83/83 tests pass, ruff 0 violations, 100% global coverage.
+
+**Best practice established**: Update shared dataclasses before provider implementations to ensure all consumers use the same contract. Use registry pattern for factory to avoid circular imports — providers register themselves at import time.
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
@@ -533,3 +574,4 @@ Changes to TODO:
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
 | 1.01 | 2026-06-19 | Added Prompt 23 — Phase 2 audit, added T2.02 Shared Types task, renumbered Phase 2 tasks |
 | 1.02 | 2026-06-19 | Added Prompt 24 — Phase 2 contract-first implementation, documentation updates, and git commits to phase2 branch (4 commits) |
+| 1.03 | 2026-06-19 | Added Prompt 25 — Phase 3 provider layer implementation, ProviderResponse contract update, 21 new provider tests |
