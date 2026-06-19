@@ -161,21 +161,26 @@ class TestProviderResponse:
     def test_provider_response_defaults(self):
         """ProviderResponse has sensible defaults."""
         response = ProviderResponse()
-        assert response.content == ""
+        assert response.text == ""
         assert response.input_tokens == 0
         assert response.output_tokens == 0
         assert response.model == ""
-        assert response.raw == {}
+        assert response.provider == ""
 
     def test_provider_response_with_values(self):
         """ProviderResponse can be constructed with values."""
         response = ProviderResponse(
-            content="Hello", input_tokens=10, output_tokens=5, model="gpt-4o-mini"
+            text="Hello",
+            input_tokens=10,
+            output_tokens=5,
+            model="gpt-4o-mini",
+            provider="openai",
         )
-        assert response.content == "Hello"
+        assert response.text == "Hello"
         assert response.input_tokens == 10
         assert response.output_tokens == 5
         assert response.model == "gpt-4o-mini"
+        assert response.provider == "openai"
 
 
 class TestSuspect:

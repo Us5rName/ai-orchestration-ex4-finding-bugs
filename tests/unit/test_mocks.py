@@ -143,7 +143,7 @@ class TestMockProvider:
         mock = MockProvider()
         result = mock.chat([{"role": "user", "content": "hello"}])
         assert isinstance(result, ProviderResponse)
-        assert result.content != ""
+        assert result.text != ""
         assert result.input_tokens > 0
         assert result.output_tokens > 0
 

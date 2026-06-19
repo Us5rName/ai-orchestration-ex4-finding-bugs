@@ -28,14 +28,14 @@ class MockProvider(ProviderInterface):
             base_url: Base URL (ignored in mock).
 
         Returns:
-            ProviderResponse with canned content and token counts.
+            ProviderResponse with canned text and token counts.
         """
         return ProviderResponse(
-            content="This is a canned mock response for testing.",
+            text="This is a canned mock response for testing.",
             input_tokens=100,
             output_tokens=50,
             model=model,
-            raw={"finish_reason": "stop", "usage": {"prompt_tokens": 100, "completion_tokens": 50}},
+            provider="mock",
         )
 
     def count_tokens(self, text: str) -> int:
