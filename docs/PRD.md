@@ -66,7 +66,7 @@ When debugging an unfamiliar codebase, a naive agent that reads all source files
 | Dimension | Choice | Rationale |
 |---|---|---|
 | **Agent Framework** | **LangGraph** | HW [§6.1] recommends LangGraph for free/limited accounts: "העדיפו LangGraph אם אתם עובדים עם חשבון חינמי מוגבל, כי קל יותר לשלוט במספר הקריאות והשלבים." LangGraph provides explicit state machines with controllable step counts. |
-| **Graph Extraction** | **Grphify** (graphifyy ≥ 0.8.40) | Required by HW [§5.1]. Produces `graph.json`, community clusters, and Obsidian vault files. |
+| **Graph Extraction** | **Grphify** (`graphify` CLI, package: `graphifyy` ≥ 0.8.40) | Required by HW [§5.1]. Produces `graphify-out/graph.json`, `GRAPH_REPORT.md`, community clusters, and interactive HTML. Obsidian vault export via `graphify export obsidian`. |
 | **Knowledge Base** | **Obsidian Vault** | Required by HW [§5.1]. Serves as the active knowledge space for navigation. |
 | **Target Codebase** | **andela/buggy-python** | Chosen from HW [§2] base repositories. Contains buggy Python scripts designed to test bug identification and fixing capabilities. |
 | **Package Manager** | **uv** | Per project rules — mandatory for all dependency management. |
@@ -310,15 +310,14 @@ code/
 │   ├── hot.md
 │   └── ... (component notes)
 ├── graph-home/                   # Grphify workspace
-│   └── .graphify/
-│       └── repos/
-│           └── andela/
-│               └── buggy-python/
+│   ├── .graphify/
+│   │   └── repos/
+│   │       └── andela/
+│   │           └── buggy-python/
+│   └── graphify-out/             # Grphify output (graph.json, GRAPH_REPORT.md, etc.)
 ├── reports/                      # Analysis reports
 │   ├── bug_analysis.md
 │   └── token_comparison.md
-├── artifacts/                    # Generated artifacts
-│   └── graph.json
 ├── tests/
 │   └── ...
 └── docs/
