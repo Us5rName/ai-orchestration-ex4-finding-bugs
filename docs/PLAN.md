@@ -1244,7 +1244,7 @@ code/
 ├── pyproject.toml
 ├── uv.lock
 ├── README.md
-├── ex04.md                       # Homework specification
+├── ASSIGNMENT.md                 # Homework specification
 ├── .env-example                  # Secret placeholders
 ├── config/
 │   ├── setup.json                # Application configuration

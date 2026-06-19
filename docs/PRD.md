@@ -293,7 +293,7 @@ code/
 ├── pyproject.toml
 ├── uv.lock
 ├── README.md
-├── ex04.md                       # Homework specification
+├── ASSIGNMENT.md                 # Homework specification
 ├── config/
 │   └── rate_limits.json          # API rate limit configuration
 ├── src/
