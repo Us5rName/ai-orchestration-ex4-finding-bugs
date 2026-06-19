@@ -212,6 +212,47 @@ Changes to TODO:
 
 ---
 
+### Prompt 11 — Enhance CLAUDE.md with Project Context
+
+**Prompt**: "Do you have suggestion on things to add to claude.md now that the todo and plan wiki and the prd exist?"
+
+**Context**: PRD, PLAN, TODO, plan-wiki, and todo-wiki all existed. `CLAUDE.md` was a generic process/rules document with no project-specific context. An agent reading it wouldn't know what this project actually is.
+
+**Suggestions provided**:
+- Add project identity (course, goal, package name, assignment spec reference)
+- Add documentation navigation table mapping each doc to purpose and when to consult
+- Explicitly direct agents to read wiki versions instead of large PLAN.md/TODO.md
+- Add deliverables checklist from assignment spec
+- Add project-specific rules (LLM providers, LangGraph, Grphify, comparison methodology)
+- Add configuration sources table
+- Add error escalation protocol
+- Reference traceability matrix
+
+**Changes**:
+- Added section `## 0. Project Context` to `CLAUDE.md` with:
+  - Project identity (course, goal, package, assignment spec)
+  - Documentation Navigation table with wiki-first guidance
+  - Explicit rule: "Do not read `docs/PLAN.md` or `docs/TODO.md` directly"
+- Existing sections 1–8 left untouched
+
+**Best practice established**: `CLAUDE.md` should be a navigation guide + guardrails, not a duplicate of wiki content. Point to docs, don't repeat them.
+
+---
+
+### Prompt 12 — Git Workflow: Branch, Merge, Push
+
+**Prompt**: "switch to a new branch, and merge. push to origin, merge to master and then push master to origin."
+
+**Context**: Needed to commit CLAUDE.md changes, push feature branch, merge to master, and push master.
+
+**Changes**:
+- Committed `CLAUDE.md` on `phase-1-foundation` branch
+- Pushed `phase-1-foundation` → `origin/phase-1-foundation`
+- Merged `phase-1-foundation` into `master` (fast-forward)
+- Pushed `master` → `origin/master`
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
