@@ -722,7 +722,7 @@ class ProviderFactory:
 |---|---|
 | **Path** | `src/ex04/shared/` |
 | **Responsibility** | Cross-cutting concerns: gatekeeper, config, version, tokens |
-| **PRD Mapping** | [PRD §6 Non-Functional Requirements NFR-1 to NFR-9] |
+| **PRD Mapping** | [PRD §6 Non-Functional Requirements NFR-1 to NFR-10] |
 
 **Sub-modules**:
 
@@ -1358,6 +1358,9 @@ Maps every PRD requirement to its architectural location:
 | FR-6.2 Graph-guided mode | Comparison Service | `services/comparison/graph_guided_runner.py` |
 | FR-6.3 Token comparison | Comparison Service | `services/comparison/metrics.py` |
 | FR-7.1 Original extension | Agent Service | `services/agent/nodes/suspect.py` |
+| FR-7.4 Dynamic diff [PRD §5.7] | Comparison Service | `services/comparison/diff_gen.py` |
+| FR-7.5 Orphan detection [PRD §5.7] | Analysis Service | `services/analysis/orphan_detector.py` |
+| FR-7.6 Impact report [PRD §5.7] | Analysis Service | `services/analysis/impact_reporter.py` |
 | NFR-1 85% coverage | All | `tests/` |
 | NFR-2 Zero Ruff | All | `pyproject.toml` |
 | NFR-3 150-line limit | All | All files ≤ 150 lines |
@@ -1367,6 +1370,9 @@ Maps every PRD requirement to its architectural location:
 | NFR-7 Docstrings | All | All modules |
 | NFR-8 uv only | All | `pyproject.toml`, `uv.lock` |
 | NFR-9 DRY | All | Shared utilities |
+| NFR-10 Per-step logging [PRD §6] | Agent + Comparison | `shared/token_tracker.py`, `services/agent/workflow.py` |
+| C8 Context-first constraint [PRD §10.1] | Agent Service | `services/agent/nodes/knowledge.py` |
+| C9 BugsInPy isolation [PRD §10.1] | Graph Service | `services/graph/runner.py` (note only) |
 
 ---
 
@@ -1375,3 +1381,4 @@ Maps every PRD requirement to its architectural location:
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.00 | 2026-06-19 | Lahav | Initial architecture plan |
+| 1.01 | 2026-06-19 | Lahav | Add FR-7.4/7.5/7.6 and NFR-10/C8/C9 to traceability matrix; update NFR range to NFR-10 ([PRD §5.7], [PRD §6], [PRD §10.1]) |

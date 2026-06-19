@@ -249,6 +249,9 @@ The system will:
 | FR-7.1 | Implement at least one original extension beyond minimum requirements (HW [§5.6]) | Must |
 | FR-7.2 | Candidate extension: Rank suspect nodes by centrality and proximity to failed tests (HW [§5.6]) | Should |
 | FR-7.3 | Candidate extension: Architecture comparison before/after fix using graphs or schemas (HW [§5.6]) | Could |
+| FR-7.4 | Candidate extension: Dynamic diff — generate a focused change summary from `hot.md` + `graph.json` state before and after the fix (ASSIGNMENT.md [§5.6]) | Could |
+| FR-7.5 | Candidate extension: Orphan detection — identify unreachable components and auto-generate documentation stubs for them (ASSIGNMENT.md [§5.6]) | Could |
+| FR-7.6 | Candidate extension: Impact report — given a node, list all entities that would break if it were changed or removed (ASSIGNMENT.md [§5.6]) | Could |
 
 ---
 
@@ -265,6 +268,7 @@ The system will:
 | NFR-7 | Full docstrings on all modules, classes, functions (project standard) | Must |
 | NFR-8 | Use `uv` for all dependency management (project standard) | Must |
 | NFR-9 | DRY — no duplicated logic across 2+ files (project standard) | Must |
+| NFR-10 | Measure and log files read, LLM call count, and tokens at each individual workflow step — not only in the final comparison report (ASSIGNMENT.md [§6.1]) | Should |
 
 ---
 
@@ -293,7 +297,7 @@ The system will:
 | D8 | OOP schema | HW [§7] |
 | D9 | Before/after proof for code fix and system understanding | HW [§7] |
 | D10 | Documentation of extensions and original ideas | HW [§7] |
-| D11 | README.md with all HW [§8] requirements (description, research questions, architecture, workflow, Grphify/Obsidian usage, reverse engineering, bug/fix, before/after, token comparison, extensions, run instructions, visual elements) | HW [§8] |
+| D11 | README.md meeting all ASSIGNMENT.md [§8] requirements, including visual elements: screenshots of Obsidian vault, rendered Mermaid diagrams, before/after code diff, and token comparison chart | ASSIGNMENT.md [§8] |
 
 ---
 
@@ -356,6 +360,8 @@ code/
 | C5 | Agent must be graph-guided (Grphify → Obsidian → code snippets), not naive | HW [§5.3] |
 | C6 | Must demonstrate token savings with quantitative comparison | HW [§5.5] |
 | C7 | Submission must be a complete GitHub repository | HW [§7] |
+| C8 | AI agent must be activated only after the graph and vault context are built — never on raw files directly (ASSIGNMENT.md [§6.1]) | ASSIGNMENT.md [§6.1] |
+| C9 | If BugsInPy is chosen as the target repository, the codebase must be cloned and run in an isolated environment (virtualenv or Docker) to avoid dependency conflicts (ASSIGNMENT.md [§6.1]) | ASSIGNMENT.md [§6.1] |
 
 ### 10.2 Assumptions
 
@@ -390,3 +396,4 @@ code/
 | Version | Date | Author | Change |
 |---|---|---|---|
 | 1.00 | 2026-06-19 | Lahav | Initial PRD creation |
+| 1.01 | 2026-06-19 | Lahav | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |
