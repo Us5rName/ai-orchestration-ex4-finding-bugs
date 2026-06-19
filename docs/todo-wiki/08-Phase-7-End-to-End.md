@@ -30,7 +30,7 @@
 **Definition of Done**:
 
 - [ ] Grphify runs on `graph-home/.graphify/repos/andela/buggy-python`
-- [ ] `graph.json` produced in `artifacts/`
+- [ ] `graph.json` produced in `graph-home/graphify-out/`
 - [ ] `GRAPH_REPORT.md` produced
 - [ ] Graph data validated (non-empty entities and relationships)
 
@@ -38,7 +38,7 @@
 
 ```bash
 uv run python -c "from ex04.sdk import Ex04SDK; sdk = Ex04SDK.from_config('config/setup.json'); r = sdk.run_graphify('graph-home/.graphify/repos/andela/buggy-python'); print(r)"
-ls -la artifacts/graph.json
+ls -la graph-home/graphify-out/graph.json
 ```
 
 ---
