@@ -5,6 +5,11 @@ must follow. Enables parallel development — other modules depend only
 on this interface, not on concrete implementations.
 
 See ADR-005 for rationale.
+
+Implementation: Phase 4 (T4.16–T4.18)
+  - T4.16: ReverseEngineer (reverse_engineer.py)
+  - T4.17: DiagramGenerator (diagram_gen.py)
+  - T4.18: BugReporter (bug_report.py)
 """
 
 from __future__ import annotations

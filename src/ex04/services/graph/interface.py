@@ -5,6 +5,11 @@ must follow. Enables parallel development — other modules depend only
 on this interface, not on concrete implementations.
 
 See ADR-005 for rationale.
+
+Implementation: Phase 4 (T4.01–T4.03)
+  - T4.01: GraphRunner (runner.py)
+  - T4.02: GraphParser (parser.py)
+  - T4.03: GraphAnalyzer (analyzer.py)
 """
 
 from __future__ import annotations

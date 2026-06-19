@@ -5,6 +5,11 @@ must follow. Enables parallel development — other modules depend only
 on this interface, not on concrete implementations.
 
 See ADR-005 for rationale.
+
+Implementation: Phase 4 (T4.04–T4.06)
+  - T4.04: VaultBuilder (builder.py)
+  - T4.05: VaultNavigator (navigator.py)
+  - T4.06: NoteManager (note_manager.py)
 """
 
 from __future__ import annotations

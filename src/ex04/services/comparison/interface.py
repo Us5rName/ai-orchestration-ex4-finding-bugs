@@ -5,6 +5,12 @@ must follow. Enables parallel development — other modules depend only
 on this interface, not on concrete implementations.
 
 See ADR-005 for rationale.
+
+Implementation: Phase 6 (T6.01–T6.03)
+  - T6.01: NaiveRunner (naive_runner.py)
+  - T6.02: GraphGuidedRunner (graph_guided_runner.py)
+  - T6.03: MetricsCalculator (metrics.py)
+  - T6.04: ReportGenerator (report_gen.py)
 """
 
 from __future__ import annotations

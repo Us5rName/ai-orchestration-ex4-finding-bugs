@@ -3,6 +3,12 @@
 All LLM calls must flow through this interface to ensure
 provider-agnostic design. The Gatekeeper controls rate limits.
 Supports custom base_url for proxy/local endpoints.
+
+Implementation: Phase 3 (T3.01–T3.04)
+  - T3.01: ProviderInterface (this file)
+  - T3.02: OpenAIProvider
+  - T3.03: AnthropicProvider
+  - T3.04: ProviderFactory
 """
 
 from __future__ import annotations

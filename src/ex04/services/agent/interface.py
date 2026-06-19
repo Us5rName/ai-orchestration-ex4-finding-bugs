@@ -5,6 +5,17 @@ must follow. Enables parallel development — other modules depend only
 on this interface, not on concrete implementations.
 
 See ADR-005 for rationale.
+
+Implementation: Phase 4 (T4.07–T4.15)
+  - T4.07: AgentState (state.py)
+  - T4.08: WorkflowBuilder (workflow.py)
+  - T4.09: KnowledgeLoadNode (nodes/knowledge.py)
+  - T4.10: BugAnalysisNode (nodes/analysis.py)
+  - T4.11: SuspectRankingNode (nodes/suspect.py)
+  - T4.12: CodeInspectionNode (nodes/inspect.py)
+  - T4.13: RootCauseNode (nodes/rootcause.py)
+  - T4.14: FixGenerationNode (nodes/fix.py)
+  - T4.15: VerificationNode (nodes/verify.py)
 """
 
 from __future__ import annotations
