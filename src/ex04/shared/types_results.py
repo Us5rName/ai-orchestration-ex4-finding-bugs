@@ -6,6 +6,7 @@ Defines the output structures returned by services and the SDK.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Any
 
 from ex04.shared.types_metrics import ComparisonReport, TokenMetrics
@@ -16,18 +17,20 @@ class ProviderResponse:
     """Response from an LLM provider call.
 
     Attributes:
-        content: Generated text content.
+        text: Generated text content.
         input_tokens: Tokens consumed in the request.
         output_tokens: Tokens consumed in the response.
         model: Model that generated the response.
-        raw: Raw API response dict (for debugging).
+        provider: Provider name (e.g. 'openai', 'anthropic').
+        timestamp: When the response was generated.
     """
 
-    content: str = ""
+    text: str = ""
     input_tokens: int = 0
     output_tokens: int = 0
     model: str = ""
-    raw: dict[str, Any] = field(default_factory=dict)
+    provider: str = ""
+    timestamp: datetime = field(default_factory=datetime.now)
 
 
 @dataclass

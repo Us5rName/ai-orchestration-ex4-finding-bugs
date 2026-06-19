@@ -14,7 +14,21 @@ Implementation: Phase 3 (T3.01–T3.04)
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TypedDict
+
+from ex04.shared.types_results import ProviderResponse
+
+
+class Message(TypedDict):
+    """A single chat message.
+
+    Attributes:
+        role: Message role ('system', 'user', or 'assistant').
+        content: Message text content.
+    """
+
+    role: str
+    content: str
 
 
 class ProviderInterface(ABC):
@@ -28,10 +42,10 @@ class ProviderInterface(ABC):
     @abstractmethod
     def chat(
         self,
-        messages: list[dict[str, str]],
+        messages: list[Message],
         model: str,
         base_url: str | None = None,
-    ) -> Any:
+    ) -> ProviderResponse:
         """Send a chat completion request to the provider.
 
         Args:
@@ -40,7 +54,7 @@ class ProviderInterface(ABC):
             base_url: Optional custom API base URL.
 
         Returns:
-            ProviderResponse with content, tokens, and metadata.
+            ProviderResponse with text, token counts, and metadata.
         """
 
     @abstractmethod
@@ -53,41 +67,3 @@ class ProviderInterface(ABC):
         Returns:
             Number of tokens in the text.
         """
-
-
-class ProviderFactory:
-    """Create provider instance from configuration.
-
-    Attributes:
-        _registry: Mapping of provider names to provider classes.
-    """
-
-    _registry: dict[str, type[ProviderInterface]] = {}
-
-    @staticmethod
-    def create(provider_name: str, config: dict[str, Any]) -> ProviderInterface:
-        """Create a provider instance from configuration.
-
-        Args:
-            provider_name: Provider name (e.g. 'openai', 'anthropic').
-            config: Config dict with 'name', 'model', 'api_key_env', 'base_url'.
-
-        Returns:
-            ProviderInterface instance configured with the given settings.
-
-        Raises:
-            ValueError: If the provider name is not registered.
-        """
-        if provider_name not in ProviderFactory._registry:
-            raise ValueError(f"Unknown provider: {provider_name}")
-        return ProviderFactory._registry[provider_name](config)
-
-    @staticmethod
-    def register(name: str, provider_class: type[ProviderInterface]) -> None:
-        """Register a provider class under a name.
-
-        Args:
-            name: Provider name to register under.
-            provider_class: Provider class to register.
-        """
-        ProviderFactory._registry[name] = provider_class
