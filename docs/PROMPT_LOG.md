@@ -149,6 +149,38 @@ Changes to TODO:
 
 ---
 
+### Prompt 7 — Turn PLAN into Wiki
+
+**Prompt**: "The plan is quite large. I want you to turn it into wiki, while not deleting original file. Later, the TODO will also be turned into a wiki"
+
+**Context**: The `docs/PLAN.md` is 1,370 lines — too large for comfortable navigation. User wanted a wiki-style split while preserving the original single-file document.
+
+**Implementation**:
+- Created `docs/wiki/` directory (later renamed to `docs/plan-wiki/`)
+- Split PLAN into 13 files: `Home.md` index + 12 section pages (`01-Architecture-Overview.md` through `12-Revision-History.md`)
+- Each page has **← Home / Prev → Next** navigation links at top and bottom
+- All Mermaid diagrams, tables, code blocks, and PRD citations preserved verbatim
+- Original `docs/PLAN.md` left untouched
+
+**Output**: `docs/plan-wiki/` — 13 files, fully navigable wiki
+
+---
+
+### Prompt 8 — Rename Wiki, Log Prompts, Commit
+
+**Prompt**: "I changed the name of wiki to plan-wiki. Add the prompts to the prompt log according to the instructions and commit your changes to a new branch in small readable commits"
+
+**Context**: User renamed `docs/wiki/` → `docs/plan-wiki/`. Needed prompt log entries and git commits.
+
+**Changes**:
+- Updated `docs/PROMPT_LOG.md` with Prompt 7 and Prompt 8 entries
+- Created feature branch `docs/plan-wiki` for commit work
+- Committed wiki files and prompt log updates in small, atomic commits
+
+**Best practice established**: Large documentation files should be split into wiki format for navigability while keeping the original as source of record.
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
