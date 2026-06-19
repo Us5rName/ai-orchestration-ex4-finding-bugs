@@ -1,10 +1,12 @@
-"""Config Manager interface — contract for configuration loading.
+"""Config Manager — JSON config loading with dot-notation access.
 
-This module defines the abstract interface that all configuration managers
-must implement. The actual implementation will be provided in **Phase 4**
-when services require configuration access.
+Implements ConfigManagerInterface with JSON file loading, dot-notation
+key access, and required-field validation.
 
-## Contract
+All configuration values are externalized in config/setup.json per
+[PRD NFR-4]. No hardcoded config values in source code.
+
+## Contract (ConfigManagerInterface)
 
 | Method | Input | Output | Phase |
 |---|---|---|---|
@@ -12,39 +14,56 @@ when services require configuration access.
 | `get(key_path)` | str (dot-notation) | Any | P4 |
 | `validate(config)` | dict[str, Any] | bool | P4 |
 
-## Usage
+## Required Fields
 
-```python
-from ex04.shared.config import ConfigManagerInterface
+Top-level keys required for validity: `provider`, `agent`.
 
-class MyConfigManager(ConfigManagerInterface):
-    def load(self, path: str) -> dict: ...
-    def get(self, key_path: str) -> Any: ...
-    def validate(self, config: dict) -> bool: ...
-```
-
-Actual implementation: **Phase 4** (services need config to function).
+Implementation: **Phase 4** (T4.00)
 """
 
 from __future__ import annotations
 
+import json
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 
 class ConfigManagerInterface(ABC):
-    """Abstract configuration manager interface.
-
-    All configuration managers must implement these methods to ensure
-    consistent configuration access across the system.
-
-    Attributes:
-        _config: Cached configuration dictionary loaded from JSON.
-    """
+    """Abstract configuration manager interface."""
 
     @abstractmethod
     def load(self, path: str) -> dict[str, Any]:
-        """Load configuration from a JSON file.
+        """Load configuration from a JSON file and cache it."""
+
+    @abstractmethod
+    def get(self, key_path: str) -> Any:
+        """Get a configuration value using dot-notation path."""
+
+    @abstractmethod
+    def validate(self, config: dict[str, Any]) -> bool:
+        """Validate that a configuration dictionary has all required fields."""
+
+
+class ConfigManager(ConfigManagerInterface):
+    """JSON configuration manager with dot-notation access.
+
+    Loads configuration from JSON files, caches it, and provides
+    dot-notation access to nested values (e.g. 'agent.max_iterations').
+
+    Attributes:
+        _config: Cached configuration dictionary loaded from JSON.
+        _required_keys: Top-level keys required for validity.
+    """
+
+    _required_keys: list[str] = ["provider", "agent"]
+
+    def __init__(self) -> None:
+        """Initialize with empty config cache."""
+        self._config: dict[str, Any] = {}
+
+    def load(self, path: str) -> dict[str, Any]:
+        """Load configuration from a JSON file and cache it.
 
         Args:
             path: Path to the JSON configuration file.
@@ -54,14 +73,22 @@ class ConfigManagerInterface(ABC):
 
         Raises:
             FileNotFoundError: If the configuration file does not exist.
-            ValueError: If the JSON is malformed or missing required fields.
+            ValueError: If the JSON is malformed.
         """
+        config_file = Path(path)
+        if not config_file.exists():
+            raise FileNotFoundError(f"Config file not found: {path}")
 
-    @abstractmethod
+        try:
+            raw = config_file.read_text(encoding="utf-8")
+            self._config = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Malformed JSON in {path}: {exc}") from exc
+
+        return self._config
+
     def get(self, key_path: str) -> Any:
         """Get a configuration value using dot-notation path.
-
-        Supports nested access like 'provider.name' or 'agent.max_iterations'.
 
         Args:
             key_path: Dot-separated key path (e.g. 'provider.model').
@@ -70,10 +97,22 @@ class ConfigManagerInterface(ABC):
             The configuration value at the given path.
 
         Raises:
-            KeyError: If the key path does not exist in the configuration.
+            KeyError: If the key path does not exist.
+            RuntimeError: If config has not been loaded yet.
         """
+        if not self._config:
+            raise RuntimeError("Config not loaded. Call load() first.")
 
-    @abstractmethod
+        keys = key_path.split(".")
+        current: Any = self._config
+
+        for key in keys:
+            if not isinstance(current, dict) or key not in current:
+                raise KeyError(f"Key not found: {key_path}")
+            current = current[key]
+
+        return current
+
     def validate(self, config: dict[str, Any]) -> bool:
         """Validate that a configuration dictionary has all required fields.
 
@@ -84,5 +123,9 @@ class ConfigManagerInterface(ABC):
             True if the configuration is valid.
 
         Raises:
-            ValueError: If required fields are missing or invalid.
+            ValueError: If required fields are missing.
         """
+        missing = [key for key in self._required_keys if key not in config]
+        if missing:
+            raise ValueError(f"Missing required config keys: {missing}")
+        return True
