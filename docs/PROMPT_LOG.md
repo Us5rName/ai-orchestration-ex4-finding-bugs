@@ -67,6 +67,77 @@
 
 ---
 
+### Prompt 32 — Next Agent Handoff Plan
+
+**Prompt**: "Read the prompt log and plan how to continue the previous agent."
+
+**Context**: The previous agent completed Phase 4 shared layer (ConfigManager, Gatekeeper, RateLimiter) and Graph Service (Runner, Parser, Analyzer). All remaining Phase 4 services are empty stubs with no tests.
+
+**Current state**:
+- Branch: `phase4-services`
+- Tests: 130 collected, all passing
+- Coverage: 59.67% global (98.35% for implemented modules — remaining modules are untested stubs)
+- Ruff: 0 violations
+- All files ≤150 lines
+- Both "immediate fixes" already resolved by Prompt 30 (gatekeeper 147 lines, test pre-creates graph.json)
+
+**Remaining Phase 4 tasks** (in implementation order):
+
+| Priority | Tasks | Components | Dependencies | Estimate |
+|---|---|---|---|---|
+| 1 | T4.04–T4.06 | VaultBuilder, VaultNavigator, NoteManager | GraphData (types) | ~2h |
+| 2 | T4.16–T4.18 | ReverseEngineer, DiagramGen, BugReporter | GraphData, InvestigationResult | ~1.5h |
+| 3 | T4.07–T4.15 | AgentState, Workflow, 7 nodes | Vault + Analysis + Gatekeeper | ~3h |
+
+**Implementation strategy for next agent**:
+
+1. **Start with Vault Service (T4.04–T4.06)** — No dependencies on other Phase 4 services. Only needs `GraphData` type. TDD approach: write tests first, then implement.
+   - `VaultBuilder.build(graph)` → creates vault directory with `index.md`, entity notes, `hot.md`
+   - `VaultNavigator.find_relevant_notes(query)` → keyword search + wikilink traversal
+   - `NoteManager.create_note(title, content, links)` → markdown with frontmatter
+
+2. **Then Analysis Service (T4.16–T4.18)** — Simple, independent modules. Only needs types.
+   - `ReverseEngineer.extract_block_schema(graph)` → Mermaid block diagram
+   - `DiagramGenerator.save_diagram(content, name, path)` → file writer + mermaid validator
+   - `BugReporter.generate(investigation)` → structured markdown report
+
+3. **Finally Agent Service (T4.07–T4.15)** — Depends on Vault + Analysis + Gatekeeper being functional.
+   - `AgentState` TypedDict + `Suspect` (already exists in types_results.py)
+   - `WorkflowBuilder.build()` → LangGraph StateGraph with 7 nodes
+   - 7 node functions: knowledge → analysis → suspect → inspect → rootcause → fix → verify
+
+**Key patterns to follow**:
+- TDD: write tests first (RED), implement (GREEN), verify
+- Temp directories with mock JSON for filesystem tests
+- Mock gatekeeper/provider for agent node tests
+- Keep files ≤150 lines (split if needed)
+- Zero ruff violations
+- All config from JSON files, nothing hardcoded
+- Every file needs docstrings
+
+**Files to create**:
+
+| Category | Files |
+|---|---|
+| Vault implementation | `src/ex04/services/vault/builder.py`, `navigator.py`, `note_manager.py` |
+| Vault tests | `tests/unit/services/vault/test_builder.py`, `test_navigator.py`, `test_note_manager.py` |
+| Analysis implementation | `src/ex04/services/analysis/reverse_engineer.py`, `diagram_gen.py`, `bug_report.py` |
+| Analysis tests | `tests/unit/services/analysis/test_reverse_engineer.py`, `test_diagram_gen.py`, `test_bug_report.py` |
+| Agent implementation | `state.py`, `workflow.py`, `nodes/{knowledge,analysis,suspect,inspect,rootcause,fix,verify}.py` |
+| Agent tests | `test_state.py`, `test_workflow.py`, `nodes/test_*.py` |
+
+**Interface contracts** (already defined, must implement):
+- `VaultServiceInterface`: `build(graph_data) -> dict[str, Path]`, `navigate(query) -> list[dict]`, `update(note_type, content) -> Path`
+- `AnalysisServiceInterface`: `reverse_engineer(graph_data) -> str`, `report(investigation) -> str`
+
+**Important notes**:
+- `Suspect` dataclass already exists in `types_results.py` — AgentState can reuse it
+- `InvestigationResult` already exists — BugReporter uses it
+- The `__init__.py` files in vault/analysis/agent already exist and export interfaces
+- Use the existing test patterns from graph tests as templates (temp dirs, mock subprocess, etc.)
+
+---
+
 ### Prompt 31 — Fix Test Hang
 
 **Prompt**: "I see that each time the tests run they hang for a few seconds. what is the reason?"
@@ -202,3 +273,4 @@
 | 1.05 | 2026-06-19 | Added Prompt 27 — Phase 4 partial implementation: ConfigManager, Gatekeeper, Graph Service (runner/parser/analyzer). 51/52 tests pass. 1 test fix needed. |
 | 1.06 | 2026-06-19 | Added Prompt 30 — Audit and fix Phase 4: circular import, Ruff violations, line counts, failing test, hardcoded values. 130/130 tests pass, 98.35% coverage, 0 Ruff violations, all files ≤150 lines. |
 | 1.07 | 2026-06-19 | Added Prompt 31 — Fix test hang: gatekeeper retry sleep (5s default → 1s in tests). Tests complete ~3s instead of hanging. |
+| 1.08 | 2026-06-19 | Added Prompt 32 — Next agent handoff plan: assessed codebase state, documented remaining tasks (Vault, Analysis, Agent), implementation strategy, file inventory, interface contracts. |
