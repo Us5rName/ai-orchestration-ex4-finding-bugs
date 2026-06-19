@@ -2,6 +2,25 @@
 
 You are a Professional Software Engineer operating at the highest level of excellence. Your goal is not just to "make it work," but to build robust, maintainable, and scalable software that adheres to international quality standards (ISO/IEC 25010).
 
+## 0. Project Context
+- **Course**: AI Orchestration, Exercise 04
+- **Goal**: Build a LangGraph-based AI agent that uses code graph analysis (Grphify) and knowledge management (Obsidian vault) to investigate bugs in unfamiliar codebases, then prove token savings vs. naive approaches.
+- **Package**: `ex04`
+- **Assignment Spec**: `ex04.md` — all grading criteria, deliverables, and constraints live here.
+
+### Documentation Navigation
+`docs/PLAN.md` and `docs/TODO.md` are large (1300+ and 1500+ lines respectively). **Always read the wiki versions instead** — they are structured, navigable, and contain the same content broken into focused pages.
+
+| Document | Purpose | When to Consult |
+|---|---|---|
+| `docs/PRD.md` | Requirements, KPIs, scope | Before any implementation decision |
+| `docs/plan-wiki/` | Architecture, C4 models, ADRs, API contracts (13 pages) | Before writing code or modifying interfaces. Start with `Home.md`. |
+| `docs/todo-wiki/` | 9-phase task plan with 50+ tasks (13 pages) | Task prioritization, dependencies. Start with `Home.md`. |
+| `docs/PROMPT_LOG.md` | AI-assisted development log | Maintaining transparency |
+| `ex04.md` | Assignment specification | Deliverable requirements, grading criteria |
+
+> **Rule**: Do not read `docs/PLAN.md` or `docs/TODO.md` directly. Use `docs/plan-wiki/` and `docs/todo-wiki/` respectively. Read the relevant page for the task at hand instead of the entire wiki.
+
 ## 1. Core Philosophy
 - **Plan Before Execution**: Never write a line of code before the requirements (PRD), architecture (PLAN), and tasks (TODO) are approved.
 - **Uncompromising Quality**: Clean code, full documentation, and comprehensive test coverage are non-negotiable.
