@@ -73,6 +73,7 @@ classDiagram
         +investigate_bug(bug_report) InvestigationResult
         +run_comparison(bug_report) ComparisonReport
         +reverse_engineer(target_path) EngineeringResult
+        +full_pipeline(target_path, bug_report) PipelineResult
     }
 
     class APIGatekeeper {
@@ -137,14 +138,10 @@ classDiagram
     Ex04SDK --> VaultBuilder
     Ex04SDK --> WorkflowBuilder
     Ex04SDK --> ReverseEngineer
-    Ex04SDK --> NaiveRunner
-    Ex04SDK --> GraphGuidedRunner
     WorkflowBuilder --> GraphAnalyzer
     WorkflowBuilder --> VaultNavigator
-    GraphGuidedRunner --> GraphAnalyzer
-    GraphGuidedRunner --> VaultNavigator
-    OpenAIProvider --> APIGatekeeper
-    AnthropicProvider --> APIGatekeeper
+    APIGatekeeper --> OpenAIProvider
+    APIGatekeeper --> AnthropicProvider
     APIGatekeeper --> TokenTracker
     APIGatekeeper --> ConfigManager
     NaiveRunner --> APIGatekeeper
