@@ -1,18 +1,26 @@
-"""Tests for bounded NaiveRunner navigation and budget enforcement."""
+"""Tests for bounded NaiveRunner — structured JSON output, budget enforcement.
+
+Success requires valid JSON output with required keys and at least one
+confirmed source anchor. Phrase/keyword matching is NOT tested here because
+it is NOT used for success determination.
+
+Traceability: [TODO P6-R03-REV], [Correction #3]
+"""
 
 from __future__ import annotations
 
+import json
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from ex04.services.comparison.naive_runner import NaiveRunner, _response_indicates_finding
-from ex04.shared.types import RunMetrics
+from ex04.services.comparison.naive_runner import NaiveRunner, _parse_json_response
+from ex04.shared.types_results import InvestigationResult
 
 
-def _make_gatekeeper(response_text: str = "root cause: off-by-one") -> MagicMock:
+def _make_gatekeeper(response_text: str = "") -> MagicMock:
     gk = MagicMock()
     resp = MagicMock()
     resp.text = response_text
@@ -31,6 +39,15 @@ def _make_files(tmp: Path, count: int, size: int = 100) -> list[Path]:
     return files
 
 
+def _valid_json(files: list[str] | None = None) -> str:
+    return json.dumps({
+        "root_cause": "off-by-one in loop",
+        "suspected_files": files or ["module_0.py"],
+        "suspected_symbols": ["process_data"],
+        "confidence": "high",
+    })
+
+
 def test_max_files_enforced() -> None:
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
@@ -43,51 +60,99 @@ def test_max_files_enforced() -> None:
 def test_max_bytes_enforced() -> None:
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
-        # Each file is ~500 bytes; limit is 300 bytes → only 0 or 1 file
         files = _make_files(tmp, 5, size=500)
         runner = NaiveRunner(_make_gatekeeper(), max_files=20, max_bytes=300)
         result = runner.run("IndexError in process_data", files)
     assert result.files_read <= 1
 
 
-def test_non_indicator_response_is_not_success() -> None:
+def test_invalid_json_sets_parser_failed() -> None:
     gk = _make_gatekeeper("I am not sure what the problem is.")
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
         files = _make_files(tmp, 2)
-        runner = NaiveRunner(gk, max_files=5)
-        result = runner.run("bug report", files)
-    assert result.found_root_cause is False
+        result = NaiveRunner(gk).run("bug report", files)
+    assert result.parser_status == "parse_failed"
 
 
-def test_indicator_response_is_success() -> None:
-    gk = _make_gatekeeper("root cause: missing bounds check at line 14")
+def test_empty_response_sets_parser_empty() -> None:
+    gk = _make_gatekeeper("")
     with tempfile.TemporaryDirectory() as td:
         tmp = Path(td)
-        files = _make_files(tmp, 2)
-        runner = NaiveRunner(gk, max_files=5)
-        result = runner.run("IndexError bug", files)
-    assert result.found_root_cause is True
+        files = _make_files(tmp, 1)
+        result = NaiveRunner(gk).run("bug", files)
+    assert result.parser_status == "empty"
+
+
+def test_valid_json_with_valid_anchor_sets_parser_ok() -> None:
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        src = tmp / "module_0.py"
+        src.write_text("def process_data(): pass\n")
+        gk = _make_gatekeeper(_valid_json(["module_0.py"]))
+        result = NaiveRunner(gk).run("IndexError bug", [src])
+    assert result.parser_status == "parsed_ok"
+    assert result.root_cause == "off-by-one in loop"
+
+
+def test_valid_json_missing_keys_sets_parser_failed() -> None:
+    bad_json = json.dumps({"root_cause": "x"})  # missing suspected_files, suspected_symbols
+    gk = _make_gatekeeper(bad_json)
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        files = _make_files(tmp, 1)
+        result = NaiveRunner(gk).run("bug", files)
+    assert result.parser_status == "parse_failed"
+
+
+def test_invalid_anchor_records_limitation() -> None:
+    """Suspected file not in corpus → limitation recorded."""
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        src = tmp / "real_module.py"
+        src.write_text("pass\n")
+        gk = _make_gatekeeper(_valid_json(["nonexistent.py"]))
+        result = NaiveRunner(gk).run("bug", [src])
+    assert any("nonexistent.py" in lim for lim in result.limitations)
 
 
 def test_empty_source_list_does_not_crash() -> None:
-    gk = _make_gatekeeper("root cause found")
-    runner = NaiveRunner(gk)
-    result = runner.run("bug", [])
-    assert isinstance(result, RunMetrics)
+    gk = _make_gatekeeper(_valid_json([]))
+    result = NaiveRunner(gk).run("bug", [])
+    assert isinstance(result, InvestigationResult)
     assert result.files_read == 0
 
 
-@pytest.mark.parametrize(
-    "text,expected",
-    [
-        ("root cause: off-by-one", True),
-        ("fix: add guard clause", True),
-        ("IndexError on line 14", True),
-        ("Traceback (most recent call last)", True),
-        ("I cannot determine the issue", False),
-        ("", False),
-    ],
-)
-def test_response_indicator_patterns(text: str, expected: bool) -> None:
-    assert _response_indicates_finding(text) == expected
+def test_all_budget_counters_populated() -> None:
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        files = _make_files(tmp, 3)
+        gk = _make_gatekeeper(_valid_json(["module_0.py"]))
+        result = NaiveRunner(gk).run("bug", files)
+    assert result.files_read >= 1
+    assert result.bytes_read >= 0
+    assert result.tool_calls >= 1
+    assert result.model_calls == 1
+    assert result.iterations == 1
+    assert result.duration_seconds >= 0.0
+    assert result.input_tokens == 10
+    assert result.output_tokens == 5
+
+
+def test_result_is_investigation_result() -> None:
+    gk = _make_gatekeeper("")
+    result = NaiveRunner(gk).run("bug", [])
+    assert isinstance(result, InvestigationResult)
+
+
+@pytest.mark.parametrize("text,expected_status", [
+    ('{"root_cause":"x","suspected_files":["f.py"],"suspected_symbols":["g"]}', "parsed_ok"),
+    ('```json\n{"root_cause":"x","suspected_files":["f.py"],"suspected_symbols":["g"]}\n```',
+     "parsed_ok"),
+    ("not json at all", "parse_failed"),
+    ('{"root_cause":"x"}', "parse_failed"),
+    ("", "empty"),
+])
+def test_parse_json_response_variants(text: str, expected_status: str) -> None:
+    status, _ = _parse_json_response(text)
+    assert status == expected_status

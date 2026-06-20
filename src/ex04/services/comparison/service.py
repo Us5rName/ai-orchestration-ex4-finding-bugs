@@ -12,8 +12,24 @@ from ex04.services.comparison.naive_runner import NaiveRunner
 from ex04.services.comparison.report_gen import ReportGenerator
 from ex04.services.comparison.signed_metrics import SignedMetricsCalculator
 from ex04.shared.gatekeeper import GatekeeperInterface
-from ex04.shared.types import ComparisonReport, GraphData
+from ex04.shared.types import ComparisonReport, GraphData, RunMetrics
 from ex04.shared.types_experiment import ExperimentConfig, SignedMetrics
+from ex04.shared.types_results import InvestigationResult
+
+
+def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
+    """Bridge InvestigationResult to RunMetrics for legacy metric calculators."""
+    tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
+    found = result.parser_status == "parsed_ok" and result.gate_status in (
+        "pass", "pass_without_gate"
+    )
+    return RunMetrics(
+        tokens_used=tokens,
+        files_read=result.files_read,
+        iterations=result.iterations,
+        time_seconds=result.duration_seconds,
+        found_root_cause=found,
+    )
 
 
 class ComparisonService(ComparisonServiceInterface):
@@ -54,5 +70,7 @@ class ComparisonService(ComparisonServiceInterface):
         self._enforcer.check(shared_cfg, shared_cfg)
         naive = self._naive.run(bug_report, source_files)
         guided = self._guided.run(bug_report, graph_data, vault_path)
-        self.last_signed_metrics = self._signed.compute(naive, guided)
-        return self._reports.generate(self._metrics.compare(naive, guided))
+        naive_rm = _to_run_metrics(naive)
+        guided_rm = _to_run_metrics(guided)
+        self.last_signed_metrics = self._signed.compute(naive_rm, guided_rm)
+        return self._reports.generate(self._metrics.compare(naive_rm, guided_rm))

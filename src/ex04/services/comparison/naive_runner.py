@@ -1,12 +1,12 @@
 """Naive Runner — bounded bug-report-driven investigation workflow.
 
-Replaces full-corpus concatenation with bounded navigation: tree listing,
-keyword filtering, and selective file reading up to hard budget limits.
-Budget counters are cumulative and never reset across iterations.
-
+Bounded navigation: tree listing, keyword filtering, selective file reading
+up to hard budget limits. Budget counters cumulative, never reset.
+Success requires structured JSON output + confirmed source anchor.
+Phrase/keyword matching is NOT used to determine success.
 No graph context, graph nodes, or vault data may enter this runner.
 
-Traceability: [PRD-CE §Naive], [TODO P6-R03]
+Traceability: [PRD-CE §Naive], [TODO P6-R03-REV], [Correction #3]
 """
 
 from __future__ import annotations
@@ -15,12 +15,12 @@ import re
 import time
 from pathlib import Path
 
+from ex04.services.comparison._output_parser import JSON_SCHEMA, parse_json_response
 from ex04.shared.gatekeeper import GatekeeperInterface
-from ex04.shared.types import RunMetrics
+from ex04.shared.types_results import InvestigationResult
 
-_SUCCESS_PATTERNS = re.compile(
-    r"root cause|fix:|problem:|indexerror|line \d+|traceback", re.IGNORECASE
-)
+# Public alias so tests can import without reaching into private module
+_parse_json_response = parse_json_response
 
 
 def _extract_keywords(bug_report: str) -> set[str]:
@@ -30,17 +30,13 @@ def _extract_keywords(bug_report: str) -> set[str]:
     return {w for w in words if w not in stop}
 
 
-def _response_indicates_finding(text: str) -> bool:
-    """Return True only when text contains structured diagnostic indicators."""
-    return bool(_SUCCESS_PATTERNS.search(text))
-
-
 class NaiveRunner:
     """Run a bounded, unfocused baseline over source files.
 
     Explores the repository using only ordinary navigation (tree listing,
     keyword-filtered file reading). Graph context is structurally excluded.
-    All budget limits are enforced cumulatively within each run() call.
+    All budget limits are enforced cumulatively. Success is determined by
+    structured JSON output validation, not keyword or phrase matching.
     """
 
     def __init__(
@@ -58,7 +54,7 @@ class NaiveRunner:
         self.max_bytes = max_bytes
         self.timeout_seconds = timeout_seconds
 
-    def run(self, bug_report: str, source_files: list[Path]) -> RunMetrics:
+    def run(self, bug_report: str, source_files: list[Path]) -> InvestigationResult:
         """Navigate source files within budget limits and query the model.
 
         Args:
@@ -66,28 +62,22 @@ class NaiveRunner:
             source_files: Candidate files for inspection.
 
         Returns:
-            RunMetrics with cumulative usage and conservative success flag.
+            InvestigationResult with structured output and budget telemetry.
         """
         started = time.perf_counter()
         keywords = _extract_keywords(bug_report)
-        trace: list[dict[str, object]] = []
-
-        # Phase 1: tree inspection (1 tool call)
         all_py = [p for p in source_files if p.is_file()]
-        tool_calls = 1
-        trace.append({"op": "tree_list", "total_files": len(all_py)})
+        tool_calls = 1  # counts tree_list
 
-        # Phase 2: keyword filter — prefer files matching bug-report terms
         def _score(p: Path) -> int:
-            name = p.name.lower()
-            return sum(1 for kw in keywords if kw in name)
+            nm = p.name.lower()
+            return sum(1 for kw in keywords if kw in nm)
 
         ranked = sorted(all_py, key=_score, reverse=True)
-
-        # Phase 3: bounded selective reading
         context_parts: list[str] = []
         files_read = 0
         bytes_read = 0
+
         for path in ranked:
             if files_read >= self.max_files or bytes_read >= self.max_bytes:
                 break
@@ -100,22 +90,41 @@ class NaiveRunner:
                 files_read += 1
                 bytes_read += len(chunk.encode())
                 tool_calls += 1
-                trace.append(
-                    {"op": "read_file", "path": str(path), "bytes": len(chunk.encode())}
-                )
             except OSError:
                 continue
 
         context = "\n\n".join(context_parts) if context_parts else "(no files read)"
         response = self.gatekeeper.send(
             self.provider,
-            [{"role": "user", "content": f"Bug:\n{bug_report}\n\n{context}"}],
+            [{"role": "user", "content": f"Bug:\n{bug_report}\n\n{context}\n\n{JSON_SCHEMA}"}],
         )
 
-        return RunMetrics(
-            tokens_used=response.input_tokens + response.output_tokens,
+        parser_status, parsed = parse_json_response(response.text)
+        known = {p.name for p in source_files} | {str(p) for p in source_files}
+        valid_anchors: list[str] = []
+        limitations: list[str] = []
+        if parsed and isinstance(parsed.get("suspected_files"), list):
+            for sf in parsed["suspected_files"]:
+                if sf in known or any(sf in str(p) for p in source_files):
+                    valid_anchors.append(str(sf))
+                else:
+                    limitations.append(f"Suspected file '{sf}' not in source corpus.")
+
+        return InvestigationResult(
+            root_cause=str(parsed.get("root_cause", "")) if parsed else "",
+            proposed_fix=str(parsed.get("patch", "")) if parsed else "",
+            original_problem=bug_report,
             files_read=files_read,
+            bytes_read=bytes_read,
+            tool_calls=tool_calls,
+            model_calls=1,
             iterations=1,
-            time_seconds=time.perf_counter() - started,
-            found_root_cause=_response_indicates_finding(response.text),
+            duration_seconds=time.perf_counter() - started,
+            input_tokens=response.input_tokens,
+            output_tokens=response.output_tokens,
+            parser_status=parser_status,
+            gate_status="pass_without_gate",
+            limitations=limitations,
+            evidence_class="fixture",
+            telemetry_available=False,
         )
