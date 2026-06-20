@@ -555,6 +555,21 @@ tests/unit/services/analysis/
 **Validation**: `find src tests -type f -name '*.py' -exec wc -l {} + | awk '$1 > 150 {print}'` returned no files.
 ---
 
+### Prompt 44 — T4.05 Vault Navigator Contract
+
+**Prompt**: "T4.05 is inconsistent with TODO: the implementation has `navigate()`, but TODO requires `find_relevant_notes()` and `navigate_from_index()`."
+
+**Context**: The Vault Service already exposed keyword search through `navigate()`, but the Phase 4 TODO contract required explicit keyword-search and index-wikilink navigation methods.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.05 | Added the `find_relevant_notes()` keyword-search API, added `navigate_from_index()` wikilink traversal, and kept `navigate()` as a compatibility alias | `src/ex04/services/vault/navigator.py`, `tests/unit/services/vault/test_navigator.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py -q`; `uv run ruff check src/ex04/services/vault/navigator.py tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py`.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -577,3 +592,4 @@ tests/unit/services/analysis/
 | 1.17 | 2026-06-20 | Added Prompt 41 — branch hygiene/provider compatibility: hidden contract-gap note ignored, pytest root import path stabilized, Anthropic text block parsing made tolerant of mocked/SDK-shaped blocks. 293 tests pass, 98.44% coverage, 0 ruff violations. |
 | 1.18 | 2026-06-20 | Added Prompt 42 — SDK wiring and service facades: `from_config()` builds Phase 4 service facades, T4.08 marked Done, T5.01 marked Partial pending Phase 6 comparison/full_pipeline completion. 293 tests pass, 98.44% coverage, 0 ruff violations. |
 | 1.19 | 2026-06-20 | Added Prompt 43 — Phase 4 NFR-3 cleanup: split oversized Gatekeeper, workflow, and vault navigator tests; all Python files are now within the 150-line limit. |
+| 1.20 | 2026-06-20 | Added Prompt 44 — T4.05 VaultNavigator contract: implemented `find_relevant_notes()` and `navigate_from_index()` with tests and mirrored TODO updates. |

@@ -197,7 +197,7 @@ uv run pytest --version
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — types.py] |
 | **PRD Reference** | [PRD NFR-7] docstrings |
@@ -767,7 +767,7 @@ uv run pytest tests/unit/services/vault/test_builder.py -v --cov=ex04.services.v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — navigator.py] |
 | **PRD Reference** | [PRD FR-2.5] |
@@ -775,10 +775,10 @@ uv run pytest tests/unit/services/vault/test_builder.py -v --cov=ex04.services.v
 
 **Definition of Done**:
 
-- [ ] `VaultNavigator.find_relevant_notes(query)` searches vault by keyword matching
-- [ ] `VaultNavigator.navigate_from_index(target)` follows wikilinks from index
-- [ ] Parses `[[wikilinks]]` from Markdown
-- [ ] Handles missing notes, broken links
+- [x] `VaultNavigator.find_relevant_notes(query)` searches vault by keyword matching
+- [x] `VaultNavigator.navigate_from_index(target)` follows wikilinks from index
+- [x] Parses `[[wikilinks]]` from Markdown
+- [x] Handles missing notes, broken links
 
 **Independent Verification**:
 
@@ -1728,3 +1728,4 @@ graph TD
 | 1.05 | 2026-06-20 | Evyatar  | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of v1.01 + v1.04). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Traceability: git merge of HEAD + 3c832f6. |
 | 1.06 | 2026-06-20 | Lahav | Mark T4.08 WorkflowBuilder done and T5.01 SDK partial: `from_config()` now wires Phase 4 service facades through the SDK, while `full_pipeline()` remains blocked on Phase 6 comparison runners. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD NFR-5], [PRD FR-4.1]. |
 | 1.07 | 2026-06-20 | Codex | Mark T8.03/NFR-3 done after splitting oversized unit tests; `find src tests -type f -name '*.py' -exec wc -l {} + \| awk '$1 > 150 {print}'` returns no files. Traceability: [PRD NFR-3]. |
+| 1.08 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |

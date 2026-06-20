@@ -47,6 +47,17 @@ class TestVaultNavigator:
                 assert "path" in results[0]
                 assert "content" in results[0]
 
+    def test_find_relevant_notes_aliases_keyword_search(self) -> None:
+        """Contract API finds notes by keyword."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            navigator = VaultNavigator(vault_path=vault_path)
+
+            results = navigator.find_relevant_notes("authentication")
+
+            assert "auth" in [result["title"] for result in results]
+
     def test_navigate_finds_matching_notes(self) -> None:
         """Test that navigate() finds notes matching the query."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -113,3 +124,17 @@ class TestVaultNavigator:
 
             paths = [Path(r["path"]).name for r in results]
             assert "hot.md" in paths
+
+    def test_navigate_from_index_follows_wikilinks(self) -> None:
+        """Index navigation follows wikilinks to matching notes."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            (vault_path / "index.md").write_text(
+                "# Index\n\n- [[auth]]\n- [[missing]]", encoding="utf-8"
+            )
+            navigator = VaultNavigator(vault_path=vault_path)
+
+            results = navigator.navigate_from_index("auth")
+
+            assert [result["title"] for result in results] == ["auth"]

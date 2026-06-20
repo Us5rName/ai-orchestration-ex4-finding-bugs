@@ -24,7 +24,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
 | **PRD Reference** | [PRD NFR-4] configuration externalization |
@@ -194,7 +194,7 @@ uv run pytest tests/unit/services/vault/test_builder.py -v --cov=ex04.services.v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — navigator.py] |
 | **PRD Reference** | [PRD FR-2.5] |
@@ -202,10 +202,10 @@ uv run pytest tests/unit/services/vault/test_builder.py -v --cov=ex04.services.v
 
 **Definition of Done**:
 
-- [ ] `VaultNavigator.find_relevant_notes(query)` searches vault by keyword matching
-- [ ] `VaultNavigator.navigate_from_index(target)` follows wikilinks from index
-- [ ] Parses `[[wikilinks]]` from Markdown
-- [ ] Handles missing notes, broken links
+- [x] `VaultNavigator.find_relevant_notes(query)` searches vault by keyword matching
+- [x] `VaultNavigator.navigate_from_index(target)` follows wikilinks from index
+- [x] Parses `[[wikilinks]]` from Markdown
+- [x] Handles missing notes, broken links
 
 **Independent Verification**:
 

@@ -13,6 +13,7 @@
 | 1.06 | 2026-06-20 | Eviatar | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of both branches). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Renumbered the duplicated v1.04 gap-analysis entry to v1.05 to remove the version collision. Traceability: git merge of HEAD + 3c832f6. |
 | 1.07 | 2026-06-20 | Lahav | Mark T4.08 WorkflowBuilder done and T5.01 SDK partial: `from_config()` now wires Phase 4 service facades through the SDK, while `full_pipeline()` remains blocked on Phase 6 comparison runners. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD NFR-5], [PRD FR-4.1]. |
 | 1.08 | 2026-06-20 | Codex | Mark T8.03/NFR-3 done after splitting oversized unit tests; `find src tests -type f -name '*.py' -exec wc -l {} + \| awk '$1 > 150 {print}'` returns no files. Traceability: [PRD NFR-3]. |
+| 1.09 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
 
 ---
 
