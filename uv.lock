@@ -239,7 +239,7 @@ wheels = [
 [[package]]
 name = "ex04"
 version = "1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
     { name = "graphifyy" },

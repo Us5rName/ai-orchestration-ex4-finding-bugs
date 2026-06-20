@@ -133,6 +133,7 @@ class ApiGatekeeper(GatekeeperInterface):
                     )
                     raise
                 time.sleep(retry_delay)
+        return None
 
     def get_call_log(self) -> list[dict[str, Any]]:
         """Retrieve the full call log."""

@@ -263,7 +263,7 @@
 
 ### Prompt 33 — Reinspection Triage: Fix Graphify Schema & Repo Integrity
 
-**Prompt**: "Check if the reinspection-report problems exist and which must be repaired soon … then commit the P0/P1 work on a branch and continue to fix all other issues. Also sync documentation where needed."
+**Prompt**: "Check whether the issues identified in the reinspection report still exist and determine which ones require immediate attention. Then, commit the P0/P1 work on a dedicated branch and continue fixing all remaining issues. Update and synchronize the documentation wherever necessary."
 
 **Context**: An external reinspection report (vs. commit `aafd5eb`) flagged 8 problems. Verified each against current `master` (`1d6c186`) **and against the installed Graphify package** by generating a real `graph.json` to anchor the schema.
 
@@ -289,6 +289,31 @@
 
 ---
 
+### Prompt 34 — Remaining Issues & Documentation Sync
+
+**Prompt**: “Continue fixing all remaining issues and problems. Also, update and synchronize the documentation where needed.”
+
+**Context**: Follow-up to Prompt 33 — clear the remaining (non-blocking) findings from the reinspection triage and consolidate the working tree.
+
+**Implementation**:
+
+| Issue | Fix | Files |
+|---|---|---|
+| Committed conflict markers in `.gitignore` (report undercounted — 4 files, not 1) | Resolved; also ignore stray root `/graphify-out/` while keeping nested evidence dirs trackable | `.gitignore` |
+| `ASSIGNMENT.md` is the grading source of truth but is gitignored | Kept **intentionally untracked** per user preference; flagged the grading-visibility implication as an open decision (a cloned repo won't include it) | `.gitignore` |
+| `uv run pytest` couldn't import `ex04` (no `[build-system]`) | Added hatchling `[build-system]` + `pythonpath = ["src"]`; `uv sync` now installs `ex04` editable | `pyproject.toml` |
+| Analyzer "overstated" its algorithms (#5) | Docstrings now state plainly: **degree** centrality + **connected-component** communities; point to Grphify's Leiden/query for richer analysis | `src/ex04/services/graph/analyzer.py` |
+| README was a `#TEMP` placeholder (#6) | Replaced with a real README (overview, architecture, setup, graph build, testing, docs, status) | `README.md` |
+| Pre-existing local edits consolidated | Kept `CLAUDE.md` spec ref (`ex04.md`→`ASSIGNMENT.md`) and `gatekeeper.py` defensive `return None` | `CLAUDE.md`, `src/ex04/shared/gatekeeper.py` |
+
+**Deferred by design (future phases / decisions, not defects)**:
+- `main.py` (Hello World) and the SDK façade — Phase 5 (T5.01/T5.02); not yet due.
+- Target-repo eligibility (`andela/buggy-python` vs a ~10k-LOC / ≥70-file repo) — needs lecturer confirmation; a decision, not a code change.
+
+**Validation**: `uv run pytest` (standard command, no `PYTHONPATH`) → 135/135 pass, 97.41% coverage; `ruff check` 0 violations; no conflict markers in any tracked file. Traceability: [PRD §9], [PRD NFR-4], [CLAUDE.md §4 Golden Rules].
+
+---
+
 ## Revision History
 
 | Version | Date | Change |
@@ -303,3 +328,4 @@
 | 1.07 | 2026-06-19 | Added Prompt 31 — Fix test hang: gatekeeper retry sleep (5s default → 1s in tests). Tests complete ~3s instead of hanging. |
 | 1.08 | 2026-06-19 | Added Prompt 32 — Next agent handoff plan: assessed codebase state, documented remaining tasks (Vault, Analysis, Agent), implementation strategy, file inventory, interface contracts. |
 | 1.09 | 2026-06-20 | Added Prompt 33 — Reinspection triage: fixed Graphify CLI command + node-link schema parsing (P0), resolved merge-conflict markers in TODO + todo-wiki (P1), added real graph.json fixture + contract tests. 135/135 tests pass. |
+| 1.10 | 2026-06-20 | Added Prompt 34 — Remaining issues: resolved `.gitignore` conflict, added `[build-system]` + pytest `pythonpath` (standard `uv run pytest` works), honest analyzer docstrings, real README. Documentation synced. |
