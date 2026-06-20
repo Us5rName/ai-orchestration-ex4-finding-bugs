@@ -41,6 +41,9 @@ class Ex04SDK:
     def reverse_engineer(self, target_path: str) -> EngineeringResult: ...
     """Extract architectural and OOP schemas. [PRD FR-3.1-3.3]"""
 
+    def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
+    """Find graph entities with no incoming edges and generate doc stubs. [PRD FR-7.5]"""
+
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
     """Execute complete pipeline: graphify → vault → investigate → compare → report."""
 ```
