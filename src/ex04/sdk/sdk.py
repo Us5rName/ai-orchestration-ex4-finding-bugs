@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ex04.sdk._wiring import build_services
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.analysis.interface import AnalysisServiceInterface
 from ex04.services.comparison.interface import ComparisonServiceInterface
@@ -23,14 +24,6 @@ from ex04.services.vault.interface import VaultServiceInterface
 from ex04.shared.types import GraphData
 from ex04.shared.types_metrics import ComparisonReport
 from ex04.shared.types_results import InvestigationResult, PipelineResult
-
-ServiceTuple = tuple[
-    GraphServiceInterface,
-    VaultServiceInterface,
-    AgentServiceInterface,
-    ComparisonServiceInterface,
-    AnalysisServiceInterface,
-]
 
 
 class Ex04SDK:
@@ -62,41 +55,7 @@ class Ex04SDK:
     def from_config(cls, config_path: str) -> Ex04SDK:
         """Create a fully wired SDK from a JSON config file."""
         config = json.loads(Path(config_path).read_text(encoding="utf-8"))
-        return cls(*cls._build_services(config), config=config)
-
-    @staticmethod
-    def _build_services(config: dict[str, Any]) -> ServiceTuple:
-        """Construct concrete services from config."""
-        from ex04.services.agent import AgentService
-        from ex04.services.analysis import AnalysisService
-        from ex04.services.comparison import ComparisonService
-        from ex04.services.graph import GraphService
-        from ex04.services.vault import VaultService
-        from ex04.shared.gatekeeper import ApiGatekeeper
-
-        vault_path = Path(config.get("vault", {}).get("output_dir", "./obsidian"))
-        target_path = Path(config.get("paths", {}).get("target_codebase", "."))
-        agent_config = config.get("agent", {})
-        provider_config = config.get("provider", {})
-        provider = provider_config.get("name", "openai")
-        gatekeeper = ApiGatekeeper(
-            rate_limits_path="config/rate_limits.json",
-            provider_configs={provider: provider_config},
-        )
-        return (
-            GraphService(),
-            VaultService(vault_path),
-            AgentService(
-                target_path,
-                max_iterations=int(agent_config.get("max_iterations", 5)),
-                max_suspects=int(agent_config.get("max_suspects", 5)),
-                context_limit=int(agent_config.get("context_window_tokens", 8000)),
-                gatekeeper=gatekeeper,
-                provider=provider,
-            ),
-            ComparisonService(gatekeeper, provider),
-            AnalysisService(),
-        )
+        return cls(*build_services(config), config=config)
 
     def run_graphify(self, target_path: str) -> GraphData:
         """Extract and parse a code graph from the target codebase."""
@@ -133,18 +92,30 @@ class Ex04SDK:
         graph_data = self.run_graphify(target_path)
         return self._analysis.reverse_engineer(graph_data)
 
+    def generate_report(self, investigation: InvestigationResult) -> str:
+        """Generate a structured Markdown bug report from an investigation."""
+        return self._analysis.report(investigation)
+
+    def identify_patterns(self, target_path: str) -> list[str]:
+        """Identify design patterns in the target codebase."""
+        graph_data = self.run_graphify(target_path)
+        return self._analysis.identify_patterns(graph_data)
+
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult:
         """Run the complete end-to-end pipeline into one aggregated result."""
         graph_path = self._graph.extract(target_path)
         graph_data = self._graph.parse(graph_path)
         vault = self._vault.build(graph_data)
-        investigation = self._agent.investigate(bug_report, graph_path)
+        vault_dir = next(iter(vault.values())).parent if vault else None
+        investigation = self._agent.investigate(bug_report, graph_path, vault_dir)
         comparison = self._comparison.run_comparison(bug_report, [], graph_data)
         engineering = self._analysis.reverse_engineer(graph_data)
+        bug_report_md = self._analysis.report(investigation)
         return PipelineResult(
             graph_result=str(graph_path),
             vault_result=str(vault.get("index", "")),
             investigation=investigation,
             comparison=comparison,
             engineering=engineering,
+            bug_report_md=bug_report_md,
         )

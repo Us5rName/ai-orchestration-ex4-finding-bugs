@@ -75,6 +75,19 @@ def test_full_pipeline_aggregates_all_stages(sdk: Ex04SDK) -> None:
     assert isinstance(result.investigation, InvestigationResult)
     assert isinstance(result.comparison, ComparisonReport)
     assert isinstance(result.engineering, str)
+    assert isinstance(result.bug_report_md, str)
+
+
+def test_generate_report_returns_string(sdk: Ex04SDK) -> None:
+    investigation = InvestigationResult(root_cause="null deref")
+    report = sdk.generate_report(investigation)
+    assert isinstance(report, str)
+    assert report
+
+
+def test_identify_patterns_returns_list(sdk: Ex04SDK) -> None:
+    patterns = sdk.identify_patterns("/some/path")
+    assert isinstance(patterns, list)
 
 
 def test_from_config_loads_json_and_wires_services(tmp_path: Path) -> None:
