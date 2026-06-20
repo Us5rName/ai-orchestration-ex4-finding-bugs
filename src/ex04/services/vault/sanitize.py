@@ -33,3 +33,19 @@ def safe_name(value: str) -> str:
     """
     cleaned = _UNSAFE_CHARS.sub("_", value).strip().strip(".").strip()
     return cleaned or _FALLBACK
+
+
+def yaml_double_quote(value: str) -> str:
+    """Return ``value`` as a YAML-safe double-quoted scalar.
+
+    Escapes backslashes and double quotes so a name containing ``"`` cannot
+    break the surrounding frontmatter (e.g. ``title: "..."``).
+
+    Args:
+        value: Raw string to embed in double quotes.
+
+    Returns:
+        The value wrapped in double quotes with internal quotes escaped.
+    """
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'

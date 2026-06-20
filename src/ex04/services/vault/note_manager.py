@@ -19,6 +19,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from ex04.services.vault.sanitize import yaml_double_quote
+
 logger = logging.getLogger(__name__)
 
 # Special note types that go in the vault root
@@ -126,7 +128,7 @@ class NoteManager:
         display_title = title or note_type
         lines = [
             "---",
-            f'title: "{display_title}"',
+            f"title: {yaml_double_quote(display_title)}",
             f"tags: [note, {note_type}]",
             f"date: {datetime.now().strftime('%Y-%m-%d')}",
             "---",

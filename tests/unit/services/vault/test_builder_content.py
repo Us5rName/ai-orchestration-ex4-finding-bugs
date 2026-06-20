@@ -84,6 +84,19 @@ class TestVaultBuilderContent:
             content = user_note.read_text(encoding="utf-8")
             assert "[[Auth]]" in content
 
+    def test_build_escapes_quotes_in_entity_title(self) -> None:
+        """An entity name with a double quote must not break note frontmatter."""
+        entities = [Entity(name='Weird"Name', kind="class")]
+        graph_data = GraphData(entities=entities)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            VaultBuilder(vault_path=vault_path).build(graph_data)
+
+            note = next((vault_path / "notes").glob("*.md"))
+            content = note.read_text(encoding="utf-8")
+            assert 'title: "Weird\\"Name"' in content
+
     def test_build_creates_communities_section(self) -> None:
         """Test that build() includes communities in index.md."""
         communities = [

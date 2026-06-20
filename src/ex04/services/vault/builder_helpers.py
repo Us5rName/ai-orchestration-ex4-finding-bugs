@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ex04.services.vault.sanitize import safe_name
+from ex04.services.vault.sanitize import safe_name, yaml_double_quote
 from ex04.shared.types import Community, Entity, GraphData
 
 
@@ -32,7 +32,7 @@ def build_entity_content(
     """
     lines: list[str] = []
     lines.append("---")
-    lines.append(f'title: "{entity.name}"')
+    lines.append(f"title: {yaml_double_quote(entity.name)}")
     lines.append(f"tags: [entity, {entity.kind}]")
     lines.append(f"date: {datetime.now().strftime('%Y-%m-%d')}")
     lines.append("---")
