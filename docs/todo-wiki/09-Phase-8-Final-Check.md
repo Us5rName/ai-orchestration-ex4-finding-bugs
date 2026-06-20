@@ -20,7 +20,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD KPI: ≥ 85% coverage] |
 | **Estimate** | 15 min |
@@ -126,7 +126,7 @@ grep -c "##" README.md  # Should have multiple sections
 - [ ] All API calls flow through Gatekeeper [PRD NFR-6]
 - [ ] `ruff check` = 0 violations [PRD NFR-2]
 - [ ] Test coverage ≥ 85% [PRD NFR-1]
-- [ ] No file > 150 lines [PRD NFR-3]
+- [x] No file > 150 lines [PRD NFR-3]
 - [ ] No hardcoded secrets or config [PRD NFR-4]
 - [ ] Mandatory docs up to date: PRD, PLAN, TODO
 - [ ] `uv` used for all dependency management [PRD NFR-8]

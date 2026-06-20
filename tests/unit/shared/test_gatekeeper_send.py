@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import tempfile
-from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -81,7 +80,6 @@ class TestGatekeeperSend:
             output_tokens=10,
             model="gpt-4o-mini",
             provider="openai",
-            timestamp=datetime.now(),
         )
         mock_provider.chat.return_value = expected_response
         mock_create.return_value = mock_provider
@@ -134,99 +132,3 @@ class TestGatekeeperSend:
         # The request must not have been dispatched, and the queue is drained.
         mock_create.assert_not_called()
         assert gatekeeper.get_queue_status()["queue_size"] == 0
-
-    @patch("ex04.providers.factory.ProviderFactory.create")
-    def test_send_honors_provider_config(self, mock_create: MagicMock) -> None:
-        mock_provider = MagicMock()
-        mock_provider.chat.return_value = ProviderResponse(text="ok", provider="openai")
-        mock_create.return_value = mock_provider
-
-        gatekeeper = ApiGatekeeper(
-            rate_limits_path=_fast_retry_path(),
-            provider_configs={
-                "openai": {"model": "gpt-4o", "base_url": "http://proxy", "max_tokens": 100}
-            },
-        )
-        gatekeeper.send("openai", [{"role": "user", "content": "hi"}])
-
-        name, config = mock_create.call_args.args
-        assert name == "openai"
-        assert config["base_url"] == "http://proxy"
-        assert config["model"] == "gpt-4o"
-        assert config["api_key_env"] == "OPENAI_API_KEY"
-        assert mock_provider.chat.call_args.kwargs["model"] == "gpt-4o"
-
-    @patch("ex04.providers.factory.ProviderFactory.create")
-    def test_send_caches_provider_across_calls(self, mock_create: MagicMock) -> None:
-        mock_provider = MagicMock()
-        mock_provider.chat.return_value = ProviderResponse(text="ok", provider="openai")
-        mock_create.return_value = mock_provider
-
-        gatekeeper = ApiGatekeeper(rate_limits_path=_fast_retry_path())
-        gatekeeper.send("openai", [{"role": "user", "content": "a"}])
-        gatekeeper.send("openai", [{"role": "user", "content": "b"}])
-
-        assert mock_create.call_count == 1
-        assert mock_provider.chat.call_count == 2
-        assert gatekeeper.get_queue_status()["queue_size"] == 0
-
-
-class TestGatekeeperCallLog:
-    """Tests for ApiGatekeeper.get_call_log() method."""
-
-    @patch("ex04.providers.factory.ProviderFactory.create")
-    def test_get_call_log_returns_list(self, mock_create: MagicMock) -> None:
-        mock_provider = MagicMock()
-        mock_provider.chat.return_value = ProviderResponse(
-            text="OK",
-            input_tokens=1,
-            output_tokens=1,
-            model="gpt-4o-mini",
-            provider="openai",
-        )
-        mock_create.return_value = mock_provider
-
-        gatekeeper = ApiGatekeeper(rate_limits_path="")
-        assert isinstance(gatekeeper.get_call_log(), list)
-        assert len(gatekeeper.get_call_log()) == 0
-
-    @patch("ex04.providers.factory.ProviderFactory.create")
-    def test_get_call_log_contains_timestamp(self, mock_create: MagicMock) -> None:
-        mock_provider = MagicMock()
-        mock_provider.chat.return_value = ProviderResponse(
-            text="OK",
-            input_tokens=1,
-            output_tokens=1,
-            model="gpt-4o-mini",
-            provider="openai",
-        )
-        mock_create.return_value = mock_provider
-
-        gatekeeper = ApiGatekeeper(rate_limits_path="")
-        gatekeeper.send("openai", [{"role": "user", "content": "Test"}])
-
-        log = gatekeeper.get_call_log()
-        assert "timestamp" in log[0]
-        assert isinstance(log[0]["timestamp"], datetime)
-
-
-class TestGatekeeperQueueStatus:
-    """Tests for ApiGatekeeper.get_queue_status() method."""
-
-    def test_get_queue_status_returns_dict(self) -> None:
-        gatekeeper = ApiGatekeeper(rate_limits_path="")
-        status = gatekeeper.get_queue_status()
-        assert isinstance(status, dict)
-
-    def test_get_queue_status_has_required_keys(self) -> None:
-        gatekeeper = ApiGatekeeper(rate_limits_path="")
-        status = gatekeeper.get_queue_status()
-        assert "queue_size" in status
-        assert "is_processing" in status
-        assert "rate_limited" in status
-
-    def test_get_queue_status_empty_queue(self) -> None:
-        gatekeeper = ApiGatekeeper(rate_limits_path="")
-        status = gatekeeper.get_queue_status()
-        assert status["queue_size"] == 0
-        assert status["is_processing"] is False

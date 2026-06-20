@@ -540,6 +540,21 @@ tests/unit/services/analysis/
 
 ---
 
+### Prompt 43 — Phase 4 NFR-3 Test Split
+
+**Prompt**: "Implement the remaining Phase 4 audit tasks on a separate `phase4` branch. Keep each commit focused on one responsibility and update the mirrored documentation."
+
+**Context**: The old Phase 4 audit identified three unit test files that exceeded the 150-line project limit: the Gatekeeper send tests, the agent workflow tests, and the vault navigator tests.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| NFR-3 / line-limit cleanup | Split oversized unit tests into focused files while preserving their existing assertions | `tests/unit/shared/test_gatekeeper_*.py`, `tests/unit/services/agent/test_workflow*.py`, `tests/unit/services/vault/test_navigator*.py` |
+
+**Validation**: `find src tests -type f -name '*.py' -exec wc -l {} + | awk '$1 > 150 {print}'` returned no files.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -561,3 +576,4 @@ tests/unit/services/analysis/
 | 1.16 | 2026-06-20 | Added Prompt 40 — T4.12 CodeInspectionNode implementation with TDD: constructor injection of target_path, snippet extraction with file path headers and line numbers, graceful handling of missing files/invalid ranges/zero-based lines. 12 tests across 3 files (all <150 lines), 100% module coverage, 0 ruff violations. |
 | 1.17 | 2026-06-20 | Added Prompt 41 — branch hygiene/provider compatibility: hidden contract-gap note ignored, pytest root import path stabilized, Anthropic text block parsing made tolerant of mocked/SDK-shaped blocks. 293 tests pass, 98.44% coverage, 0 ruff violations. |
 | 1.18 | 2026-06-20 | Added Prompt 42 — SDK wiring and service facades: `from_config()` builds Phase 4 service facades, T4.08 marked Done, T5.01 marked Partial pending Phase 6 comparison/full_pipeline completion. 293 tests pass, 98.44% coverage, 0 ruff violations. |
+| 1.19 | 2026-06-20 | Added Prompt 43 — Phase 4 NFR-3 cleanup: split oversized Gatekeeper, workflow, and vault navigator tests; all Python files are now within the 150-line limit. |
