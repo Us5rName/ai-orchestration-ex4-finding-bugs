@@ -1,6 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 11. Statistics
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 | Metric | Value |
 |---|---|
@@ -12,5 +14,3 @@
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §11.

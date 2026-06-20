@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +25,7 @@ def call_gatekeeper(
     return gatekeeper.send(provider, [{"role": "user", "content": prompt}])
 
 
-def merge_tokens(state: dict[str, Any], response: ProviderResponse) -> TokenMetrics:
+def merge_tokens(state: Mapping[str, Any], response: ProviderResponse) -> TokenMetrics:
     """Merge response token counts into state token usage."""
     current = state.get("token_usage", TokenMetrics())
     return TokenMetrics(

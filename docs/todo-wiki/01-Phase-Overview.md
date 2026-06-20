@@ -1,6 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 1. Phase Overview
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 Each phase consists of **independent, verifiable tasks**. Tasks within a phase may run in parallel. Tasks between phases follow dependency order only — no task blocks another within the same phase.
 
@@ -27,5 +29,3 @@ graph LR
 | **Phase 8** | Submission ready | [PRD §12 Final Checklist] passes |
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §1.

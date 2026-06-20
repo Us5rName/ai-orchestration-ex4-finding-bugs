@@ -137,8 +137,8 @@ def build_hot_content(graph_data: GraphData) -> str:
     file_entities = [e for e in graph_data.entities if e.kind == "file"]
     if file_entities:
         lines.append("## Source Files")
-        for ent in file_entities:
-            lines.append(f"- [[notes/{safe_name(ent.name)}|{ent.name}]]")
+        for entity in file_entities:
+            lines.append(f"- [[notes/{safe_name(entity.name)}|{entity.name}]]")
         lines.append("")
 
     return "\n".join(lines)

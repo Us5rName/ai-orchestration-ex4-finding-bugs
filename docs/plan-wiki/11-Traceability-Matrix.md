@@ -1,8 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 11. Traceability Matrix
 
-[← Back to Home](./Home.md) | [Prev: Project Structure](./10-Project-Structure.md) | [Next: Revision History →](./12-Revision-History.md)
-
----
+[Back to Home](./Home.md)
 
 Maps every PRD requirement to its architectural location:
 
@@ -51,5 +51,3 @@ Maps every PRD requirement to its architectural location:
 | C9 BugsInPy isolation [PRD §10.1] | Graph Service | `services/graph/runner.py` (note only) |
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: Project Structure](./10-Project-Structure.md) | [Next: Revision History →](./12-Revision-History.md)

@@ -10,7 +10,9 @@ Implementation: Phase 4 (T4.002, extracted from gatekeeper)
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+
+from ex04.providers.types import ProviderConfig
 
 if TYPE_CHECKING:
     from ex04.providers.interface import ProviderInterface
@@ -47,9 +49,7 @@ class ProviderPool:
             # Lazy import avoids a circular dependency at module load time.
             from ex04.providers.factory import ProviderFactory
 
-            self._instances[provider] = ProviderFactory.create(
-                provider, self._config_for(provider)
-            )
+            self._instances[provider] = ProviderFactory.create(provider, self._config_for(provider))
         return self._instances[provider]
 
     def model_for(self, provider: str) -> str | None:
@@ -63,7 +63,7 @@ class ProviderPool:
         """
         return self._configs.get(provider, {}).get("model")
 
-    def _config_for(self, provider: str) -> dict[str, Any]:
+    def _config_for(self, provider: str) -> ProviderConfig:
         """Build the provider config, defaulting api_key_env to <PROVIDER>_API_KEY.
 
         Args:
@@ -74,4 +74,4 @@ class ProviderPool:
         """
         config = dict(self._configs.get(provider, {}))
         config.setdefault("api_key_env", f"{provider.upper()}_API_KEY")
-        return config
+        return cast(ProviderConfig, config)

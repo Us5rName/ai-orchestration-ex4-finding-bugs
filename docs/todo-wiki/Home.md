@@ -1,21 +1,20 @@
-<!-- GENERATED FROM CANONICAL DOCUMENTATION — DO NOT EDIT DIRECTLY -->
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
 
-# TODO Wiki — Home
+# TODO Wiki - Home
 
 Navigation index generated from `docs/TODO.md`.
 
 | # | Section |
 |---|---|
-| 1 | [Table of Contents](./todo-01-Table-of-Contents.md) |
-| 2 | [1. Phase Overview](./todo-02-1-Phase-Overview.md) |
-| 3 | [2. Phase 1 — Foundation](./todo-03-2-Phase-1-Foundation.md) |
-| 4 | [3. Phase 2 — Shared Layer](./todo-04-3-Phase-2-Shared-Layer.md) |
-| 5 | [4. Phase 3 — Provider Layer](./todo-05-4-Phase-3-Provider-Layer.md) |
-| 6 | [5. Phase 4 — Services](./todo-06-5-Phase-4-Services.md) |
-| 7 | [6. Phase 5 — SDK + CLI](./todo-07-6-Phase-5-SDK-CLI.md) |
-| 8 | [7. Phase 6 — Comparison Service](./todo-08-7-Phase-6-Comparison-Service.md) |
-| 9 | [8. Phase 7 — End-to-End Execution](./todo-09-8-Phase-7-End-to-End-Execution.md) |
-| 10 | [9. Phase 8 — Final Check](./todo-10-9-Phase-8-Final-Check.md) |
-| 11 | [10. Task Dependency Summary](./todo-11-10-Task-Dependency-Summary.md) |
-| 12 | [11. Statistics](./todo-12-11-Statistics.md) |
-| 13 | [12. Revision History](./todo-13-12-Revision-History.md) |
+| 1 | [1. Phase Overview](./01-Phase-Overview.md) |
+| 2 | [2. Phase 1 — Foundation](./02-Phase-1-Foundation.md) |
+| 3 | [3. Phase 2 — Shared Layer](./03-Phase-2-Shared-Layer.md) |
+| 4 | [4. Phase 3 — Provider Layer](./04-Phase-3-Provider-Layer.md) |
+| 5 | [5. Phase 4 — Services](./05-Phase-4-Services.md) |
+| 6 | [6. Phase 5 — SDK + CLI](./06-Phase-5-SDK-CLI.md) |
+| 7 | [7. Phase 6 — Comparison Service](./07-Phase-6-Comparison.md) |
+| 8 | [8. Phase 7 — End-to-End Execution](./08-Phase-7-End-to-End.md) |
+| 9 | [9. Phase 8 — Final Check](./09-Phase-8-Final-Check.md) |
+| 10 | [10. Task Dependency Summary](./10-Dependency-Summary.md) |
+| 11 | [11. Statistics](./11-Statistics.md) |
+| 12 | [12. Revision History](./12-Revision-History.md) |

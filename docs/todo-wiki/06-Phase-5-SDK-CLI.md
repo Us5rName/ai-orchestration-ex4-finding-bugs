@@ -1,17 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 6. Phase 5 — SDK + CLI
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Wire all services through SDK. Add CLI entry point.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T5.01 — Implement SDK | See below |
-| T5.02 — Implement CLI Entry Point | See below |
-
----
 
 ### T5.01 — Implement SDK
 
@@ -41,8 +34,7 @@
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/sdk/test_sdk.py -v --cov=ex04.sdk.sdk --cov-report=term-missing
-# Tests with all services mocked
+uv run pytest tests/unit/sdk/test_sdk.py tests/integration/ -v
 ```
 
 ---
@@ -74,5 +66,3 @@ uv run python -m ex04 --help
 ```
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §6.

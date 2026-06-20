@@ -1,10 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 5. Architectural Decision Records (ADRs)
 
-[← Back to Home](./Home.md) | [Prev: Data Flow](./04-Data-Flow.md) | [Next: OOP Schema →](./06-OOP-Schema.md)
+[Back to Home](./Home.md)
 
----
-
-## ADR-001: LangGraph Over CrewAI
+### ADR-001: LangGraph Over CrewAI
 
 | Field | Value |
 |---|---|
@@ -15,7 +15,7 @@
 | **Rationale** | HW [§6.1] explicitly recommends LangGraph for limited accounts: "העדיפו LangGraph אם אתם עובדים עם חשבון חינמי מוגבל, כי קל יותר לשלוט במספר הקריאות והשלבים." LangGraph provides explicit state machines with deterministic control flow, enabling precise token counting per step. |
 | **Consequences** | LangGraph-specific code in Agent Service. CrewAI path not implemented. |
 
-## ADR-002: Provider-Agnostic LLM Abstraction
+### ADR-002: Provider-Agnostic LLM Abstraction
 
 | Field | Value |
 |---|---|
@@ -26,7 +26,7 @@
 | **Rationale** | Enables switching providers via configuration alone. Facilitates token comparison experiments ([PRD §5.6 FR-6]) where different providers might be tested. Supports [PRD §6 NFR-4] no-hardcoding principle. |
 | **Consequences** | Slight overhead of abstraction layer. All LLM calls flow through Gatekeeper → ProviderInterface → concrete provider. |
 
-## ADR-003: Grphify as External Tool, Not Library Import
+### ADR-003: Grphify as External Tool, Not Library Import
 
 | Field | Value |
 |---|---|
@@ -37,7 +37,7 @@
 | **Rationale** | Running the initial graph build as a subprocess keeps Grphify's complex extraction pipeline isolated — its failures don't crash the main application. The existing project structure has `graph-home` as a Grphify workspace, suggesting CLI usage. After the graph exists, `graphify query` / `graphify path` / `graphify explain` can be called for targeted investigation. |
 | **Consequences** | Graph Service must handle subprocess execution and output parsing. Graph data format depends on Grphify's output schema (`graphify-out/graph.json`). The Agent Service can optionally use `graphify query` for graph-guided investigation. |
 
-## ADR-004: Separate Comparison as Independent Module
+### ADR-004: Separate Comparison as Independent Module
 
 | Field | Value |
 |---|---|
@@ -48,7 +48,7 @@
 | **Rationale** | Keeps the comparison experiment isolated and independently testable. Each runner can be executed separately for debugging. The MetricsCalculator provides clear separation of concerns. Aligns with [PRD §4.1 In Scope item 6]. |
 | **Consequences** | Both runners need access to Provider layer and may duplicate some agent logic. Mitigated by sharing node implementations where possible. |
 
-## ADR-005: Contract-First Parallel Development
+### ADR-005: Contract-First Parallel Development
 
 | Field | Value |
 |---|---|
@@ -59,7 +59,7 @@
 | **Rationale** | Enables fully parallel development: Agent developer works against `MockGraphService` and `MockVaultService` while the real implementations are built simultaneously. Zero blocking between teams. Also improves testability — every module is testable with mocks from day one. |
 | **Consequences** | Slight overhead of maintaining interfaces. SDK becomes the sole wiring point. All `interface.py` files must be created before implementation phases begin ([TODO §2 Phase 1 — T1.04 defines all contracts]). |
 
-## ADR-006: Markdown-Based Vault Over Obsidian API
+### ADR-006: Markdown-Based Vault Over Obsidian API
 
 | Field | Value |
 |---|---|
@@ -71,5 +71,3 @@
 | **Consequences** | Cannot use Obsidian's graph view API or plugin ecosystem. Navigation is done by parsing Markdown links, not querying an Obsidian API. |
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: Data Flow](./04-Data-Flow.md) | [Next: OOP Schema →](./06-OOP-Schema.md)

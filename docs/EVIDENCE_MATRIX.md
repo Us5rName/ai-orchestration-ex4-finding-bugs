@@ -4,6 +4,7 @@
 |---|---|
 | Version | 1.00 |
 | Date | 2026-06-20 |
+| Author | evya1 |
 | Scope | Phase 6-8 finalization evidence |
 
 ## Evidence Classes
@@ -36,6 +37,6 @@
 
 ## Revision History
 
-| Version | Date | Change |
-|---|---|---|
-| 1.00 | 2026-06-20 | Initial Phase 6-8 evidence matrix. |
+| Version | Date | Author | Change |
+|---|---|---|---|
+| 1.00 | 2026-06-20 | evya1 | Initial Phase 6-8 evidence matrix. |

@@ -1,21 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 8. Phase 7 — End-to-End Execution
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Run the full pipeline on the target codebase.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T7.01 — Run Grphify on Target Codebase | See below |
-| T7.02 — Build Obsidian Vault | See below |
-| T7.03 — Execute Bug Investigation | See below |
-| T7.04 — Execute Token Comparison | See below |
-| T7.05 — Generate Reverse Engineering Artifacts | See below |
-| T7.06 — Update Obsidian After Investigation | See below |
-
----
 
 ### T7.01 — Run Grphify on Target Codebase
 
@@ -172,4 +161,104 @@ ls -la obsidian/*.md  # New files should exist after investigation
 
 ---
 
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §8.
+### T7.07 — Orphan Detector Extension (FR-7.5)
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.5] |
+| **PRD Reference** | [PRD-EXT] EXT-1 |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `OrphanDetector.detect(graph_data, min_connections)` returns `OrphanReport`
+- [x] `Ex04SDK.detect_orphans` exposes operation
+- [x] Unit tests: empty graph, isolated nodes, threshold edge cases
+- [x] `tests/unit/services/analysis/test_orphan_detector.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v
+```
+
+---
+
+### T7.08 — Patch-Impact Analyzer Extension (FR-7.6)
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.6] |
+| **PRD Reference** | [PRD-EXT] EXT-2 |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `PatchImpactAnalyzer.analyze(graph_data, changed_symbols, max_depth)` returns `ImpactReport`
+- [x] `Ex04SDK.analyze_patch_impact` exposes operation
+- [x] Unit tests: no changed symbols, cycle handling, depth limit
+- [x] `tests/unit/services/analysis/test_patch_impact.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_patch_impact.py -v
+```
+
+---
+
+### T7.09 — Artifact Provenance and ArtifactStore
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
+| **PRD Reference** | [PRD-AP] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `ArtifactStore` implements overwrite protection
+- [x] `RunManifest` schema covers all PRD-AP fields
+- [x] Sanitizer removes secrets and personal paths
+- [x] `artifacts/manifests/` directory committed with fixture
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_artifact_store.py -v
+ls artifacts/manifests/
+```
+
+---
+
+### T7.10 — Deterministic Fixtures and Walkthrough Notebook
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
+| **PRD Reference** | [PRD §8 Deliverables] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] Fixture vault in `obsidian/` with `index.md` and `hot.md`
+- [x] Fixture investigation result in `artifacts/runs/fixture-001/`
+- [x] Walkthrough notebook `notebooks/walkthrough.ipynb` loads committed evidence
+- [x] Notebook remains viewable without a paid provider
+
+**Independent Verification**:
+
+```bash
+ls obsidian/ && ls artifacts/runs/
+uv run jupyter nbconvert --to notebook --execute notebooks/walkthrough.ipynb 2>/dev/null || echo "nbconvert optional"
+```
+
+---

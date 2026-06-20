@@ -1,20 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 4. Phase 3 — Provider Layer
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Provider-agnostic LLM abstraction. Fully testable with mocks — no real API calls needed for unit tests.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T3.01 — Implement Provider Interface | See below |
-| T3.02 — Implement OpenAI Provider | See below |
-| T3.03 — Implement Anthropic Provider | See below |
-| T3.04 — Implement Provider Factory | See below |
-| T3.05 — Provider Layer `__init__.py` | See below |
-
----
 
 ### T3.01 — Implement Provider Interface
 
@@ -137,5 +127,3 @@ uv run python -c "from ex04.providers import ProviderInterface, ProviderFactory;
 ```
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §4.

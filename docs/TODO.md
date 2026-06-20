@@ -1891,15 +1891,15 @@ grep -c "##" README.md  # Should have multiple sections
 
 | Attribute | Value |
 |---|---|
-| **Status** | Done |
+| **Status** | Pending |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §12 Final Checklist] |
 | **Estimate** | 20 min |
 
 **Definition of Done**:
 
-- [x] `reports/clean_clone_verification.md` committed with verified results
-- [x] Report includes: SHA, Python version, uv version, ruff, mypy, pytest, coverage
+- [ ] `reports/clean_clone_verification.md` committed with verified results
+- [ ] Report includes: SHA, Python version, uv version, ruff, mypy, pytest, coverage
 
 ---
 

@@ -57,3 +57,7 @@ class AgentState(TypedDict, total=False):
     test_results: dict[str, Any]
     token_usage: TokenMetrics
     iterations: int
+    max_iterations: int
+    target_path: str
+    test_command: list[str]
+    test_cwd: str

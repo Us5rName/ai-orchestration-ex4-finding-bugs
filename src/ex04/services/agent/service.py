@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.agent.state import AgentState
@@ -72,4 +72,4 @@ class AgentService(AgentServiceInterface):
     def _invoke_workflow(self, state: AgentState) -> AgentState:
         """Invoke the compiled LangGraph workflow."""
         result = self._builder.build().invoke(state)
-        return dict(result)
+        return cast(AgentState, dict(result))
