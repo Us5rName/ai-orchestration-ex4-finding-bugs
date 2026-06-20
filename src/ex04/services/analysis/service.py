@@ -27,3 +27,7 @@ class AnalysisService(AnalysisServiceInterface):
     def report(self, investigation: InvestigationResult) -> str:
         """Generate a structured bug report from an investigation."""
         return self._reporter.generate(investigation)
+
+    def identify_patterns(self, graph_data: GraphData) -> list[str]:
+        """Identify design patterns from graph data."""
+        return self._reverse_engineer.identify_patterns(graph_data)
