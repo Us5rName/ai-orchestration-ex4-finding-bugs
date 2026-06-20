@@ -16,6 +16,7 @@ Implementation: **Phase 4** (T4.08)
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -46,13 +47,18 @@ class WorkflowBuilder:
         max_iterations: Cap on verify→suspect retries before forcing END.
     """
 
-    def __init__(self, max_iterations: int = _DEFAULT_MAX_ITERATIONS) -> None:
+    def __init__(
+        self,
+        target_path: Path | str = ".",
+        max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+    ) -> None:
         """Initialize with a retry cap.
 
         Args:
             max_iterations: Maximum verify→suspect retry cycles. The agent
                 service should pass ``config['agent']['max_iterations']``.
         """
+        self.target_path = Path(target_path)
         self.max_iterations = max_iterations
 
     def build(self) -> CompiledStateGraph:
@@ -71,7 +77,7 @@ class WorkflowBuilder:
         graph.add_node("knowledge", KnowledgeLoadNode())
         graph.add_node("analysis", BugAnalysisNode())
         graph.add_node("suspect", SuspectRankingNode())
-        graph.add_node("inspect", CodeInspectionNode())
+        graph.add_node("inspect", CodeInspectionNode(self.target_path))
         graph.add_node("rootcause", RootCauseNode())
         graph.add_node("fix", FixGenerationNode())
         graph.add_node("verify", VerificationNode())

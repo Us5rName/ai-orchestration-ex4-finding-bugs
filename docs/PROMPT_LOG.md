@@ -521,6 +521,25 @@ tests/unit/services/analysis/
 
 ---
 
+### Prompt 42 — SDK Wiring and Service Facades
+
+**Prompt**: "Commit all uncommitted work in separate commits by context, and update/check off corresponding PLAN/TODO documentation."
+
+**Context**: PLAN §3 describes runtime service facades behind the `*Interface` contracts, but the branch only had component classes and mocks. `Ex04SDK.from_config()` still needed concrete service construction after the Phase 4 work on master.
+
+**Implementation**:
+
+| Change | Files | Documentation |
+|---|---|---|
+| Added production facades for graph, vault, analysis, agent, and deferred comparison contracts | `services/*/service.py`, service `__init__.py` exports | PLAN §3.2, PLAN §10, plan-wiki §3/§10 |
+| Wired `Ex04SDK.from_config()` to build service facades from `config/setup.json` | `src/ex04/sdk/sdk.py`, `tests/unit/sdk/test_sdk.py` | TODO T5.01 marked Partial; implemented checkboxes marked done |
+| Passed configured target paths into agent workflow construction and added facade/regression tests | `agent/service.py`, `agent/workflow.py`, new service tests | TODO T4.08 marked Done |
+| Kept comparison explicitly deferred until Phase 6 | `services/comparison/service.py` | TODO T5.01 remaining note |
+
+**Validation**: `uv run pytest -q` → 293 passed, 98.44% coverage. `uv run ruff check src tests` → 0 violations.
+
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -541,3 +560,4 @@ tests/unit/services/analysis/
 | 1.15 | 2026-06-20 | Added Prompt 39 — Code-review fixes for Phase 4 services (vault/agent/analysis): filename/path sanitization, bounded retry loop via max_iterations, navigator empty-query + whole-vault search + title fallback, YAML frontmatter escaping, CompiledStateGraph annotation, deterministic pattern ordering. 8 fixes, one commit each. 274/274 tests, 98.15% coverage. |
 | 1.16 | 2026-06-20 | Added Prompt 40 — T4.12 CodeInspectionNode implementation with TDD: constructor injection of target_path, snippet extraction with file path headers and line numbers, graceful handling of missing files/invalid ranges/zero-based lines. 12 tests across 3 files (all <150 lines), 100% module coverage, 0 ruff violations. |
 | 1.17 | 2026-06-20 | Added Prompt 41 — branch hygiene/provider compatibility: hidden contract-gap note ignored, pytest root import path stabilized, Anthropic text block parsing made tolerant of mocked/SDK-shaped blocks. 293 tests pass, 98.44% coverage, 0 ruff violations. |
+| 1.18 | 2026-06-20 | Added Prompt 42 — SDK wiring and service facades: `from_config()` builds Phase 4 service facades, T4.08 marked Done, T5.01 marked Partial pending Phase 6 comparison/full_pipeline completion. 293 tests pass, 98.44% coverage, 0 ruff violations. |

@@ -208,6 +208,8 @@ class Ex04SDK:
     ):
         ...
 
+    @classmethod
+    def from_config(cls, config_path: str) -> Ex04SDK: ...
     def run_graphify(self, target_path: str) -> GraphData: ...
     def build_vault(self, graph_data: GraphData) -> dict[str, Path]: ...
     def investigate_bug(
@@ -226,6 +228,10 @@ class Ex04SDK:
     def reverse_engineer(self, target_path: str) -> str: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
+
+`from_config()` is the concrete wiring point: it builds the Phase 4 service facades
+(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`) and the
+Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
 
 ## 3.3 Graph Service — Grphify Integration
 

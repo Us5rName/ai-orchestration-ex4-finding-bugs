@@ -500,6 +500,8 @@ class Ex04SDK:
     ):
         ...
 
+    @classmethod
+    def from_config(cls, config_path: str) -> Ex04SDK: ...
     def run_graphify(self, target_path: str) -> GraphData: ...
     def build_vault(self, graph_data: GraphData) -> dict[str, Path]: ...
     def investigate_bug(
@@ -518,6 +520,10 @@ class Ex04SDK:
     def reverse_engineer(self, target_path: str) -> str: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
+
+`from_config()` is the concrete wiring point: it builds the Phase 4 service facades
+(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`) and the
+Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
 
 ### 3.3 Graph Service — Grphify Integration
 
@@ -1472,18 +1478,21 @@ code/
 │       │   ├── graph/
 │       │   │   ├── __init__.py
 │       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
+│       │   │   ├── service.py    # Facade implementing GraphServiceInterface
 │       │   │   ├── runner.py     # [PRD FR-1.1] Grphify execution
 │       │   │   ├── parser.py     # [PRD FR-1.1] Graph parsing
 │       │   │   └── analyzer.py   # [PRD FR-1.4-1.5] Graph analysis
 │       │   ├── vault/
 │       │   │   ├── __init__.py
 │       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
+│       │   │   ├── service.py    # Facade implementing VaultServiceInterface
 │       │   │   ├── builder.py    # [PRD FR-2.2-2.3] Vault creation
 │       │   │   ├── navigator.py  # [PRD FR-2.5] Vault navigation
 │       │   │   └── note_manager.py  # [PRD FR-2.4] Note management
 │       │   ├── agent/
 │       │   │   ├── __init__.py
 │       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
+│       │   │   ├── service.py    # Facade implementing AgentServiceInterface
 │       │   │   ├── workflow.py   # [PRD FR-4.1] LangGraph assembly
 │       │   │   ├── state.py      # [PRD FR-4.3] State schema
 │       │   │   └── nodes/
@@ -1498,12 +1507,14 @@ code/
 │       │   ├── analysis/
 │       │   │   ├── __init__.py
 │       │   │   ├── interface.py  # [ADR-005] Contract for parallel dev
+│       │   │   ├── service.py    # Facade implementing AnalysisServiceInterface
 │       │   │   ├── reverse_engineer.py  # [PRD FR-3.1-3.2]
 │       │   │   ├── diagram_gen.py       # [PRD FR-3.3]
 │       │   │   └── bug_report.py        # [PRD FR-5.2]
 │       │   └── comparison/
 │       │       ├── __init__.py
 │       │       ├── interface.py  # [ADR-005] Contract for parallel dev
+│       │       ├── service.py    # Phase 6-deferred ComparisonService facade
 │       │       ├── naive_runner.py      # [PRD FR-6.1]
 │       │       ├── graph_guided_runner.py  # [PRD FR-6.2]
 │       │       ├── metrics.py           # [PRD FR-6.3]
@@ -1599,3 +1610,4 @@ Maps every PRD requirement to its architectural location:
 | 1.02 | 2026-06-20 | Lahav | Sync fix: add full_pipeline to Ex04SDK OOP Schema class diagram (§6) to match plan-wiki/06-OOP-Schema.md |
 | 1.03 | 2026-06-20 | Lahav | Fill missing signatures in §3: added all 6 service interface ABCs (§3.1.1), all 7 agent node classes (§3.5), shared layer Gatekeeper/ConfigManager/TokenTracker signatures, and complete dataclass types (§3.9) — sourced from actual implementation code (Traceability: [CLAUDE.md §3 SDK-First], [CLAUDE.md §4 Golden Rules]) |
 | 1.04 | 2026-06-20 | Lahav | Align §3.2/3.3/3.4/3.6/4.1/6/8.1 with actual implementation: removed undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry); replaced with actual types (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures to match code (Traceability: [PLAN §3.2 SDK Module], [PLAN §3.3 Graph Service], [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PLAN §4.1 Data Flow], [PLAN §6 OOP Schema], [PLAN §8.1 API Contract], [PRD §5.1 FR-1.1], [PRD §5.2 FR-2.1-2.4], [PRD §5.3 FR-3.1-3.2], [PRD §6 NFR-5]) |
+| 1.05 | 2026-06-20 | Lahav | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |

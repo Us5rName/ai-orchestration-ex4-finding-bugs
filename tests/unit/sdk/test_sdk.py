@@ -77,12 +77,22 @@ def test_full_pipeline_aggregates_all_stages(sdk: Ex04SDK) -> None:
     assert isinstance(result.engineering, str)
 
 
-def test_from_config_loads_json_and_attempts_wiring(tmp_path: Path) -> None:
-    """from_config reads the file, then hits the Phase 4 integration point."""
+def test_from_config_loads_json_and_wires_services(tmp_path: Path) -> None:
+    """from_config reads the file and wires Phase 4 service facades."""
     cfg = tmp_path / "setup.json"
-    cfg.write_text(json.dumps({"provider": {"name": "openai"}}), encoding="utf-8")
-    with pytest.raises(NotImplementedError):
-        Ex04SDK.from_config(str(cfg))
+    cfg.write_text(
+        json.dumps(
+            {
+                "provider": {"name": "openai"},
+                "vault": {"output_dir": str(tmp_path / "vault")},
+                "paths": {"target_codebase": str(tmp_path)},
+                "agent": {"max_iterations": 2},
+            }
+        ),
+        encoding="utf-8",
+    )
+    sdk = Ex04SDK.from_config(str(cfg))
+    assert isinstance(sdk, Ex04SDK)
 
 
 def test_from_config_missing_file_raises(tmp_path: Path) -> None:
