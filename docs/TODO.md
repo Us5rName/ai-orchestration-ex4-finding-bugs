@@ -686,7 +686,7 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — parser.py] |
 | **PRD Reference** | [PRD FR-1.1] graph.json parsing |
@@ -694,10 +694,10 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 
 **Definition of Done**:
 
-- [ ] `GraphParser.parse(graph_path)` reads `graph.json` and returns `GraphData`
-- [ ] Extracts entities, relationships, communities from Grphify output
-- [ ] Handles missing fields, malformed JSON, empty graph
-- [ ] File ≤ 150 lines
+- [x] `GraphParser.parse(graph_path)` reads `graph.json` and returns `GraphData`
+- [x] Extracts entities, relationships, communities from Grphify output
+- [x] Handles missing fields, malformed JSON, empty graph
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -712,7 +712,7 @@ uv run pytest tests/unit/services/graph/test_parser.py -v --cov=ex04.services.gr
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — analyzer.py] |
 | **PRD Reference** | [PRD FR-1.4-1.5], [PRD FR-7.2] centrality ranking |
@@ -720,11 +720,11 @@ uv run pytest tests/unit/services/graph/test_parser.py -v --cov=ex04.services.gr
 
 **Definition of Done**:
 
-- [ ] `GraphAnalyzer.find_god_nodes(graph)` identifies high-degree nodes
-- [ ] `GraphAnalyzer.rank_by_centrality(graph, ref_node)` ranks by proximity
-- [ ] `GraphAnalyzer.detect_communities(graph)` extracts community clusters
-- [ ] All methods have docstrings with I/O contract
-- [ ] File ≤ 150 lines — split centrality calculation if needed
+- [x] `GraphAnalyzer.find_god_nodes(graph)` identifies high-degree nodes
+- [x] `GraphAnalyzer.rank_by_centrality(graph, ref_node)` ranks by proximity
+- [x] `GraphAnalyzer.detect_communities(graph)` extracts community clusters
+- [x] All methods have docstrings with I/O contract
+- [x] File ≤ 150 lines — split centrality calculation if needed
 
 **Independent Verification**:
 
@@ -739,7 +739,7 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — builder.py] |
 | **PRD Reference** | [PRD FR-2.2-2.3] |
@@ -747,12 +747,12 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 **Definition of Done**:
 
-- [ ] `VaultBuilder.build(graph)` creates complete vault from graph data
-- [ ] `VaultBuilder.create_index(graph)` generates `index.md` with navigation structure
-- [ ] `VaultBuilder.create_hot(focus_area)` generates `hot.md` for bug area
-- [ ] Uses `[[wikilinks]]` syntax for Obsidian compatibility
-- [ ] Creates vault directory structure
-- [ ] File ≤ 150 lines
+- [x] `VaultBuilder.build(graph)` creates complete vault from graph data
+- [x] `VaultBuilder.create_index(graph)` generates `index.md` with navigation structure
+- [x] `VaultBuilder.create_hot(focus_area)` generates `hot.md` for bug area
+- [x] Uses `[[wikilinks]]` syntax for Obsidian compatibility
+- [x] Creates vault directory structure
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -793,7 +793,7 @@ uv run pytest tests/unit/services/vault/test_navigator.py -v --cov=ex04.services
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — note_manager.py] |
 | **PRD Reference** | [PRD FR-2.4] |
@@ -801,10 +801,10 @@ uv run pytest tests/unit/services/vault/test_navigator.py -v --cov=ex04.services
 
 **Definition of Done**:
 
-- [ ] `NoteManager.create_note(title, content, links)` creates linked Markdown note
-- [ ] `NoteManager.update_note(path, content)` appends to existing note
-- [ ] Generates proper frontmatter with title, tags, date
-- [ ] File ≤ 150 lines
+- [x] `NoteManager.create_note(title, content, links)` creates linked Markdown note
+- [x] `NoteManager.update_note(path, content)` appends to existing note
+- [x] Generates proper frontmatter with title, tags, date
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -944,7 +944,7 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/inspect.py] |
 | **PRD Reference** | [PRD FR-4.2] |
@@ -953,8 +953,8 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 **Definition of Done**:
 
 - [x] Fetches code snippets only for ranked suspects (not entire codebase)
-- [ ] Records files read for comparison metrics
-- [ ] Uses Gatekeeper for LLM analysis
+- [x] Records files read for comparison metrics
+- [x] Uses Gatekeeper for LLM analysis
 - [x] Callable as LangGraph node
 
 **Independent Verification**:
@@ -1046,7 +1046,7 @@ uv run pytest tests/unit/services/agent/nodes/test_verify.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — reverse_engineer.py] |
 | **PRD Reference** | [PRD FR-3.1-3.2] |
@@ -1054,10 +1054,10 @@ uv run pytest tests/unit/services/agent/nodes/test_verify.py -v
 
 **Definition of Done**:
 
-- [ ] `extract_block_schema(graph)` produces Mermaid block diagram
-- [ ] `extract_oop_schema(graph)` produces Mermaid class diagram
-- [ ] `identify_patterns(graph)` detects design patterns
-- [ ] Uses Gatekeeper for LLM-assisted analysis
+- [x] `extract_block_schema(graph)` produces Mermaid block diagram
+- [x] `extract_oop_schema(graph)` produces Mermaid class diagram
+- [x] `identify_patterns(graph)` detects design patterns
+- [x] Uses Gatekeeper for LLM-assisted analysis
 
 **Independent Verification**:
 
@@ -1071,7 +1071,7 @@ uv run pytest tests/unit/services/analysis/test_reverse_engineer.py -v --cov=ex0
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — diagram_gen.py] |
 | **PRD Reference** | [PRD FR-3.3] |
@@ -1079,9 +1079,9 @@ uv run pytest tests/unit/services/analysis/test_reverse_engineer.py -v --cov=ex0
 
 **Definition of Done**:
 
-- [ ] `save_diagram(content, name, path)` writes Mermaid to `.md` file
-- [ ] `validate_mermaid(content)` checks basic Mermaid syntax
-- [ ] File ≤ 150 lines
+- [x] `save_diagram(content, name, path)` writes Mermaid to `.md` file
+- [x] `validate_mermaid(content)` checks basic Mermaid syntax
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -1095,7 +1095,7 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — bug_report.py] |
 | **PRD Reference** | [PRD FR-5.2] |
@@ -1103,9 +1103,9 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 **Definition of Done**:
 
-- [ ] `generate(investigation)` produces structured Markdown report
-- [ ] Includes: problem, root cause, investigation steps, fix, before/after
-- [ ] File ≤ 150 lines
+- [x] `generate(investigation)` produces structured Markdown report
+- [x] Includes: problem, root cause, investigation steps, fix, before/after
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -1732,3 +1732,4 @@ graph TD
 | 1.10 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
 | 1.11 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
 | 1.12 | 2026-06-20 | Codex | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
+| 1.14 | 2026-06-20 | Codex | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |

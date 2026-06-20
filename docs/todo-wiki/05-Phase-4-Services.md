@@ -111,7 +111,7 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — parser.py] |
 | **PRD Reference** | [PRD FR-1.1] graph.json parsing |
@@ -119,10 +119,10 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 
 **Definition of Done**:
 
-- [ ] `GraphParser.parse(graph_path)` reads `graph.json` and returns `GraphData`
-- [ ] Extracts entities, relationships, communities from Grphify output
-- [ ] Handles missing fields, malformed JSON, empty graph
-- [ ] File ≤ 150 lines
+- [x] `GraphParser.parse(graph_path)` reads `graph.json` and returns `GraphData`
+- [x] Extracts entities, relationships, communities from Grphify output
+- [x] Handles missing fields, malformed JSON, empty graph
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -137,7 +137,7 @@ uv run pytest tests/unit/services/graph/test_parser.py -v --cov=ex04.services.gr
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — analyzer.py] |
 | **PRD Reference** | [PRD FR-1.4-1.5], [PRD FR-7.2] centrality ranking |
@@ -145,11 +145,11 @@ uv run pytest tests/unit/services/graph/test_parser.py -v --cov=ex04.services.gr
 
 **Definition of Done**:
 
-- [ ] `GraphAnalyzer.find_god_nodes(graph)` identifies high-degree nodes
-- [ ] `GraphAnalyzer.rank_by_centrality(graph, ref_node)` ranks by proximity
-- [ ] `GraphAnalyzer.detect_communities(graph)` extracts community clusters
-- [ ] All methods have docstrings with I/O contract
-- [ ] File ≤ 150 lines — split centrality calculation if needed
+- [x] `GraphAnalyzer.find_god_nodes(graph)` identifies high-degree nodes
+- [x] `GraphAnalyzer.rank_by_centrality(graph, ref_node)` ranks by proximity
+- [x] `GraphAnalyzer.detect_communities(graph)` extracts community clusters
+- [x] All methods have docstrings with I/O contract
+- [x] File ≤ 150 lines — split centrality calculation if needed
 
 **Independent Verification**:
 
@@ -166,7 +166,7 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — builder.py] |
 | **PRD Reference** | [PRD FR-2.2-2.3] |
@@ -174,12 +174,12 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 **Definition of Done**:
 
-- [ ] `VaultBuilder.build(graph)` creates complete vault from graph data
-- [ ] `VaultBuilder.create_index(graph)` generates `index.md` with navigation structure
-- [ ] `VaultBuilder.create_hot(focus_area)` generates `hot.md` for bug area
-- [ ] Uses `[[wikilinks]]` syntax for Obsidian compatibility
-- [ ] Creates vault directory structure
-- [ ] File ≤ 150 lines
+- [x] `VaultBuilder.build(graph)` creates complete vault from graph data
+- [x] `VaultBuilder.create_index(graph)` generates `index.md` with navigation structure
+- [x] `VaultBuilder.create_hot(focus_area)` generates `hot.md` for bug area
+- [x] Uses `[[wikilinks]]` syntax for Obsidian compatibility
+- [x] Creates vault directory structure
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -220,7 +220,7 @@ uv run pytest tests/unit/services/vault/test_navigator.py -v --cov=ex04.services
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service — note_manager.py] |
 | **PRD Reference** | [PRD FR-2.4] |
@@ -228,10 +228,10 @@ uv run pytest tests/unit/services/vault/test_navigator.py -v --cov=ex04.services
 
 **Definition of Done**:
 
-- [ ] `NoteManager.create_note(title, content, links)` creates linked Markdown note
-- [ ] `NoteManager.update_note(path, content)` appends to existing note
-- [ ] Generates proper frontmatter with title, tags, date
-- [ ] File ≤ 150 lines
+- [x] `NoteManager.create_note(title, content, links)` creates linked Markdown note
+- [x] `NoteManager.update_note(path, content)` appends to existing note
+- [x] Generates proper frontmatter with title, tags, date
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -247,7 +247,7 @@ uv run pytest tests/unit/services/vault/test_note_manager.py -v --cov=ex04.servi
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — state.py] |
 | **PRD Reference** | [PRD FR-4.3] |
@@ -373,7 +373,7 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/inspect.py] |
 | **PRD Reference** | [PRD FR-4.2] |
@@ -382,8 +382,8 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 **Definition of Done**:
 
 - [x] Fetches code snippets only for ranked suspects (not entire codebase)
-- [ ] Records files read for comparison metrics
-- [ ] Uses Gatekeeper for LLM analysis
+- [x] Records files read for comparison metrics
+- [x] Uses Gatekeeper for LLM analysis
 - [x] Callable as LangGraph node
 
 **Independent Verification**:
@@ -477,7 +477,7 @@ uv run pytest tests/unit/services/agent/nodes/test_verify.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — reverse_engineer.py] |
 | **PRD Reference** | [PRD FR-3.1-3.2] |
@@ -485,10 +485,10 @@ uv run pytest tests/unit/services/agent/nodes/test_verify.py -v
 
 **Definition of Done**:
 
-- [ ] `extract_block_schema(graph)` produces Mermaid block diagram
-- [ ] `extract_oop_schema(graph)` produces Mermaid class diagram
-- [ ] `identify_patterns(graph)` detects design patterns
-- [ ] Uses Gatekeeper for LLM-assisted analysis
+- [x] `extract_block_schema(graph)` produces Mermaid block diagram
+- [x] `extract_oop_schema(graph)` produces Mermaid class diagram
+- [x] `identify_patterns(graph)` detects design patterns
+- [x] Uses Gatekeeper for LLM-assisted analysis
 
 **Independent Verification**:
 
@@ -502,7 +502,7 @@ uv run pytest tests/unit/services/analysis/test_reverse_engineer.py -v --cov=ex0
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — diagram_gen.py] |
 | **PRD Reference** | [PRD FR-3.3] |
@@ -510,9 +510,9 @@ uv run pytest tests/unit/services/analysis/test_reverse_engineer.py -v --cov=ex0
 
 **Definition of Done**:
 
-- [ ] `save_diagram(content, name, path)` writes Mermaid to `.md` file
-- [ ] `validate_mermaid(content)` checks basic Mermaid syntax
-- [ ] File ≤ 150 lines
+- [x] `save_diagram(content, name, path)` writes Mermaid to `.md` file
+- [x] `validate_mermaid(content)` checks basic Mermaid syntax
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -526,7 +526,7 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service — bug_report.py] |
 | **PRD Reference** | [PRD FR-5.2] |
@@ -534,9 +534,9 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 **Definition of Done**:
 
-- [ ] `generate(investigation)` produces structured Markdown report
-- [ ] Includes: problem, root cause, investigation steps, fix, before/after
-- [ ] File ≤ 150 lines
+- [x] `generate(investigation)` produces structured Markdown report
+- [x] Includes: problem, root cause, investigation steps, fix, before/after
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 

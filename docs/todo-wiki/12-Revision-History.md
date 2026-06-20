@@ -17,6 +17,7 @@
 | 1.11 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
 | 1.12 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
 | 1.13 | 2026-06-20 | Codex | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
+| 1.14 | 2026-06-20 | Codex | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |
 
 ---
 
