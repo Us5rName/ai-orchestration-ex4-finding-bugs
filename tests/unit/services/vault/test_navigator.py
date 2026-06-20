@@ -100,6 +100,20 @@ class TestVaultNavigator:
             titles = [r["title"] for r in results]
             assert "User" in titles
 
+    def test_navigate_searches_root_notes(self) -> None:
+        """Root-level notes (index.md, hot.md) are searched, not just notes/."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            (vault_path / "hot.md").write_text(
+                "# Hot Area\n\nPrimary Focus: payment_processor", encoding="utf-8"
+            )
+            navigator = VaultNavigator(vault_path=vault_path)
+            results = navigator.navigate("payment_processor")
+
+            paths = [Path(r["path"]).name for r in results]
+            assert "hot.md" in paths
+
     def test_navigate_empty_vault(self) -> None:
         """Test that navigate() handles empty vault gracefully."""
         with tempfile.TemporaryDirectory() as tmpdir:

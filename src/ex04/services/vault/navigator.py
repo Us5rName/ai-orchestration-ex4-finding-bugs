@@ -63,14 +63,12 @@ class VaultNavigator:
         if not self.vault_path.exists():
             return []
 
-        notes_dir = self.vault_path / "notes"
-        if not notes_dir.exists():
-            return []
-
         results: list[dict[str, str]] = []
         query_lower = query.lower()
 
-        for md_file in sorted(notes_dir.glob("*.md")):
+        # Search every note in the vault, including the curated root-level
+        # index.md and hot.md (the bug focus area), not just notes/.
+        for md_file in sorted(self.vault_path.rglob("*.md")):
             content = md_file.read_text(encoding="utf-8")
             title = self._extract_title(content)
 
