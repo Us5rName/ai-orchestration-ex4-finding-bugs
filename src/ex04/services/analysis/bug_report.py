@@ -60,6 +60,13 @@ class BugReporter:
         lines.append(f"**Date**: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         lines.append("")
 
+        # Original Problem
+        if investigation.original_problem:
+            lines.append("## Original Problem")
+            lines.append("")
+            lines.append(investigation.original_problem)
+            lines.append("")
+
         # Problem Summary
         lines.append("## Problem Summary")
         lines.append("")
@@ -90,6 +97,15 @@ class BugReporter:
         proposed_fix = investigation.proposed_fix or "None"
         lines.append(proposed_fix)
         lines.append("")
+
+        # Fix Diff
+        if investigation.fix_diff:
+            lines.append("## Fix Diff")
+            lines.append("")
+            lines.append("```diff")
+            lines.append(investigation.fix_diff)
+            lines.append("```")
+            lines.append("")
 
         # Fix Status
         lines.append("## Fix Status")

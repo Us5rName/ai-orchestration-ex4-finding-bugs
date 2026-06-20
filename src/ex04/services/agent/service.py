@@ -57,6 +57,8 @@ class AgentService(AgentServiceInterface):
             proposed_fix=self._state.get("proposed_fix", ""),
             fix_applied=self._state.get("fix_applied", False),
             test_results=self._state.get("test_results", {}),
+            original_problem=self._state.get("bug_report", ""),
+            fix_diff=self._state.get("fix_diff", ""),
         )
         if "token_usage" in self._state:
             result.token_usage = self._state["token_usage"]
