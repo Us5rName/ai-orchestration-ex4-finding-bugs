@@ -1,0 +1,16 @@
+{
+  "evidence_class": "fixture",
+  "target_identifier": "andela/buggy-python",
+  "selected_commit": "unknown — live Graphify extraction required",
+  "commit_hash": "unknown",
+  "snapshot_hash": "unknown",
+  "acquisition_date": "2026-06-20",
+  "license": "andela/buggy-python is available on GitHub under its stated license",
+  "excluded_paths": [".git", "__pycache__", "*.pyc", "node_modules"],
+  "generated_paths": ["graphify-out/graph.json", "graphify-out/GRAPH_REPORT.md"],
+  "selected_bug": "IndexError in process_data when items list is empty (off-by-one / missing guard)",
+  "reproduction_command": "python buggy.py",
+  "graphify_status": "BLOCKED — live Graphify extraction requires the target repository and credentials",
+  "vault_status": "FIXTURE — obsidian/ contains representative fixture notes, not live extraction output",
+  "note": "T7.01 and T7.02 are blocked on live provider credentials. Fixtures document the intended workflow."
+}

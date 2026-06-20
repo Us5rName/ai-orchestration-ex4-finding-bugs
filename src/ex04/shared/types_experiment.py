@@ -11,7 +11,6 @@ from datetime import datetime
 
 from ex04.shared.types_results import InvestigationResult
 
-
 @dataclass
 class ExperimentConfig:
     """Shared configuration for both comparison modes (fairness invariant).

@@ -1,4 +1,13 @@
-"""Graph-guided bounded investigation workflow."""
+"""Graph Guided Runner — executes graph-guided investigation workflow.
+
+Uses ranked graph entities (by degree centrality), relationships, source
+anchors, and vault notes (index.md → hot.md) to provide focused context.
+
+Context acquisition strategy: graph → vault → targeted source anchors.
+This is the independent variable vs. NaiveRunner.
+
+Traceability: [PRD-GGI §Contracts], [TODO T6.02, T6.04], [PRD-CE §12.3]
+"""
 
 from __future__ import annotations
 
@@ -21,9 +30,16 @@ from ex04.shared.types_results import InvestigationResult
 def _legacy_request(bug_report: str, provider: str) -> ComparisonRequest:
     return ComparisonRequest(bug_report=bug_report, provider=provider, run_id="legacy-graph")
 
+_MAX_ENTITIES = 20
+_MAX_VAULT_NOTES = 3
+
 
 class GraphGuidedRunner:
-    """Run the focused graph/vault-guided comparison mode."""
+    """Run a focused graph/vault-guided comparison pass.
+
+    Context is derived exclusively from graph_data and the vault — no
+    filesystem scan of source files is performed.
+    """
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
         self.gatekeeper = gatekeeper

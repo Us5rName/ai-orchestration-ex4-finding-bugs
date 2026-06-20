@@ -408,7 +408,7 @@ Respond with JSON matching the diagnosis schema. Include source anchors
 | **Task ID** | T8.05 |
 | **Classification** | Prompt template |
 | **Purpose** | Produce an evidence-based self-assessment of submission readiness. |
-| **Intended agent/role** | Documentation reviewer |
+| **Intended agent/role** | Author / reviewer |
 | **Required inputs** | All P0 task statuses, test results, coverage, ruff, mypy, artifact index |
 | **Expected structured output** | Structured self-assessment with: verified strengths, completed requirements, limitations, blocked ops, known risks |
 | **Constraints** | Must not claim guaranteed full marks. Must not claim completion of blocked live work. |
