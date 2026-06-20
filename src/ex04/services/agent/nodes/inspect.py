@@ -96,10 +96,11 @@ class CodeInspectionNode:
         if analysis:
             inspected = f"{raw_code}\n\n## Inspection Analysis\n{analysis}"
 
+        previous_reads = state.get("files_read", 0)
         return {
             **state,
             "inspected_code": inspected,
-            "files_read": len(snippets),
+            "files_read": previous_reads + len(snippets),
             "token_usage": merge_tokens(state, response),
         }
 
