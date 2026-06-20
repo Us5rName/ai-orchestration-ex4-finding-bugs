@@ -17,4 +17,5 @@ Navigation index generated from `docs/PLAN.md`.
 | 9 | [9. Configuration Schema](./09-Configuration-Schema.md) |
 | 10 | [10. Project Structure (Final)](./10-Project-Structure.md) |
 | 11 | [11. Traceability Matrix](./11-Traceability-Matrix.md) |
-| 12 | [12. Revision History](./12-Revision-History.md) |
+| 12 | [12. Repair Inventory (Phase 6–8 Architectural Repairs)](./12-Repair-Inventory-Phase-6-8-Architectural-Repairs.md) |
+| 13 | [13. Revision History](./13-Revision-History.md) |

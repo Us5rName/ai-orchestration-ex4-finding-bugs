@@ -17,4 +17,5 @@ Navigation index generated from `docs/TODO.md`.
 | 9 | [9. Phase 8 — Final Check](./09-Phase-8-Final-Check.md) |
 | 10 | [10. Task Dependency Summary](./10-Dependency-Summary.md) |
 | 11 | [11. Statistics](./11-Statistics.md) |
-| 12 | [12. Revision History](./12-Revision-History.md) |
+| 12 | [12. Repair Inventory (Phase 6–8 Repairs)](./12-Repair-Inventory-Phase-6-8-Repairs.md) |
+| 13 | [13. Revision History](./13-Revision-History.md) |
