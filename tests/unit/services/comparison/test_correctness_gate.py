@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from ex04.services.comparison.correctness_gate import CorrectnessGate
 from ex04.services.comparison.gate_policies import (
     check_path_policy,
@@ -21,7 +19,6 @@ from ex04.services.comparison.gate_policies import (
     count_test_functions,
 )
 from ex04.shared.types_experiment import GateOutput
-
 
 # ── GateOutput defaults ──────────────────────────────────────────────────────
 

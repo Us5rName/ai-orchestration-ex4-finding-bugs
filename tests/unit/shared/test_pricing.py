@@ -5,7 +5,6 @@ Traceability: [TODO P7-R02], [Correction #8]
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest

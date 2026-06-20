@@ -41,16 +41,17 @@ def build_notebook() -> nbf.NotebookNode:
         # Section 1: Header and provenance
         _md("# EX04 — Comparison Analysis\n\n" + EVIDENCE_BANNER),
         _code("""\
-import json, sys
+import json  # noqa: E401
+import sys
 from pathlib import Path
 
 ROOT = Path(".").resolve()
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
-from ex04.sdk import Ex04SDK
-
-prov = json.loads((ROOT / "artifacts" / "pre_fix" / "provenance.json").read_text())
+prov = json.loads(  # noqa: E402
+    (ROOT / "artifacts" / "pre_fix" / "provenance.json").read_text()
+)
 print(f"Target repo  : {prov['target_repo']}")
 print(f"Target commit: {prov['target_commit'][:12]}...")
 print(f"Graphify     : {prov['graphify_status']}")
@@ -74,8 +75,8 @@ print("Guided :", guided_m["run_id"], "| files:", guided_m["files_read"],
         _md("## Section 3 — Signed Delta Table\n\n"
             + "> Token delta is `None` because telemetry is blocked."),
         _code("""\
+from ex04.shared.types_experiment import SignedMetrics  # noqa: F401
 from ex04.shared.types_results import InvestigationResult
-from ex04.shared.types_experiment import SignedMetrics
 
 # Build fixture results matching the manifests
 naive_r = InvestigationResult(
@@ -131,7 +132,7 @@ for m in (naive_m, guided_m):
         _md("## Section 7 — Charts\n\n"
             "> Pre-generated fixture-labeled PNGs from `assets/charts/`."),
         _code("""\
-from IPython.display import Image, display
+from IPython.display import Image, display  # noqa: I001
 for fname in sorted((ROOT / "assets" / "charts").glob("*.png")):
     print(fname.name)
     display(Image(str(fname), width=500))"""),
