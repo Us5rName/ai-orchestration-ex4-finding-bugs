@@ -103,6 +103,18 @@ class TestReverseEngineer:
         assert "Auth Module" in result
         assert "Data Module" in result
 
+    def test_reverse_engineer_central_components_sorted(self) -> None:
+        """Central Component lines are emitted in deterministic sorted order."""
+        relationships = []
+        for src in ("x", "y", "z"):
+            relationships.append(Relationship(source=src, target="Zeta", type="calls"))
+            relationships.append(Relationship(source=src, target="Alpha", type="calls"))
+        graph_data = GraphData(relationships=relationships)
+        result = ReverseEngineer().reverse_engineer(graph_data)
+
+        assert "Central Component" in result
+        assert result.index("Alpha has") < result.index("Zeta has")
+
     def test_reverse_engineer_identifies_patterns(self) -> None:
         """Test that reverse_engineer() identifies common patterns."""
         entities = [
