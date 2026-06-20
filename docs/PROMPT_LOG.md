@@ -570,6 +570,25 @@ tests/unit/services/analysis/
 **Validation**: `uv run pytest --no-cov tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py -q`; `uv run ruff check src/ex04/services/vault/navigator.py tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py`.
 ---
 
+### Prompt 45 — T4.09-T4.15 Active Agent Nodes
+
+**Prompt**: "T4.09, T4.10, T4.11, T4.13, T4.14, and T4.15 still return the state unchanged, or only increment iterations. The agent nodes that call an LLM do not use the Gatekeeper yet."
+
+**Context**: The LangGraph workflow existed, but most nodes were still stubs. Runtime SDK wiring also needed to pass the Gatekeeper and provider configuration into the workflow.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.09 | Loaded bounded graph and vault context from configured paths | `nodes/knowledge.py`, `nodes/common.py` |
+| T4.10 / T4.13 / T4.14 | Routed LLM prompts through the injected Gatekeeper and accumulated token usage | `nodes/analysis.py`, `nodes/rootcause.py`, `nodes/fix.py` |
+| T4.11 | Ranked and limited suspects using the configured `max_suspects` value | `nodes/suspect.py` |
+| T4.15 | Ran the verification command and populated `test_results` | `nodes/verify.py` |
+| NFR-6 | Wired `ApiGatekeeper` from SDK configuration into the agent workflow nodes | `sdk.py`, `agent/service.py`, `agent/workflow.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/agent/nodes/test_active_nodes.py tests/unit/services/agent/test_workflow.py tests/unit/services/agent/test_workflow_edges.py tests/unit/services/agent/test_agent_service.py tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/agent src/ex04/sdk/sdk.py tests/unit/services/agent tests/unit/sdk/test_sdk.py`.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -593,3 +612,4 @@ tests/unit/services/analysis/
 | 1.18 | 2026-06-20 | Added Prompt 42 — SDK wiring and service facades: `from_config()` builds Phase 4 service facades, T4.08 marked Done, T5.01 marked Partial pending Phase 6 comparison/full_pipeline completion. 293 tests pass, 98.44% coverage, 0 ruff violations. |
 | 1.19 | 2026-06-20 | Added Prompt 43 — Phase 4 NFR-3 cleanup: split oversized Gatekeeper, workflow, and vault navigator tests; all Python files are now within the 150-line limit. |
 | 1.20 | 2026-06-20 | Added Prompt 44 — T4.05 VaultNavigator contract: implemented `find_relevant_notes()` and `navigate_from_index()` with tests and mirrored TODO updates. |
+| 1.21 | 2026-06-20 | Added Prompt 45 — T4.09-T4.15 active agent nodes: context loading, Gatekeeper-backed analysis/root-cause/fix generation, suspect ranking, subprocess verification, and SDK Gatekeeper wiring. |

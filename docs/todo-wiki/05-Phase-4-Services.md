@@ -51,7 +51,7 @@ uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config 
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
 | **PRD Reference** | [PRD NFR-1] API call management |
@@ -299,7 +299,7 @@ uv run pytest tests/unit/services/agent/test_workflow.py -v --cov=ex04.services.
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/knowledge.py] |
 | **PRD Reference** | [PRD FR-4.2] |
@@ -307,9 +307,9 @@ uv run pytest tests/unit/services/agent/test_workflow.py -v --cov=ex04.services.
 
 **Definition of Done**:
 
-- [ ] Loads graph summary and vault context into `AgentState`
-- [ ] Limits context to configured token budget
-- [ ] Callable as LangGraph node: `(state) -> state`
+- [x] Loads graph summary and vault context into `AgentState`
+- [x] Limits context to configured token budget
+- [x] Callable as LangGraph node: `(state) -> state`
 
 **Independent Verification**:
 
@@ -323,7 +323,7 @@ uv run pytest tests/unit/services/agent/nodes/test_knowledge.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/analysis.py] |
 | **PRD Reference** | [PRD FR-4.4] |
@@ -331,10 +331,10 @@ uv run pytest tests/unit/services/agent/nodes/test_knowledge.py -v
 
 **Definition of Done**:
 
-- [ ] Analyzes bug report against graph context
-- [ ] Uses Gatekeeper for LLM call
-- [ ] Populates initial suspects list
-- [ ] Callable as LangGraph node
+- [x] Analyzes bug report against graph context
+- [x] Uses Gatekeeper for LLM call
+- [x] Populates initial suspects list
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 
@@ -349,7 +349,7 @@ uv run pytest tests/unit/services/agent/nodes/test_analysis.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/suspect.py] |
 | **PRD Reference** | [PRD FR-4.4], [PRD FR-7.2] original extension: centrality ranking |
@@ -357,9 +357,9 @@ uv run pytest tests/unit/services/agent/nodes/test_analysis.py -v
 
 **Definition of Done**:
 
-- [ ] Ranks suspects by graph centrality and proximity to failure indicators
-- [ ] Limits to `max_suspects` from config
-- [ ] Callable as LangGraph node
+- [x] Ranks suspects by graph centrality and proximity to failure indicators
+- [x] Limits to `max_suspects` from config
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 
@@ -373,7 +373,7 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/inspect.py] |
 | **PRD Reference** | [PRD FR-4.2] |
@@ -381,10 +381,10 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 
 **Definition of Done**:
 
-- [ ] Fetches code snippets only for ranked suspects (not entire codebase)
+- [x] Fetches code snippets only for ranked suspects (not entire codebase)
 - [ ] Records files read for comparison metrics
 - [ ] Uses Gatekeeper for LLM analysis
-- [ ] Callable as LangGraph node
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 
@@ -398,7 +398,7 @@ uv run pytest tests/unit/services/agent/nodes/test_inspect.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/rootcause.py] |
 | **PRD Reference** | [PRD FR-4.4] |
@@ -406,10 +406,10 @@ uv run pytest tests/unit/services/agent/nodes/test_inspect.py -v
 
 **Definition of Done**:
 
-- [ ] Analyzes inspected code to determine root cause
-- [ ] Produces structured root cause description
-- [ ] Uses Gatekeeper for LLM call
-- [ ] Callable as LangGraph node
+- [x] Analyzes inspected code to determine root cause
+- [x] Produces structured root cause description
+- [x] Uses Gatekeeper for LLM call
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 
@@ -423,7 +423,7 @@ uv run pytest tests/unit/services/agent/nodes/test_rootcause.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/fix.py] |
 | **PRD Reference** | [PRD FR-4.5], [PRD FR-5.1] |
@@ -431,11 +431,11 @@ uv run pytest tests/unit/services/agent/nodes/test_rootcause.py -v
 
 **Definition of Done**:
 
-- [ ] Generates fix based on root cause analysis
-- [ ] Applies fix to target file
-- [ ] Records before/after diff
-- [ ] Uses Gatekeeper for LLM call
-- [ ] Callable as LangGraph node
+- [x] Generates fix based on root cause analysis
+- [x] Applies fix to target file
+- [x] Records before/after diff
+- [x] Uses Gatekeeper for LLM call
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 
@@ -450,7 +450,7 @@ uv run pytest tests/unit/services/agent/nodes/test_fix.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — nodes/verify.py] |
 | **PRD Reference** | [PRD FR-4.6] |
@@ -458,10 +458,10 @@ uv run pytest tests/unit/services/agent/nodes/test_fix.py -v
 
 **Definition of Done**:
 
-- [ ] Runs tests on fixed code
-- [ ] Records test results in state
-- [ ] Determines whether to iterate or succeed
-- [ ] Callable as LangGraph node
+- [x] Runs tests on fixed code
+- [x] Records test results in state
+- [x] Determines whether to iterate or succeed
+- [x] Callable as LangGraph node
 
 **Independent Verification**:
 

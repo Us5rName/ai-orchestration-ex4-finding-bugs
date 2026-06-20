@@ -72,14 +72,28 @@ class Ex04SDK:
         from ex04.services.comparison import ComparisonService
         from ex04.services.graph import GraphService
         from ex04.services.vault import VaultService
+        from ex04.shared.gatekeeper import ApiGatekeeper
 
         vault_path = Path(config.get("vault", {}).get("output_dir", "./obsidian"))
         target_path = Path(config.get("paths", {}).get("target_codebase", "."))
-        max_iterations = int(config.get("agent", {}).get("max_iterations", 5))
+        agent_config = config.get("agent", {})
+        provider_config = config.get("provider", {})
+        provider = provider_config.get("name", "openai")
+        gatekeeper = ApiGatekeeper(
+            rate_limits_path="config/rate_limits.json",
+            provider_configs={provider: provider_config},
+        )
         return (
             GraphService(),
             VaultService(vault_path),
-            AgentService(target_path, max_iterations=max_iterations),
+            AgentService(
+                target_path,
+                max_iterations=int(agent_config.get("max_iterations", 5)),
+                max_suspects=int(agent_config.get("max_suspects", 5)),
+                context_limit=int(agent_config.get("context_window_tokens", 8000)),
+                gatekeeper=gatekeeper,
+                provider=provider,
+            ),
             ComparisonService(),
             AnalysisService(),
         )

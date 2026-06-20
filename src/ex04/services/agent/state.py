@@ -36,6 +36,7 @@ class AgentState(TypedDict, total=False):
         inspected_code: Code snippets fetched during inspection.
         root_cause: Identified root cause of the bug.
         proposed_fix: Suggested code fix to resolve the bug.
+        fix_diff: Unified diff of the applied change, when available.
         fix_applied: Whether the proposed fix was successfully applied.
         test_results: Dictionary of test execution results.
         token_usage: Token metrics accumulated during the investigation.
@@ -49,6 +50,7 @@ class AgentState(TypedDict, total=False):
     inspected_code: str
     root_cause: str
     proposed_fix: str
+    fix_diff: str
     fix_applied: bool
     test_results: dict[str, Any]
     token_usage: TokenMetrics

@@ -9,6 +9,8 @@ Implementation: **Phase 4** (T4.15)
 from __future__ import annotations
 
 import logging
+import subprocess
+from pathlib import Path
 
 from ex04.services.agent.state import AgentState
 
@@ -25,6 +27,11 @@ class VerificationNode:
         None — stateless node.
     """
 
+    def __init__(self, command: list[str] | None = None, cwd: Path | str = ".") -> None:
+        """Initialize with a verification command and working directory."""
+        self.command = command or ["uv", "run", "pytest", "-q"]
+        self.cwd = Path(cwd)
+
     def __call__(self, state: AgentState) -> AgentState:
         """Run verification tests and count the completed iteration.
 
@@ -38,4 +45,21 @@ class VerificationNode:
             State with test_results populated and the iteration counter bumped.
         """
         logger.info("VerificationNode: running tests")
-        return {**state, "iterations": state.get("iterations", 0) + 1}
+        command = state.get("test_command", self.command)
+        completed = subprocess.run(
+            command,
+            cwd=state.get("test_cwd", self.cwd),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        failed = 0 if completed.returncode == 0 else 1
+        results = {
+            "command": command,
+            "returncode": completed.returncode,
+            "passed": completed.returncode == 0,
+            "failed": failed,
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+        }
+        return {**state, "test_results": results, "iterations": state.get("iterations", 0) + 1}

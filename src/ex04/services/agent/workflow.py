@@ -29,6 +29,7 @@ from ex04.services.agent.nodes.rootcause import RootCauseNode
 from ex04.services.agent.nodes.suspect import SuspectRankingNode
 from ex04.services.agent.nodes.verify import VerificationNode
 from ex04.services.agent.state import AgentState
+from ex04.shared.gatekeeper import GatekeeperInterface
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,10 @@ class WorkflowBuilder:
         self,
         target_path: Path | str = ".",
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+        max_suspects: int = 5,
+        context_limit: int = 8000,
+        gatekeeper: GatekeeperInterface | None = None,
+        provider: str = "openai",
     ) -> None:
         """Initialize with a retry cap.
 
@@ -60,6 +65,10 @@ class WorkflowBuilder:
         """
         self.target_path = Path(target_path)
         self.max_iterations = max_iterations
+        self.max_suspects = max_suspects
+        self.context_limit = context_limit
+        self.gatekeeper = gatekeeper
+        self.provider = provider
 
     def build(self) -> CompiledStateGraph:
         """Build and compile the LangGraph debugging workflow.
@@ -74,13 +83,13 @@ class WorkflowBuilder:
         graph = StateGraph(AgentState)
 
         # Register all 7 nodes
-        graph.add_node("knowledge", KnowledgeLoadNode())
-        graph.add_node("analysis", BugAnalysisNode())
-        graph.add_node("suspect", SuspectRankingNode())
+        graph.add_node("knowledge", KnowledgeLoadNode(context_limit=self.context_limit))
+        graph.add_node("analysis", BugAnalysisNode(self.gatekeeper, self.provider))
+        graph.add_node("suspect", SuspectRankingNode(max_suspects=self.max_suspects))
         graph.add_node("inspect", CodeInspectionNode(self.target_path))
-        graph.add_node("rootcause", RootCauseNode())
-        graph.add_node("fix", FixGenerationNode())
-        graph.add_node("verify", VerificationNode())
+        graph.add_node("rootcause", RootCauseNode(self.gatekeeper, self.provider))
+        graph.add_node("fix", FixGenerationNode(self.target_path, self.gatekeeper, self.provider))
+        graph.add_node("verify", VerificationNode(cwd=self.target_path))
 
         # Linear control flow
         graph.add_edge(START, "knowledge")

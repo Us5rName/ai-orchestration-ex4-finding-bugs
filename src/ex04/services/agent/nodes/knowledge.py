@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 
+from ex04.services.agent.nodes.common import read_path_context
 from ex04.services.agent.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,10 @@ class KnowledgeLoadNode:
         None — stateless node.
     """
 
+    def __init__(self, context_limit: int = 8000) -> None:
+        """Initialize with a maximum context character budget."""
+        self.context_limit = context_limit
+
     def __call__(self, state: AgentState) -> AgentState:
         """Load context into state.
 
@@ -35,4 +40,6 @@ class KnowledgeLoadNode:
             State with graph_context and vault_context populated.
         """
         logger.info("KnowledgeLoadNode: loading context")
-        return state
+        graph_context = read_path_context(state.get("graph_context", ""), self.context_limit)
+        vault_context = read_path_context(state.get("vault_context", ""), self.context_limit)
+        return {**state, "graph_context": graph_context, "vault_context": vault_context}

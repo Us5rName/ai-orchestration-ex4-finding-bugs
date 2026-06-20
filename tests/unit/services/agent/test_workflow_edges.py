@@ -65,5 +65,6 @@ class TestVerifyRoute:
         assert builder._verify_route(state) == "pass"
 
     def test_verify_node_increments_iterations(self) -> None:
-        result = VerificationNode()({"iterations": 2})
+        result = VerificationNode(command=["true"])({"iterations": 2})
         assert result["iterations"] == 3
+        assert result["test_results"]["passed"] is True
