@@ -14,20 +14,15 @@ Implementation: Phase 3 (T3.01–T3.04)
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from ex04.shared.types_results import ProviderResponse
 
 
 class Message(TypedDict):
-    """A single chat message.
+    """A provider-independent chat message."""
 
-    Attributes:
-        role: Message role ('system', 'user', or 'assistant').
-        content: Message text content.
-    """
-
-    role: str
+    role: Literal["system", "user", "assistant"]
     content: str
 
 
@@ -43,7 +38,7 @@ class ProviderInterface(ABC):
     def chat(
         self,
         messages: list[Message],
-        model: str,
+        model: str | None = None,
         base_url: str | None = None,
     ) -> ProviderResponse:
         """Send a chat completion request to the provider.
