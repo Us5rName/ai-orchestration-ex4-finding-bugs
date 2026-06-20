@@ -17,7 +17,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.2 SDK Module] |
 | **PRD Reference** | [PRD NFR-5] SDK-first |
@@ -25,15 +25,18 @@
 
 **Definition of Done**:
 
-- [ ] `Ex04SDK.from_config(config_path)` creates SDK with all services
-- [ ] `run_graphify(target_path)` delegates to Graph Service
-- [ ] `build_vault(graph)` delegates to Vault Service
-- [ ] `investigate_bug(bug_report)` delegates to Agent Service
-- [ ] `run_comparison(bug_report)` delegates to Comparison Service
-- [ ] `reverse_engineer(target_path)` delegates to Analysis Service
+- [x] `Ex04SDK.from_config(config_path)` creates SDK with all services
+- [x] `run_graphify(target_path)` delegates to Graph Service
+- [x] `build_vault(graph)` delegates to Vault Service
+- [x] `investigate_bug(bug_report)` delegates to Agent Service
+- [x] `run_comparison(bug_report)` delegates to Comparison Service
+- [x] `reverse_engineer(target_path)` delegates to Analysis Service
 - [ ] `full_pipeline(target_path, bug_report)` executes complete flow
-- [ ] All methods have docstrings
-- [ ] File ≤ 150 lines — extract helper methods if needed
+- [x] All methods have docstrings
+- [x] File ≤ 150 lines — extract helper methods if needed
+
+**Remaining**: `full_pipeline()` still depends on the Phase 6 comparison runners;
+the current `ComparisonService` facade fails explicitly until Phase 6.
 
 **Independent Verification**:
 

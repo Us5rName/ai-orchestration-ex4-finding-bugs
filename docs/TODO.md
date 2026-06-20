@@ -118,7 +118,7 @@ graph LR
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §10 Project Structure] |
 | **PRD Reference** | [PRD §9 Recommended Repository Structure] |
@@ -143,7 +143,7 @@ find src/ex04 -type f -name "*.py" | sort
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §9 Configuration Schema] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding |
@@ -842,7 +842,7 @@ uv run python -c "from ex04.services.agent.state import AgentState, Suspect; pri
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — workflow.py] |
 | **PRD Reference** | [PRD FR-4.1] |
@@ -850,12 +850,12 @@ uv run python -c "from ex04.services.agent.state import AgentState, Suspect; pri
 
 **Definition of Done**:
 
-- [ ] `WorkflowBuilder.build()` assembles LangGraph `StateGraph` with all 7 nodes
-- [ ] `add_nodes()` registers each node function
-- [ ] `add_edges()` defines control flow: knowledge → analysis → suspect → inspect → rootcause → fix → verify
-- [ ] Retry loop: verify → suspect (if tests fail)
-- [ ] Compiled graph is executable
-- [ ] File ≤ 150 lines
+- [x] `WorkflowBuilder.build()` assembles LangGraph `StateGraph` with all 7 nodes
+- [x] `add_nodes()` registers each node function
+- [x] `add_edges()` defines control flow: knowledge → analysis → suspect → inspect → rootcause → fix → verify
+- [x] Retry loop: verify → suspect (if tests fail)
+- [x] Compiled graph is executable
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 
@@ -1123,7 +1123,7 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.2 SDK Module] |
 | **PRD Reference** | [PRD NFR-5] SDK-first |
@@ -1131,15 +1131,18 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 
 **Definition of Done**:
 
-- [ ] `Ex04SDK.from_config(config_path)` creates SDK with all services
-- [ ] `run_graphify(target_path)` delegates to Graph Service
-- [ ] `build_vault(graph)` delegates to Vault Service
-- [ ] `investigate_bug(bug_report)` delegates to Agent Service
-- [ ] `run_comparison(bug_report)` delegates to Comparison Service
-- [ ] `reverse_engineer(target_path)` delegates to Analysis Service
+- [x] `Ex04SDK.from_config(config_path)` creates SDK with all services
+- [x] `run_graphify(target_path)` delegates to Graph Service
+- [x] `build_vault(graph)` delegates to Vault Service
+- [x] `investigate_bug(bug_report)` delegates to Agent Service
+- [x] `run_comparison(bug_report)` delegates to Comparison Service
+- [x] `reverse_engineer(target_path)` delegates to Analysis Service
 - [ ] `full_pipeline(target_path, bug_report)` executes complete flow
-- [ ] All methods have docstrings
-- [ ] File ≤ 150 lines — extract helper methods if needed
+- [x] All methods have docstrings
+- [x] File ≤ 150 lines — extract helper methods if needed
+
+**Remaining**: `full_pipeline()` still depends on the Phase 6 comparison runners;
+the current `ComparisonService` facade fails explicitly until Phase 6.
 
 **Independent Verification**:
 
@@ -1723,3 +1726,4 @@ graph TD
 | 1.01 | 2026-06-19 | Lahav    | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
 | 1.04 | 2026-06-19 | Lahav    | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
 | 1.05 | 2026-06-20 | Evyatar  | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of v1.01 + v1.04). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Traceability: git merge of HEAD + 3c832f6. |
+| 1.06 | 2026-06-20 | Lahav | Mark T4.08 WorkflowBuilder done and T5.01 SDK partial: `from_config()` now wires Phase 4 service facades through the SDK, while `full_pipeline()` remains blocked on Phase 6 comparison runners. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD NFR-5], [PRD FR-4.1]. |

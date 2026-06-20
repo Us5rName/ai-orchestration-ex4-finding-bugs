@@ -271,7 +271,7 @@ uv run python -c "from ex04.services.agent.state import AgentState, Suspect; pri
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.5 Agent Service — workflow.py] |
 | **PRD Reference** | [PRD FR-4.1] |
@@ -279,12 +279,12 @@ uv run python -c "from ex04.services.agent.state import AgentState, Suspect; pri
 
 **Definition of Done**:
 
-- [ ] `WorkflowBuilder.build()` assembles LangGraph `StateGraph` with all 7 nodes
-- [ ] `add_nodes()` registers each node function
-- [ ] `add_edges()` defines control flow: knowledge → analysis → suspect → inspect → rootcause → fix → verify
-- [ ] Retry loop: verify → suspect (if tests fail)
-- [ ] Compiled graph is executable
-- [ ] File ≤ 150 lines
+- [x] `WorkflowBuilder.build()` assembles LangGraph `StateGraph` with all 7 nodes
+- [x] `add_nodes()` registers each node function
+- [x] `add_edges()` defines control flow: knowledge → analysis → suspect → inspect → rootcause → fix → verify
+- [x] Retry loop: verify → suspect (if tests fail)
+- [x] Compiled graph is executable
+- [x] File ≤ 150 lines
 
 **Independent Verification**:
 

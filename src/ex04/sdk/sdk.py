@@ -66,11 +66,22 @@ class Ex04SDK:
 
     @staticmethod
     def _build_services(config: dict[str, Any]) -> ServiceTuple:
-        """Construct concrete services from config (Phase 4 integration point)."""
-        # === PHASE 4 INTEGRATION POINT (see docs/PHASE5_INTEGRATION.md) ===
-        raise NotImplementedError(
-            "Concrete service wiring is implemented in Phase 4. Until then, "
-            "construct Ex04SDK with explicit service instances."
+        """Construct concrete services from config."""
+        from ex04.services.agent import AgentService
+        from ex04.services.analysis import AnalysisService
+        from ex04.services.comparison import ComparisonService
+        from ex04.services.graph import GraphService
+        from ex04.services.vault import VaultService
+
+        vault_path = Path(config.get("vault", {}).get("output_dir", "./obsidian"))
+        target_path = Path(config.get("paths", {}).get("target_codebase", "."))
+        max_iterations = int(config.get("agent", {}).get("max_iterations", 5))
+        return (
+            GraphService(),
+            VaultService(vault_path),
+            AgentService(target_path, max_iterations=max_iterations),
+            ComparisonService(),
+            AnalysisService(),
         )
 
     def run_graphify(self, target_path: str) -> GraphData:

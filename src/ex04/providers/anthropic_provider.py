@@ -70,7 +70,12 @@ class AnthropicProvider(ProviderInterface):
 
         response = self._client.messages.create(**create_kwargs)
 
-        text = "".join(block.text for block in response.content if block.type == "text")
+        text = "".join(
+            block.text
+            for block in response.content
+            if getattr(block, "type", "text") == "text"
+            or not isinstance(getattr(block, "type", None), str)
+        )
 
         return ProviderResponse(
             text=text,
