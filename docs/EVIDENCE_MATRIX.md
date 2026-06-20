@@ -33,9 +33,17 @@
 | P8-I02 documentation | `README.md`, this file, `docs/SELF_ASSESSMENT.md` | docs sync and reference review | generated and authored docs | Complete | Live evidence remains blocked |
 | P8-I03 visuals | `assets/README.md`, `assets/screenshots/README.md` | docs review | blocked-operation docs | Complete | No real screenshots generated |
 | P8-I04 clean clone | `reports/clean_clone_verification.md` | isolated worktree verification | verification report | Complete | Report verifies candidate SHA before the report commit |
+| P8-R02 validator | `scripts/validate_repo.py` | `tests/integration/test_validator_failures.py` | 16-check validator; 10 failure tests | Complete | Deterministic keyless evidence |
+| P8-R05 target provenance | `artifacts/pre_fix/provenance.json`, `artifacts/pre_fix/graphify-out/graph.json` | provenance review | Real clone + Graphify run (code-only) | Complete | Graphify ran on snippets/ subdirectory (no API key); README extraction (docs) requires API key |
+| P8-R06 charts | `assets/charts/*.png`, `assets/diagrams/architecture.md` | visual review | Fixture-labeled charts; Mermaid diagram | Complete | Token chart blocked; files/iterations from fixtures |
+| P8-R07 notebook | `notebooks/comparison_analysis.ipynb` | `tests/unit/notebook/test_notebook_imports.py` | SDK-based, keyless notebook | Complete | No live LLM execution; fixture data only |
+| P6-R07 SDK ops | `src/ex04/sdk/_comparison_ops.py` | `tests/unit/sdk/test_sdk_operations.py` | 7 new SDK operations; 8 tests | Complete | Deterministic keyless evidence |
+| P6-R08 CLI delegation | `src/ex04/__main__.py` | `tests/unit/sdk/test_cli.py` | investigate-naive/graph subcommands; 6 boundary tests | Complete | Deterministic keyless evidence |
+| P7-R04 comparison reports | `src/ex04/services/comparison/report_gen.py` | `tests/unit/services/comparison/test_comparison_reports.py` | JSON + MD reports; 4 tests | Complete | Deterministic keyless evidence |
 
 ## Revision History
 
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-20 | Initial Phase 6-8 evidence matrix. |
+| 1.01 | 2026-06-21 | Add P8-R02/05/06/07, P6-R07/08, P7-R04 rows. Update Graphify status (real run complete). |

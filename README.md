@@ -16,7 +16,7 @@ versus naive full-corpus reading.
 |---|---|
 | **Central question** | Does graph-guided context selection reduce token usage compared to naive full-corpus reading? |
 | **Target** | andela/buggy-python |
-| **Selected bug** | `IndexError` in `process_data` when input list is empty (missing empty-list guard) |
+| **Selected bug** | `ImportError: cannot import name 'lambda_array' from 'snippets'` — `__init__.py` has all imports commented out; additional type/name bugs in `loop.py` and `io.py` |
 | **Provenance** | `artifacts/pre_fix/provenance.json` |
 | **Independent variable** | Context acquisition strategy (naive vs. graph-guided) |
 | **Controlled variables** | Provider, model, system prompt, max iterations, token budget |
@@ -27,10 +27,11 @@ versus naive full-corpus reading.
 |---|---|---|
 | Graph-analysis extension tests | Deterministic keyless evidence | `tests/unit/services/analysis/` |
 | Artifact store / correctness gate tests | Deterministic keyless evidence | `tests/unit/shared/`, `tests/unit/services/comparison/` |
+| Graphify extraction on code-only corpus | Deterministic keyless evidence | `artifacts/pre_fix/graphify-out/graph.json` |
+| Bug reproduction (ImportError) | Deterministic keyless evidence | `artifacts/pre_fix/provenance.json` |
 | Obsidian vault | Representative deterministic fixture | `obsidian/` |
 | Run manifests | Representative deterministic fixture | `artifacts/manifests/` |
 | Live LLM runs, real token counts | Blocked (no provider credentials) | N/A |
-| Graphify extraction | Blocked (requires target repo) | N/A |
 
 > No fabricated evidence. Blocked live operations are reported as blocked, not simulated.
 
@@ -73,12 +74,14 @@ src/ex04/
     |-- analysis/    # Reverse engineering + orphan detector + patch-impact
     `-- comparison/  # NaiveRunner + GraphGuidedRunner + metrics + gate
 
-tests/               # 412 tests; 97%+ coverage
+tests/               # 489 tests; 95%+ coverage
 scripts/             # generate_doc_wikis.py, check_docs_sync.py, validate_repo.py
 artifacts/           # Immutable evidence (fixtures committed; live runs blocked)
 obsidian/            # Obsidian vault (fixture)
 reports/             # Comparison and gate reports
-notebooks/           # walkthrough.ipynb
+notebooks/           # walkthrough.ipynb, comparison_analysis.ipynb (SDK-based, keyless)
+assets/charts/       # Fixture-labeled comparison charts (PNG)
+assets/diagrams/     # Architecture diagram (Mermaid)
 docs/                # PRD, PLAN, TODO, mechanism PRDs, prompt registry, wiki
 ```
 
@@ -149,16 +152,19 @@ result = sdk.full_pipeline(target_path="path/to/target", bug_report="IndexError 
 
 ---
 
-## Grphify Prerequisites (for live runs)
+## Graphify Prerequisites (for live runs)
 
 ```bash
-uv run graphify install claude      # install the Grphify MCP skill
-uv run graphify extract <target>    # extract graph.json from target codebase
-uv run graphify export obsidian     # build Obsidian vault from graph
+# Code-only corpus — no API key required
+python -m graphify extract <target_path>   # extracts graph.json + .graphify_analysis.json
+
+# Mixed corpus (docs/papers/images) — API key required
+python -m graphify extract <target_path>   # set ANTHROPIC_API_KEY or OPENAI_API_KEY first
 ```
 
-Live Graphify extraction is **blocked** in this repository; no target repo is committed.
-See `artifacts/pre_fix/provenance.json` for the intended workflow.
+**Real Graphify extraction has been run** on `andela/buggy-python` (code-only corpus,
+no API key). See `artifacts/pre_fix/graphify-out/graph.json` (13 nodes, 11 edges)
+and `artifacts/pre_fix/provenance.json`.
 
 ---
 
@@ -247,10 +253,10 @@ report = sdk.analyze_patch_impact(graph_data, ["process_data"], max_depth=3)
 | FR-7.6 | Patch-impact | `analysis/patch_impact.py` | `test_patch_impact.py` | 10 tests | Complete |
 | PRD-CE | Correctness gate | `comparison/correctness_gate.py` | `test_correctness_gate.py` | 8 tests | Complete |
 | PRD-AP | Artifact provenance | `shared/artifact_store.py` | `test_artifact_store.py` | 12 tests | Complete |
-| NFR-1 | Coverage >= 85% | Full suite | `pytest --cov-fail-under=85` | 97.14% | Complete |
+| NFR-1 | Coverage >= 85% | Full suite | `pytest --cov-fail-under=85` | 95.46% | Complete |
 | NFR-2 | Ruff = 0 | All sources | `ruff check .` | 0 violations | Complete |
 | NFR-3 | Max 150 lines | All sources | `validate_repo.py` | Passes | Complete |
-| G1 | Grphify extraction | `services/graph/runner.py` | T7.01 | **Blocked** | Blocked |
+| G1 | Graphify extraction | `services/graph/runner.py` | T7.01 | **Complete** (code-only, keyless) | See artifacts/pre_fix/ |
 | G4-G5 | Bug investigation | Agent + SDK | T7.03 | **Blocked** | Blocked |
 | G6 | Token comparison | ComparisonService | T7.04 | **Blocked** | Blocked |
 
@@ -267,7 +273,11 @@ report = sdk.analyze_patch_impact(graph_data, ["process_data"], max_depth=3)
 | Graph-guided manifest | `artifacts/manifests/fixture-001_manifest.json` | Fixture |
 | Naive manifest | `artifacts/manifests/fixture-naive-001_manifest.json` | Fixture |
 | Investigation result | `artifacts/runs/fixture-001/result.json` | Fixture |
+| Graphify graph output | `artifacts/pre_fix/graphify-out/graph.json` | Deterministic — real CLI run |
+| Comparison analysis notebook | `notebooks/comparison_analysis.ipynb` | Deterministic (SDK-based, keyless) |
 | Walkthrough | `notebooks/walkthrough.ipynb` | Deterministic |
+| Files-read chart | `assets/charts/files_read_comparison.png` | Fixture (labeled) |
+| Architecture diagram | `assets/diagrams/architecture.md` | Generated documentation |
 | CI workflow | `.github/workflows/ci.yml` | Infrastructure |
 | Prompt registry | `docs/PROMPTS.md` | Generated documentation |
 
@@ -304,7 +314,7 @@ find src -name "*.py" | xargs wc -l | awk '$1 > 150 {print}'  # file size check
 
 ## Known Limitations
 
-1. **Graphify extraction blocked**: T7.01 requires the target repository and live execution. No real target `graph.json` is committed.
+1. **Graphify extraction**: Complete for code-only corpus (`python -m graphify extract snippets`). Real `graph.json` committed at `artifacts/pre_fix/graphify-out/graph.json`.
 2. **Live LLM runs blocked**: All provider API calls require credentials not committed to this repo.
 3. **Real token counts unavailable**: No provider telemetry; cost comparison not possible.
 4. **Correctness gate not executed**: Requires target snapshot; gate implementation tested in isolation.
@@ -316,7 +326,7 @@ find src -name "*.py" | xargs wc -l | awk '$1 > 150 {print}'  # file size check
 ## Reproducible Self-Assessment
 
 **Verified strengths**:
-- 412 deterministic tests, 97%+ coverage, 0 ruff violations, all files <= 150 lines
+- 489 deterministic tests, 95%+ coverage, 0 ruff violations, all files <= 150 lines
 - SDK-first design with full dependency injection
 - Both graph-analysis extensions implemented, tested, and exposed via SDK
 - Immutable artifact structure with overwrite protection
@@ -324,7 +334,7 @@ find src -name "*.py" | xargs wc -l | awk '$1 > 150 {print}'  # file size check
 - CI workflow covering all keyless checks
 
 **Blocked operations**:
-- Live Graphify extraction (T7.01; no target repo)
+- Full Graphify extraction with docs corpus (requires API key; code-only corpus done)
 - Real LLM investigation runs (T7.03; no credentials)
 - Real token comparison (T7.04; no credentials)
 - Real screenshots (no live execution)

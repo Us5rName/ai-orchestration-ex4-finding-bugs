@@ -439,3 +439,4 @@ Respond with JSON matching the diagnosis schema. Include source anchors
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial Phase 6–8 prompt registry (15 entries, all templates) |
+| 1.01 | 2026-06-21 | No new prompts executed. AI assistance used for P8-R02/05/06/07, P6-R07/08, P7-R04 implementation. All prompts remain templates (not executed against live provider). |
