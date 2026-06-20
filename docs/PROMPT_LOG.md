@@ -39,7 +39,7 @@
 
 ### Prompt 30 — Audit & Fix Phase 4
 
-**Prompt**: "Read what he did in the journal, and start fixing, dry violations and line lengths semantically, or tests that weren't written well (ignored the API contract)."
+**Prompt**: "Read what he did in the journal, and start fixing DRY violations and line lengths semantically, as well as tests that weren't written well (they ignored the API contract)."
 
 **Context**: Audit Phase 4 code for CLAUDE.md violations and fix them.
 
@@ -69,7 +69,7 @@
 
 ### Prompt 32 — Next Agent Handoff Plan
 
-**Prompt**: "Read the prompt log and plan how to continue the previous agent."
+**Prompt**: "Read the prompt log and plan how to continue the previous agent's work."
 
 **Context**: The previous agent completed Phase 4 shared layer (ConfigManager, Gatekeeper, RateLimiter) and Graph Service (Runner, Parser, Analyzer). All remaining Phase 4 services are empty stubs with no tests.
 
@@ -140,7 +140,7 @@
 
 ### Prompt 31 — Fix Test Hang
 
-**Prompt**: "I see that each time the tests run they hang for a few seconds. what is the reason?"
+**Prompt**: "I see that each time the tests run, they hang for a few seconds. What is the reason?"
 
 **Root cause**: `ApiGatekeeper.send()` calls `time.sleep(retry_delay)` between retry attempts. The default `retry_delay_seconds` is **5 seconds** with **3 retry attempts**, so `test_send_handles_provider_error` slept ~10 seconds before the exception propagated.
 
@@ -157,7 +157,7 @@
 
 ### Prompt 27 — Implement Phase 4: Config Manager & Gatekeeper
 
-**Prompt**: "Switch to a new branch and implement phase 4"
+**Prompt**: "Switch to a new branch and implement Phase 4."
 
 **Context**: Phase 4 — Services. Implement all domain services and shared layer contracts.
 
@@ -189,7 +189,7 @@
 
 ### Prompt 28 — Implement Phase 4: Graph Service
 
-**Prompt**: Continue Phase 4 with Graph Service
+**Prompt**: "Continue Phase 4 with the Graph Service."
 
 **Implementation details**:
 
@@ -382,7 +382,7 @@ tests/unit/services/analysis/
 
 ### Prompt 36 — Phase 4: T4.17-T4.18 + T4.07-T4.10 Implementation
 
-**Prompt**: "Write what you did in the prompt log and commit in small readable commits (no more than 300 changes each, dry run before commit to verify)"
+**Prompt**: "Write what you did in the prompt log, and commit in small, readable commits (no more than 300 changes each; dry-run before committing to verify)."
 
 **Context**: Continue Phase 4 implementation. T4.04-T4.06 (Vault) and T4.16 (ReverseEngineer) were verified as complete by the previous agent. Remaining tasks: T4.17 (DiagramGenerator), T4.18 (BugReporter), T4.07 (AgentState), T4.08 (WorkflowBuilder), T4.09-T4.15 (7 agent nodes).
 
@@ -427,7 +427,7 @@ tests/unit/services/analysis/
 
 ### Prompt 37 — Prompt 35 Files: Commit T4.04-T4.06 + T4.16 to Repository
 
-**Prompt**: "now add it to the prompt log as well and commit the log"
+**Prompt**: "Now add it to the prompt log as well, and commit the log."
 
 **Context**: The 4 source files and 7 test files from Prompt 35 (T4.04-T4.06 Vault Service + T4.16 ReverseEngineer) were implemented and verified by the previous agent, but never committed to this branch. They were sitting as modified/untracked files. User requested they be committed in small batches (≤300 lines each) with dry-run verification.
 
@@ -455,6 +455,53 @@ tests/unit/services/analysis/
 
 **Traceability**: [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PRD FR-2.2 to FR-2.5, FR-3.1 to FR-3.2]
 
+---
+
+### Prompt 38 — Code-Review Fixes: Provider & Gatekeeper Bugs
+
+**Prompt**: "On a dedicated branch, fix the two most severe bugs (the Anthropic provider being non-functional) and the gatekeeper/rate-limiter cluster (a status check consuming rate budget, `send()` returning None and dropping requests, a write-only FIFO queue, and ignored base_url/per-provider model settings)."
+
+**Context**: Follow-up to an `xhigh` `/code-review` of the non-test source tree. Findings were verified against the installed SDKs (anthropic 0.111.0, openai 2.43.0, tiktoken 0.13.0). Branch: `fix/provider-gatekeeper-bugs`.
+
+**Implementation**:
+
+| Bug | Fix | Files |
+|---|---|---|
+| Anthropic `chat()` omitted the required `max_tokens` → `TypeError` on every call | Send `max_tokens` (config-driven, with a fallback constant); omit `system` when absent instead of passing `None` | `providers/anthropic_provider.py`, `config/setup.json` |
+| `count_tokens` called the removed `client.count_tokens` → `AttributeError` | Use `client.messages.count_tokens(...)` and return `.input_tokens` | `providers/anthropic_provider.py` |
+| `RateLimiter.is_any_limited` (a status query) recorded a timestamp per provider, consuming rate budget | Add a non-mutating `is_currently_limited` plus `_recent`/`_exceeds` helpers; the status path no longer records | `shared/rate_limiter.py` |
+| `Gatekeeper.send` returned `None` (contract is `ProviderResponse`) and silently dropped rate-limited requests | Replace the "defensive" `return None` with a FIFO wait-for-slot that returns a response or raises `RuntimeError` | `shared/gatekeeper.py`, `shared/call_executor.py` |
+| The overflow queue was write-only (never drained; duplicate appends per retry) | Implement a real FIFO: enqueue on entry, drain in `finally`, no duplicates | `shared/gatekeeper.py` |
+| `base_url`/per-provider model were ignored (hardcoded `base_url=None`, one shared default model) | Honor per-provider config and cache instances via a new `ProviderPool` | `shared/provider_pool.py`, `shared/gatekeeper.py` |
+| Coupled: `tiktoken.encoding_for_model` crashed on custom/proxy models; partial rate-limit config raised `KeyError` | Fall back to a default encoding; `get_config` overlays defaults | `providers/openai_provider.py`, `shared/rate_limiter.py` |
+
+**Validation**: `uv run pytest` → 167/167 pass (+14 new tests), 98.65% coverage; `ruff check src tests` → 0 violations; all source files ≤150 lines. Traceability: [CLAUDE.md §3 API Gatekeeper], [CLAUDE.md §4 Golden Rules], [PRD NFR-4].
+
+---
+
+### Prompt 39 — Code-Review Fixes: Phase 4 Services (Vault / Agent / Analysis)
+
+**Prompt**: "Fix all items from the code review of master's new Phase 4 implementations. Commit each fix in a separate commit, and update the PR."
+
+**Context**: Follow-up `/code-review` (tests excluded) of the Phase 4 service code merged from master. Eight findings, each fixed in its own commit.
+
+**Implementation** (one commit per item):
+
+| # | Fix | Files |
+|---|---|---|
+| 1 | Sanitize entity names used as note filenames and wikilink targets (path-separator crash / `..` traversal); new shared `safe_name()` | `vault/sanitize.py`, `vault/builder.py`, `vault/builder_helpers.py` |
+| 2 | Bound the verify→suspect retry loop by `max_iterations` (was unbounded and ignored config); add an `iterations` counter incremented by the verify node | `agent/workflow.py`, `agent/state.py`, `agent/nodes/verify.py` |
+| 3 | Return `[]` for an empty/whitespace navigator query instead of the whole vault | `vault/navigator.py` |
+| 4 | Search the whole vault (root `index.md`/`hot.md` plus notes/) via `rglob`, matching the docstring | `vault/navigator.py` |
+| 5 | Escape double quotes in YAML frontmatter titles; new `yaml_double_quote()` | `vault/sanitize.py`, `vault/builder_helpers.py`, `vault/note_manager.py` |
+| 6 | Fall back to the filename stem in `_extract_title` (as documented) | `vault/navigator.py` |
+| 7 | Annotate `WorkflowBuilder.build` return type as `CompiledStateGraph` | `agent/workflow.py` |
+| 8 | Sort the "Central Component" patterns for deterministic output | `analysis/reverse_engineer_text.py` |
+
+**Validation**: `uv run pytest` → 274/274 pass, 98.15% coverage; `ruff check src tests` → 0 violations; all source files ≤150 lines. Traceability: [CLAUDE.md §4 Golden Rules], [PLAN §3.4–§3.6 Vault/Agent/Analysis services].
+
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -471,3 +518,5 @@ tests/unit/services/analysis/
 | 1.11 | 2026-06-20 | Added Prompt 35 — Phase 4 services implementation: Vault Service (T4.04-T4.06) with VaultBuilder, VaultNavigator, NoteManager; Analysis Service ReverseEngineer (T4.16) with Mermaid diagram generation. 46/46 new tests pass, 0 ruff violations, all files ≤150 lines.
 | 1.12 | 2026-06-20 | Added Prompt 36 — Phase 4 completion: T4.17 DiagramGenerator, T4.18 BugReporter, T4.07 AgentState, T4.08 WorkflowBuilder + 7 node stubs. 60/60 new tests pass, 0 ruff violations, all files ≤150 lines. 5 small commits (≤300 lines each). |
 | 1.13 | 2026-06-20 | Added Prompt 37 — committed all Prompt 35 files (T4.04-T4.06 Vault + T4.16 ReverseEngineer): 8 small commits, ~1,411 lines across 13 files, 34 new tests, 0 ruff violations.
+| 1.14 | 2026-06-20 | Added Prompt 38 — Code-review fixes for the provider & gatekeeper layer: Anthropic `max_tokens`/`count_tokens`, non-mutating rate-limit status check, gatekeeper FIFO queue (no None return), per-provider config via `ProviderPool`/`CallExecutor`, tiktoken fallback. 167/167 tests, 98.65% coverage. |
+| 1.15 | 2026-06-20 | Added Prompt 39 — Code-review fixes for Phase 4 services (vault/agent/analysis): filename/path sanitization, bounded retry loop via max_iterations, navigator empty-query + whole-vault search + title fallback, YAML frontmatter escaping, CompiledStateGraph annotation, deterministic pattern ordering. 8 fixes, one commit each. 274/274 tests, 98.15% coverage. |
