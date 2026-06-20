@@ -37,5 +37,5 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 addopts = "--cov=src/ex04 --cov-report=term-missing --cov-fail-under=85"

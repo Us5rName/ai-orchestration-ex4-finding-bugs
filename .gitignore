@@ -24,6 +24,7 @@ ex04.pdf
 # Misc
 .coverage
 ASSIGNMENT.md
+.contract-gaps.md
 # Stray Graphify output written into the repo root during local probing.
 # Nested evidence dirs (e.g. graph-home/.../graphify-out/) stay trackable.
 /graphify-out/

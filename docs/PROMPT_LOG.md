@@ -503,6 +503,24 @@ tests/unit/services/analysis/
 
 ---
 
+### Prompt 41 — Branch Hygiene, Test Import Stability, Anthropic Text Parsing
+
+**Prompt**: "Separate uncommitted work into contextual commits and ensure each commit updates the corresponding documentation."
+
+**Context**: After rebasing `docs/fix-missing-api` over `origin/master`, local work included a hidden contract-gap note ignore rule, a pytest import-path fix for existing `tests.mocks` imports, and an Anthropic response parsing compatibility fix discovered by the full test suite.
+
+**Implementation**:
+
+| Change | Files | Traceability |
+|---|---|---|
+| Ignore the local-only `.contract-gaps.md` audit note so it remains off GitHub | `.gitignore` | User request for hidden ignored local notes |
+| Add repo root to pytest `pythonpath` so existing absolute `tests.mocks` imports resolve under `uv run pytest` | `pyproject.toml` | [CLAUDE.md §6 Package Management], [PRD NFR-8] |
+| Parse Anthropic text blocks that expose `.text` even when mocked or SDK-shaped objects do not provide a real string `type` | `src/ex04/providers/anthropic_provider.py` | [PRD §1.3 Provider-Agnostic], [PLAN §3.8 Provider Layer] |
+
+**Validation**: `uv run pytest -q` → 293 passed, 98.44% coverage. `uv run ruff check src tests` → 0 violations.
+
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -522,3 +540,4 @@ tests/unit/services/analysis/
 | 1.14 | 2026-06-20 | Added Prompt 38 — Code-review fixes for the provider & gatekeeper layer: Anthropic `max_tokens`/`count_tokens`, non-mutating rate-limit status check, gatekeeper FIFO queue (no None return), per-provider config via `ProviderPool`/`CallExecutor`, tiktoken fallback. 167/167 tests, 98.65% coverage. |
 | 1.15 | 2026-06-20 | Added Prompt 39 — Code-review fixes for Phase 4 services (vault/agent/analysis): filename/path sanitization, bounded retry loop via max_iterations, navigator empty-query + whole-vault search + title fallback, YAML frontmatter escaping, CompiledStateGraph annotation, deterministic pattern ordering. 8 fixes, one commit each. 274/274 tests, 98.15% coverage. |
 | 1.16 | 2026-06-20 | Added Prompt 40 — T4.12 CodeInspectionNode implementation with TDD: constructor injection of target_path, snippet extraction with file path headers and line numbers, graceful handling of missing files/invalid ranges/zero-based lines. 12 tests across 3 files (all <150 lines), 100% module coverage, 0 ruff violations. |
+| 1.17 | 2026-06-20 | Added Prompt 41 — branch hygiene/provider compatibility: hidden contract-gap note ignored, pytest root import path stabilized, Anthropic text block parsing made tolerant of mocked/SDK-shaped blocks. 293 tests pass, 98.44% coverage, 0 ruff violations. |
