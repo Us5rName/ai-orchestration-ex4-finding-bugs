@@ -589,6 +589,25 @@ tests/unit/services/analysis/
 **Validation**: `uv run pytest --no-cov tests/unit/services/agent/nodes/test_active_nodes.py tests/unit/services/agent/test_workflow.py tests/unit/services/agent/test_workflow_edges.py tests/unit/services/agent/test_agent_service.py tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/agent src/ex04/sdk/sdk.py tests/unit/services/agent tests/unit/sdk/test_sdk.py`.
 ---
 
+### Prompt 46 — FR-6 Comparison Service
+
+**Prompt**: "FR-6.1 to FR-6.3 are still open because the comparison service is not implemented."
+
+**Context**: `ComparisonService` raised `NotImplementedError`, so the SDK could not run the naive baseline, the graph-guided mode, or the comparison metrics report.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T6.01 / FR-6.1 | Implemented the raw-file naive runner through the Gatekeeper | `naive_runner.py` |
+| T6.02 / FR-6.2 | Implemented the graph/vault-guided runner through the Gatekeeper | `graph_guided_runner.py` |
+| T6.03 / FR-6.3 | Implemented savings metrics with zero-baseline handling | `metrics.py` |
+| T6.04 / FR-6.3 | Implemented the Markdown narrative report object; report persistence remains open | `report_gen.py` |
+| SDK | Wired `ComparisonService` to use the same `ApiGatekeeper` and provider configuration as the agent path | `sdk.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/comparison tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/comparison src/ex04/sdk/sdk.py tests/unit/services/comparison tests/unit/sdk/test_sdk.py`.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -613,3 +632,4 @@ tests/unit/services/analysis/
 | 1.19 | 2026-06-20 | Added Prompt 43 — Phase 4 NFR-3 cleanup: split oversized Gatekeeper, workflow, and vault navigator tests; all Python files are now within the 150-line limit. |
 | 1.20 | 2026-06-20 | Added Prompt 44 — T4.05 VaultNavigator contract: implemented `find_relevant_notes()` and `navigate_from_index()` with tests and mirrored TODO updates. |
 | 1.21 | 2026-06-20 | Added Prompt 45 — T4.09-T4.15 active agent nodes: context loading, Gatekeeper-backed analysis/root-cause/fix generation, suspect ranking, subprocess verification, and SDK Gatekeeper wiring. |
+| 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |

@@ -20,7 +20,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — naive_runner.py] |
 | **PRD Reference** | [PRD FR-6.1] |
@@ -28,10 +28,10 @@
 
 **Definition of Done**:
 
-- [ ] `NaiveRunner.run(bug_report, source_files)` dumps all code context
-- [ ] Makes LLM calls via Gatekeeper without graph guidance
-- [ ] Tracks: tokens used, files read, iterations, time elapsed
-- [ ] Returns `RunMetrics`
+- [x] `NaiveRunner.run(bug_report, source_files)` dumps all code context
+- [x] Makes LLM calls via Gatekeeper without graph guidance
+- [x] Tracks: tokens used, files read, iterations, time elapsed
+- [x] Returns `RunMetrics`
 
 **Independent Verification**:
 
@@ -46,7 +46,7 @@ uv run pytest tests/unit/services/comparison/test_naive_runner.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — graph_guided_runner.py] |
 | **PRD Reference** | [PRD FR-6.2] |
@@ -54,10 +54,10 @@ uv run pytest tests/unit/services/comparison/test_naive_runner.py -v
 
 **Definition of Done**:
 
-- [ ] `GraphGuidedRunner.run(bug_report, graph, vault)` navigates via graph + vault first
-- [ ] Makes focused LLM calls via Gatekeeper
-- [ ] Tracks: tokens used, files read, iterations, time elapsed
-- [ ] Returns `RunMetrics`
+- [x] `GraphGuidedRunner.run(bug_report, graph, vault)` navigates via graph + vault first
+- [x] Makes focused LLM calls via Gatekeeper
+- [x] Tracks: tokens used, files read, iterations, time elapsed
+- [x] Returns `RunMetrics`
 
 **Independent Verification**:
 
@@ -72,7 +72,7 @@ uv run pytest tests/unit/services/comparison/test_graph_guided_runner.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — metrics.py] |
 | **PRD Reference** | [PRD FR-6.3] |
@@ -80,10 +80,10 @@ uv run pytest tests/unit/services/comparison/test_graph_guided_runner.py -v
 
 **Definition of Done**:
 
-- [ ] `compare(naive, guided)` calculates savings percentages
-- [ ] Computes: `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
-- [ ] Returns `ComparisonMetrics`
-- [ ] Handles edge cases: zero tokens, equal runs
+- [x] `compare(naive, guided)` calculates savings percentages
+- [x] Computes: `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
+- [x] Returns `ComparisonMetrics`
+- [x] Handles edge cases: zero tokens, equal runs
 
 **Independent Verification**:
 
@@ -97,7 +97,7 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — report_gen.py] |
 | **PRD Reference** | [PRD FR-6.3] |
@@ -105,9 +105,9 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 **Definition of Done**:
 
-- [ ] `generate(metrics)` produces Markdown comparison report
-- [ ] Includes side-by-side table of naive vs. guided metrics
-- [ ] Includes savings percentages
+- [x] `generate(metrics)` produces Markdown comparison report
+- [x] Includes side-by-side table of naive vs. guided metrics
+- [x] Includes savings percentages
 - [ ] Saves to `reports/` directory
 
 **Independent Verification**:

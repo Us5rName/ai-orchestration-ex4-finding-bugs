@@ -1186,7 +1186,7 @@ uv run python -m ex04 --help
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — naive_runner.py] |
 | **PRD Reference** | [PRD FR-6.1] |
@@ -1194,10 +1194,10 @@ uv run python -m ex04 --help
 
 **Definition of Done**:
 
-- [ ] `NaiveRunner.run(bug_report, source_files)` dumps all code context
-- [ ] Makes LLM calls via Gatekeeper without graph guidance
-- [ ] Tracks: tokens used, files read, iterations, time elapsed
-- [ ] Returns `RunMetrics`
+- [x] `NaiveRunner.run(bug_report, source_files)` dumps all code context
+- [x] Makes LLM calls via Gatekeeper without graph guidance
+- [x] Tracks: tokens used, files read, iterations, time elapsed
+- [x] Returns `RunMetrics`
 
 **Independent Verification**:
 
@@ -1212,7 +1212,7 @@ uv run pytest tests/unit/services/comparison/test_naive_runner.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — graph_guided_runner.py] |
 | **PRD Reference** | [PRD FR-6.2] |
@@ -1220,10 +1220,10 @@ uv run pytest tests/unit/services/comparison/test_naive_runner.py -v
 
 **Definition of Done**:
 
-- [ ] `GraphGuidedRunner.run(bug_report, graph, vault)` navigates via graph + vault first
-- [ ] Makes focused LLM calls via Gatekeeper
-- [ ] Tracks: tokens used, files read, iterations, time elapsed
-- [ ] Returns `RunMetrics`
+- [x] `GraphGuidedRunner.run(bug_report, graph, vault)` navigates via graph + vault first
+- [x] Makes focused LLM calls via Gatekeeper
+- [x] Tracks: tokens used, files read, iterations, time elapsed
+- [x] Returns `RunMetrics`
 
 **Independent Verification**:
 
@@ -1238,7 +1238,7 @@ uv run pytest tests/unit/services/comparison/test_graph_guided_runner.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — metrics.py] |
 | **PRD Reference** | [PRD FR-6.3] |
@@ -1246,10 +1246,10 @@ uv run pytest tests/unit/services/comparison/test_graph_guided_runner.py -v
 
 **Definition of Done**:
 
-- [ ] `compare(naive, guided)` calculates savings percentages
-- [ ] Computes: `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
-- [ ] Returns `ComparisonMetrics`
-- [ ] Handles edge cases: zero tokens, equal runs
+- [x] `compare(naive, guided)` calculates savings percentages
+- [x] Computes: `token_savings_pct`, `file_read_savings_pct`, `iteration_savings_pct`
+- [x] Returns `ComparisonMetrics`
+- [x] Handles edge cases: zero tokens, equal runs
 
 **Independent Verification**:
 
@@ -1263,7 +1263,7 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Partial |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — report_gen.py] |
 | **PRD Reference** | [PRD FR-6.3] |
@@ -1271,9 +1271,9 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 **Definition of Done**:
 
-- [ ] `generate(metrics)` produces Markdown comparison report
-- [ ] Includes side-by-side table of naive vs. guided metrics
-- [ ] Includes savings percentages
+- [x] `generate(metrics)` produces Markdown comparison report
+- [x] Includes side-by-side table of naive vs. guided metrics
+- [x] Includes savings percentages
 - [ ] Saves to `reports/` directory
 
 **Independent Verification**:
@@ -1730,3 +1730,4 @@ graph TD
 | 1.07 | 2026-06-20 | Codex | Mark T8.03/NFR-3 done after splitting oversized unit tests; `find src tests -type f -name '*.py' -exec wc -l {} + \| awk '$1 > 150 {print}'` returns no files. Traceability: [PRD NFR-3]. |
 | 1.08 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
 | 1.09 | 2026-06-20 | Codex | Mark T4.09-T4.11 and T4.13-T4.15 done after activating agent nodes with context loading, Gatekeeper-backed analysis/root-cause/fix calls, suspect ranking, and subprocess verification; mark T4.12 partial for snippet inspection only. Traceability: [PLAN §3.5], [PRD FR-4.2 to FR-4.6], [PRD FR-5.1], [PRD NFR-6]. |
+| 1.10 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |

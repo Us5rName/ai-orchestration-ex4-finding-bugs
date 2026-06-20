@@ -15,6 +15,7 @@
 | 1.08 | 2026-06-20 | Codex | Mark T8.03/NFR-3 done after splitting oversized unit tests; `find src tests -type f -name '*.py' -exec wc -l {} + \| awk '$1 > 150 {print}'` returns no files. Traceability: [PRD NFR-3]. |
 | 1.09 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
 | 1.10 | 2026-06-20 | Codex | Mark T4.09-T4.11 and T4.13-T4.15 done after activating agent nodes with context loading, Gatekeeper-backed analysis/root-cause/fix calls, suspect ranking, and subprocess verification; mark T4.12 partial for snippet inspection only. Traceability: [PLAN §3.5], [PRD FR-4.2 to FR-4.6], [PRD FR-5.1], [PRD NFR-6]. |
+| 1.11 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
 
 ---
 

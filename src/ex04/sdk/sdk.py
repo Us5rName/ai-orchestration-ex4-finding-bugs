@@ -94,7 +94,7 @@ class Ex04SDK:
                 gatekeeper=gatekeeper,
                 provider=provider,
             ),
-            ComparisonService(),
+            ComparisonService(gatekeeper, provider),
             AnalysisService(),
         )
 
