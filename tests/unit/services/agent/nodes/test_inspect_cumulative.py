@@ -91,7 +91,6 @@ class TestFilesReadCumulative:
 
     def test_investigation_result_reflects_cumulative(self, node: CodeInspectionNode) -> None:
         """Final InvestigationResult carries the accumulated files_read value."""
-        from ex04.services.agent.service import AgentService
         from ex04.shared.types_results import InvestigationResult
 
         # Verify the state key name matches what AgentService surfaces

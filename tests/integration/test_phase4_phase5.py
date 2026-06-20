@@ -18,12 +18,11 @@ from ex04.sdk.sdk import Ex04SDK
 from ex04.services.agent.nodes.inspect import CodeInspectionNode
 from ex04.shared.types import GraphData
 from ex04.shared.types_metrics import ComparisonReport
-from ex04.shared.types_results import InvestigationResult, Suspect
+from ex04.shared.types_results import Suspect
 from tests.mocks.mock_agent_service import MockAgentService
 from tests.mocks.mock_analysis_service import MockAnalysisService
 from tests.mocks.mock_graph_service import MockGraphService
 from tests.mocks.mock_vault_service import MockVaultService
-
 
 # ---------------------------------------------------------------------------
 # Recording comparison service — captures real inputs for assertion

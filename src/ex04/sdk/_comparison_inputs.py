@@ -10,7 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-def resolve_vault_dir(vault: dict[str, "Path"]) -> "Path | None":
+
+def resolve_vault_dir(vault: dict[str, Path]) -> Path | None:
     """Resolve the vault directory from a built vault artifact map.
 
     Prefers the parent of the 'index' note (canonical artifact), then the
