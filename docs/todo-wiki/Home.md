@@ -4,7 +4,7 @@
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
 | **Version** | 1.00 |
-| **Author** | Lahav |
+| **Author** | evya1 |
 | **Date** | 2026-06-19 |
 | **Status** | Draft |
 | **PRD Reference** | `docs/PRD.md` v1.00 |
