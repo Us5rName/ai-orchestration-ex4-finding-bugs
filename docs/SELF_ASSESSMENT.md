@@ -4,7 +4,6 @@
 |---|---|
 | Version | 1.00 |
 | Date | 2026-06-20 |
-| Author | evya1 |
 | Scope | Phase 6-8 readiness assessment |
 
 ## Verified Strengths
@@ -35,6 +34,6 @@ The branch is ready for independent review after final report-only checks and pu
 
 ## Revision History
 
-| Version | Date | Author | Change |
-|---|---|---|---|
-| 1.00 | 2026-06-20 | evya1 | Initial evidence-backed self assessment. |
+| Version | Date | Change |
+|---|---|---|
+| 1.00 | 2026-06-20 | Initial evidence-backed self assessment. |
