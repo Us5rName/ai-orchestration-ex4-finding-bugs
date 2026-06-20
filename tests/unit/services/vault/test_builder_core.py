@@ -65,3 +65,23 @@ class TestVaultBuilderCore:
             notes_dir = vault_path / "notes"
             assert notes_dir.exists()
             assert notes_dir.is_dir()
+
+    def test_build_sanitizes_path_like_entity_names(self) -> None:
+        """Path-like / traversal entity names must not crash or escape notes/."""
+        entities = [
+            Entity(name="pkg/sub/mod", kind="file"),
+            Entity(name="../escape", kind="class"),
+        ]
+        graph_data = GraphData(entities=entities)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            builder = VaultBuilder(vault_path=vault_path)
+            builder.build(graph_data)  # must not raise FileNotFoundError
+
+            notes_dir = vault_path / "notes"
+            written = list(notes_dir.glob("*.md"))
+            assert len(written) == 2
+            # Every note stays directly inside notes/ (no traversal, no subdirs).
+            assert all(p.parent == notes_dir for p in written)
+            assert not (vault_path.parent / "escape.md").exists()
