@@ -72,6 +72,19 @@ class TestOpenAIProvider:
 
     @patch("ex04.providers.openai_provider.OpenAI")
     @patch("ex04.providers.openai_provider.tiktoken")
+    def test_init_falls_back_on_unknown_model(self, mock_tiktoken, mock_openai):
+        """An unknown/proxy model name falls back to a default encoding."""
+        mock_openai.return_value = MagicMock()
+        mock_tiktoken.encoding_for_model.side_effect = KeyError("no mapping")
+        mock_tiktoken.get_encoding.return_value = MagicMock(encode=lambda x: [1, 2])
+
+        provider = OpenAIProvider({"api_key_env": "OPENAI_API_KEY", "model": "my-proxy-model"})
+
+        assert provider.count_tokens("hi") == 2
+        mock_tiktoken.get_encoding.assert_called_once()
+
+    @patch("ex04.providers.openai_provider.OpenAI")
+    @patch("ex04.providers.openai_provider.tiktoken")
     def test_chat_empty_response(self, mock_tiktoken, mock_openai):
         """chat() handles empty response gracefully."""
         mock_client = MagicMock()

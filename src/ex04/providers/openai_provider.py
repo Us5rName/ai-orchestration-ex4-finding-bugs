@@ -16,6 +16,10 @@ from openai import OpenAI
 
 from ex04.providers.interface import Message, ProviderInterface, ProviderResponse
 
+# Current default tokenizer for the GPT-4o family; used when a model name
+# (e.g. a custom/proxy/local endpoint model) is not in tiktoken's registry.
+_FALLBACK_ENCODING = "o200k_base"
+
 
 class OpenAIProvider(ProviderInterface):
     """OpenAI provider implementation.
@@ -38,7 +42,12 @@ class OpenAIProvider(ProviderInterface):
             base_url=config.get("base_url"),  # type: ignore[arg-type]
         )
         self._model = config.get("model", "gpt-4o-mini")
-        self._encoding = tiktoken.encoding_for_model(self._model)
+        try:
+            self._encoding = tiktoken.encoding_for_model(self._model)
+        except KeyError:
+            # Custom/proxy/local model names have no tiktoken mapping; fall
+            # back to the default tokenizer instead of crashing construction.
+            self._encoding = tiktoken.get_encoding(_FALLBACK_ENCODING)
 
     def chat(
         self,

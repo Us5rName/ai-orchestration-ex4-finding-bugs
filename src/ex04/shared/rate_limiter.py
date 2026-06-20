@@ -71,53 +71,79 @@ class RateLimiter:
     def get_config(self, provider: str) -> dict[str, Any]:
         """Get rate limit config for a provider, with safe defaults.
 
+        Defaults are overlaid by any provider-specific values, so a partial
+        configuration entry (e.g. one missing ``requests_per_minute``) still
+        yields a complete config instead of raising a KeyError downstream.
+
         Args:
             provider: Provider name (e.g. 'openai').
 
         Returns:
-            Dict with rate limit settings.
+            Dict with the full set of rate limit settings.
         """
-        return self._limits.get(provider, _default_config())
+        config = _default_config()
+        config.update(self._limits.get(provider, {}))
+        return config
+
+    def _recent(self, provider: str) -> tuple[int, int]:
+        """Prune expired timestamps and count recent requests (no recording).
+
+        Args:
+            provider: Provider name to inspect.
+
+        Returns:
+            (requests_in_last_minute, requests_in_last_day).
+        """
+        now = time.time()
+        kept = [t for t in self._timestamps.get(provider, []) if t > now - 86400]
+        self._timestamps[provider] = kept
+        last_minute = sum(1 for t in kept if t > now - 60)
+        return last_minute, len(kept)
+
+    def _exceeds(self, provider: str) -> bool:
+        """Return True if the provider has hit its per-minute or per-day cap."""
+        config = self.get_config(provider)
+        last_minute, last_day = self._recent(provider)
+        return (
+            last_minute >= config["requests_per_minute"]
+            or last_day >= config["requests_per_day"]
+        )
 
     def is_within_limit(self, provider: str) -> bool:
-        """Check if the provider is within rate limits.
+        """Check limits and, if within them, record the request timestamp.
 
-        Prunes timestamps older than 24 hours, then checks per-minute
-        and per-day limits. Records the current request timestamp if
-        within limits.
+        This is the *consuming* check: a True result reserves a slot. For a
+        side-effect-free check use :meth:`is_currently_limited`.
 
         Args:
             provider: Provider name to check.
 
         Returns:
-            True if within limits, False if rate limited.
+            True if within limits (and a slot was reserved), else False.
         """
-        config = self.get_config(provider)
-        now = time.time()
-        day_ago = now - 86400
-        minute_ago = now - 60
-
-        if provider not in self._timestamps:
-            self._timestamps[provider] = []
-
-        # Prune old entries
-        self._timestamps[provider] = [t for t in self._timestamps[provider] if t > day_ago]
-
-        requests_last_minute = sum(1 for t in self._timestamps[provider] if t > minute_ago)
-        requests_last_day = len(self._timestamps[provider])
-
-        if requests_last_minute >= config["requests_per_minute"]:
+        if self._exceeds(provider):
             return False
-        if requests_last_day >= config["requests_per_day"]:
-            return False
-
-        self._timestamps[provider].append(now)
+        self._timestamps[provider].append(time.time())
         return True
+
+    def is_currently_limited(self, provider: str) -> bool:
+        """Report whether a provider is rate limited without recording a request.
+
+        Args:
+            provider: Provider name to inspect.
+
+        Returns:
+            True if the provider is currently at or over a limit.
+        """
+        return self._exceeds(provider)
 
     def is_any_limited(self) -> bool:
         """Check if any configured provider is currently rate limited.
 
+        Uses the non-recording check so that polling status never consumes
+        rate-limit budget.
+
         Returns:
             True if at least one provider is rate limited.
         """
-        return any(not self.is_within_limit(provider) for provider in self._limits)
+        return any(self.is_currently_limited(provider) for provider in self._limits)

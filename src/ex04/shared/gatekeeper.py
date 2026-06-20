@@ -1,10 +1,12 @@
 """API Gatekeeper — centralized API call routing with rate limiting.
 
-Implements GatekeeperInterface with rate limiting, FIFO queuing, retry
-logic, and call logging. All LLM calls flow through this gatekeeper.
+Implements GatekeeperInterface. All LLM calls flow through this gatekeeper,
+which owns the FIFO request queue and delegates the per-call mechanics (slot
+waiting, retry, logging) to CallExecutor, rate limiting to RateLimiter, and
+provider construction/caching to ProviderPool.
 
-Rate limits are delegated to RateLimiter. Provider instances are created
-via ProviderFactory (lazy import to avoid circular dependency).
+A rate-limited request waits in the FIFO queue for a free slot rather than
+being silently dropped; ``send`` always returns a ProviderResponse or raises.
 
 ## Contract (GatekeeperInterface)
 
@@ -19,12 +21,12 @@ Implementation: **Phase 4** (T4.002)
 
 from __future__ import annotations
 
-import time
 from abc import ABC, abstractmethod
 from collections import deque
-from datetime import datetime
 from typing import Any
 
+from ex04.shared.call_executor import CallExecutor
+from ex04.shared.provider_pool import ProviderPool
 from ex04.shared.rate_limiter import RateLimiter
 from ex04.shared.types_results import ProviderResponse
 
@@ -48,30 +50,35 @@ class GatekeeperInterface(ABC):
 class ApiGatekeeper(GatekeeperInterface):
     """Centralized API call manager with rate limiting and queuing.
 
-    Delegates rate limiting to RateLimiter and provider creation to
-    ProviderFactory. Queues overflow requests and logs all calls.
+    Owns the FIFO request queue and delegates rate limiting, provider
+    creation/caching, and per-call dispatch to focused collaborators.
     """
 
     def __init__(
         self,
         rate_limits_path: str = "",
-        default_model: str = "gpt-4o-mini",
+        provider_configs: dict[str, dict[str, Any]] | None = None,
     ) -> None:
-        """Initialize gatekeeper with optional rate limits config.
+        """Initialize gatekeeper with optional rate limits and provider config.
 
         Args:
-            rate_limits_path: Path to rate_limits.json. Empty disables.
-            default_model: Default LLM model to use for API calls.
+            rate_limits_path: Path to rate_limits.json. Empty disables loading.
+            provider_configs: Per-provider config (model, base_url, max_tokens,
+                api_key_env) used to build providers.
         """
         self._limiter = RateLimiter()
-        self._call_log: list[dict[str, Any]] = []
+        self._pool = ProviderPool(provider_configs)
         self._queue: deque[dict[str, Any]] = deque()
-        self._default_model = default_model
         if rate_limits_path:
             self._limiter.load(rate_limits_path)
+        self._executor = CallExecutor(self._limiter, self._pool)
 
     def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
         """Execute an API call through the gatekeeper.
+
+        The request is enqueued (FIFO) for the duration of the call and removed
+        when it completes or fails. Returns a ProviderResponse or raises — it
+        never returns None.
 
         Args:
             provider: Provider name (e.g. 'openai', 'anthropic').
@@ -81,63 +88,18 @@ class ApiGatekeeper(GatekeeperInterface):
             ProviderResponse with text, token counts, and metadata.
 
         Raises:
-            RuntimeError: If all retry attempts fail.
+            RuntimeError: If a slot never frees, or all retries fail.
             ValueError: If the provider is not registered.
         """
-        # Lazy import to avoid circular dependency
-        from ex04.providers.factory import ProviderFactory
-
-        config = self._limiter.get_config(provider)
-        max_retries = config.get("retry_attempts", 3)
-        retry_delay = config.get("retry_delay_seconds", 5)
-
-        for attempt in range(max_retries):
-            try:
-                if not self._limiter.is_within_limit(provider):
-                    self._queue.append({"provider": provider, "messages": messages})
-                    time.sleep(retry_delay)
-                    continue
-
-                provider_instance = ProviderFactory.create(
-                    provider,
-                    {
-                        "api_key_env": f"{provider.upper()}_API_KEY",
-                        "model": self._default_model,
-                        "base_url": None,
-                    },
-                )
-                response = provider_instance.chat(messages=messages, model=self._default_model)
-
-                self._call_log.append(
-                    {
-                        "timestamp": datetime.now(),
-                        "provider": provider,
-                        "status": "success",
-                        "input_tokens": response.input_tokens,
-                        "output_tokens": response.output_tokens,
-                        "attempt": attempt + 1,
-                    }
-                )
-                return response
-
-            except Exception as exc:
-                if attempt == max_retries - 1:
-                    self._call_log.append(
-                        {
-                            "timestamp": datetime.now(),
-                            "provider": provider,
-                            "status": "failed",
-                            "error": str(exc),
-                            "attempt": attempt + 1,
-                        }
-                    )
-                    raise
-                time.sleep(retry_delay)
-        return None
+        self._queue.append({"provider": provider, "messages": messages})
+        try:
+            return self._executor.run(provider, messages)
+        finally:
+            self._queue.popleft()
 
     def get_call_log(self) -> list[dict[str, Any]]:
         """Retrieve the full call log."""
-        return list(self._call_log)
+        return self._executor.get_log()
 
     def get_queue_status(self) -> dict[str, Any]:
         """Retrieve the current queue status."""

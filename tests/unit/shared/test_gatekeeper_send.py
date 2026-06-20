@@ -31,6 +31,24 @@ def _fast_retry_path() -> str:
     return tmp_path
 
 
+def _blocked_path() -> str:
+    """Return a temp rate-limits file where the provider is always limited."""
+    tmp_path = tempfile.mktemp(suffix=".json")
+    with open(tmp_path, "w") as tmp:
+        json.dump(
+            {
+                "openai": {
+                    "requests_per_minute": 0,
+                    "requests_per_day": 0,
+                    "retry_attempts": 2,
+                    "retry_delay_seconds": 0,
+                }
+            },
+            tmp,
+        )
+    return tmp_path
+
+
 class TestGatekeeperSend:
     """Tests for ApiGatekeeper.send() method."""
 
@@ -105,6 +123,52 @@ class TestGatekeeperSend:
         gatekeeper = ApiGatekeeper(rate_limits_path=_fast_retry_path())
         with pytest.raises(Exception, match="API error"):
             gatekeeper.send("openai", [{"role": "user", "content": "Test"}])
+
+    @patch("ex04.providers.factory.ProviderFactory.create")
+    def test_send_raises_when_rate_limited_instead_of_returning_none(
+        self, mock_create: MagicMock
+    ) -> None:
+        gatekeeper = ApiGatekeeper(rate_limits_path=_blocked_path())
+        with pytest.raises(RuntimeError, match="Rate limit exceeded"):
+            gatekeeper.send("openai", [{"role": "user", "content": "Test"}])
+        # The request must not have been dispatched, and the queue is drained.
+        mock_create.assert_not_called()
+        assert gatekeeper.get_queue_status()["queue_size"] == 0
+
+    @patch("ex04.providers.factory.ProviderFactory.create")
+    def test_send_honors_provider_config(self, mock_create: MagicMock) -> None:
+        mock_provider = MagicMock()
+        mock_provider.chat.return_value = ProviderResponse(text="ok", provider="openai")
+        mock_create.return_value = mock_provider
+
+        gatekeeper = ApiGatekeeper(
+            rate_limits_path=_fast_retry_path(),
+            provider_configs={
+                "openai": {"model": "gpt-4o", "base_url": "http://proxy", "max_tokens": 100}
+            },
+        )
+        gatekeeper.send("openai", [{"role": "user", "content": "hi"}])
+
+        name, config = mock_create.call_args.args
+        assert name == "openai"
+        assert config["base_url"] == "http://proxy"
+        assert config["model"] == "gpt-4o"
+        assert config["api_key_env"] == "OPENAI_API_KEY"
+        assert mock_provider.chat.call_args.kwargs["model"] == "gpt-4o"
+
+    @patch("ex04.providers.factory.ProviderFactory.create")
+    def test_send_caches_provider_across_calls(self, mock_create: MagicMock) -> None:
+        mock_provider = MagicMock()
+        mock_provider.chat.return_value = ProviderResponse(text="ok", provider="openai")
+        mock_create.return_value = mock_provider
+
+        gatekeeper = ApiGatekeeper(rate_limits_path=_fast_retry_path())
+        gatekeeper.send("openai", [{"role": "user", "content": "a"}])
+        gatekeeper.send("openai", [{"role": "user", "content": "b"}])
+
+        assert mock_create.call_count == 1
+        assert mock_provider.chat.call_count == 2
+        assert gatekeeper.get_queue_status()["queue_size"] == 0
 
 
 class TestGatekeeperCallLog:

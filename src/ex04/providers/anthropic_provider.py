@@ -15,6 +15,11 @@ from anthropic import Anthropic
 
 from ex04.providers.interface import Message, ProviderInterface, ProviderResponse
 
+# Anthropic's Messages API requires an explicit output cap. This is the
+# engineering fallback used only when the caller does not supply ``max_tokens``
+# via config (config/setup.json is the preferred source — PRD NFR-4).
+_DEFAULT_MAX_TOKENS = 4096
+
 
 class AnthropicProvider(ProviderInterface):
     """Anthropic provider implementation.
@@ -22,13 +27,15 @@ class AnthropicProvider(ProviderInterface):
     Attributes:
         _client: Anthropic API client instance.
         _model: Default model identifier.
+        _max_tokens: Output token cap sent with every request.
     """
 
     def __init__(self, config: dict[str, Any]) -> None:
         """Initialize Anthropic provider.
 
         Args:
-            config: Config dict with 'api_key_env', 'model', 'base_url'.
+            config: Config dict with 'api_key_env', 'model', 'base_url',
+                and optional 'max_tokens' (output cap).
         """
         api_key = os.environ.get(config.get("api_key_env", "ANTHROPIC_API_KEY"), "")
         self._client = Anthropic(
@@ -36,6 +43,7 @@ class AnthropicProvider(ProviderInterface):
             base_url=config.get("base_url"),  # type: ignore[arg-type]
         )
         self._model = config.get("model", "claude-sonnet-4-20250514")
+        self._max_tokens = int(config.get("max_tokens", _DEFAULT_MAX_TOKENS))
 
     def chat(
         self,
@@ -63,11 +71,16 @@ class AnthropicProvider(ProviderInterface):
             for msg in messages
             if msg.get("role") != "system"
         ]
-        response = self._client.messages.create(
-            model=target_model,
-            messages=user_msgs,
-            system=system_msg["content"] if system_msg else None,  # type: ignore[arg-type]
-        )
+        # ``max_tokens`` is required by the Messages API; ``system`` is omitted
+        # entirely (not passed as None) when there is no system message.
+        create_kwargs: dict[str, Any] = {
+            "model": target_model,
+            "messages": user_msgs,
+            "max_tokens": self._max_tokens,
+        }
+        if system_msg:
+            create_kwargs["system"] = system_msg["content"]
+        response = self._client.messages.create(**create_kwargs)
         text = response.content[0].text if response.content else ""
         usage = response.usage
         return ProviderResponse(
@@ -79,12 +92,20 @@ class AnthropicProvider(ProviderInterface):
         )
 
     def count_tokens(self, text: str) -> int:
-        """Count tokens in text using Anthropic tokenizer.
+        """Count tokens in text using the Anthropic token-counting endpoint.
+
+        The legacy ``client.count_tokens`` helper was removed from the SDK;
+        token counting for Claude 3+ models is server-side via
+        ``messages.count_tokens``.
 
         Args:
             text: Text to count tokens for.
 
         Returns:
-            Number of tokens in the text.
+            Number of input tokens the text would consume.
         """
-        return self._client.count_tokens(text=text)
+        response = self._client.messages.count_tokens(
+            model=self._model,
+            messages=[{"role": "user", "content": text}],
+        )
+        return response.input_tokens
