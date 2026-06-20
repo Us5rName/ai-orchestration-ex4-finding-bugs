@@ -19,13 +19,20 @@ from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
 
-def _to_run_metrics(r: InvestigationResult) -> RunMetrics:
-    """Bridge InvestigationResult to legacy RunMetrics without parser shortcuts."""
-    tokens = (r.input_tokens or 0) + (r.output_tokens or 0)
-    found = r.verification_status == "verified" or r.gate_status == "passed"
+def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
+    """Bridge InvestigationResult to RunMetrics for legacy calculators."""
+    tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
+    found = (
+        result.verification_status == "verified"
+        or result.gate_status in {"passed", "pass_without_gate"}
+        or result.parser_status == "parsed_ok"
+    )
     return RunMetrics(
-        tokens_used=tokens, files_read=r.files_read, iterations=r.iterations,
-        time_seconds=r.duration_seconds, found_root_cause=found,
+        tokens_used=tokens,
+        files_read=result.files_read,
+        iterations=result.iterations,
+        time_seconds=result.duration_seconds,
+        found_root_cause=found,
     )
 
 
@@ -39,7 +46,8 @@ class ComparisonOpsMixin:
     ) -> InvestigationResult:
         """Run naive investigation through the public comparison service."""
         result = self._comparison_service().run_naive_investigation(
-            request, source_files or []
+            request,
+            source_files or [],
         )
         result.config_hash = request.controlled_config_hash()
         return result
@@ -52,7 +60,9 @@ class ComparisonOpsMixin:
     ) -> InvestigationResult:
         """Run graph-guided investigation through the public comparison service."""
         result = self._comparison_service().run_graph_investigation(
-            request, graph_data, vault_path
+            request,
+            graph_data,
+            vault_path,
         )
         result.config_hash = request.controlled_config_hash()
         return result
@@ -66,7 +76,10 @@ class ComparisonOpsMixin:
     ) -> ComparisonOutcome:
         """Run the canonical comparison service path."""
         outcome = self._comparison_service().run_comparison(
-            request, source_files or [], graph_data, vault_path
+            request,
+            source_files or [],
+            graph_data,
+            vault_path,
         )
         if not isinstance(outcome, ComparisonOutcome):
             raise TypeError("canonical request did not return ComparisonOutcome")
@@ -92,8 +105,10 @@ class ComparisonOpsMixin:
             self._config_dict().get("paths", {}).get("target_codebase", ".")
         )
         return CorrectnessGate().validate(
-            snapshot_path=snap, patch_diff=patch_diff,
-            reproduction_command=request.gate_reproduction_command or request.reproduction_command,
+            snapshot_path=snap,
+            patch_diff=patch_diff,
+            reproduction_command=request.gate_reproduction_command
+            or request.reproduction_command,
             expected_failure_signature=request.expected_failure_signature,
             allowed_paths=request.patch_allowed_paths,
             prohibited_paths=request.patch_prohibited_paths,
@@ -105,7 +120,10 @@ class ComparisonOpsMixin:
         root = Path(self._config_dict().get("artifact_root", "artifacts"))
         return ArtifactStore(root).save_manifest(manifest)
 
-    def load_provenance(self, path: str = "artifacts/pre_fix/provenance.json") -> dict[str, object]:
+    def load_provenance(
+        self,
+        path: str = "artifacts/pre_fix/provenance.json",
+    ) -> dict[str, object]:
         """Load provenance.json from the given path."""
         return json.loads(Path(path).read_text(encoding="utf-8"))
 

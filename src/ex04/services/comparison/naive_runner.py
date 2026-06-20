@@ -17,6 +17,7 @@ from pathlib import Path
 
 from ex04.services.comparison._output_parser import JSON_SCHEMA, parse_json_response
 from ex04.shared.gatekeeper import GatekeeperInterface
+from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
 # Public alias so tests can import without reaching into private module.
@@ -48,11 +49,20 @@ class NaiveRunner:
         self.max_bytes = max_bytes
         self.timeout_seconds = timeout_seconds
 
-    def run(self, bug_report: str, source_files: list[Path]) -> InvestigationResult:
+    def run(
+        self,
+        request: ComparisonRequest | str,
+        source_files: list[Path],
+    ) -> InvestigationResult:
         """Navigate source files within budget limits and query the model."""
+        req = request if isinstance(request, ComparisonRequest) else None
+        bug_report = req.bug_report if req else request
         started = time.perf_counter()
         keywords = _extract_keywords(bug_report)
         all_py = [p for p in source_files if p.is_file()]
+        max_files = req.max_files if req else self.max_files
+        max_bytes = req.max_bytes if req else self.max_bytes
+        timeout_seconds = float(req.timeout_seconds) if req else self.timeout_seconds
         tool_calls = 1
 
         def _score(p: Path) -> int:
@@ -63,15 +73,15 @@ class NaiveRunner:
         files_read = 0
         bytes_read = 0
         for path in sorted(all_py, key=_score, reverse=True):
-            if files_read >= self.max_files or bytes_read >= self.max_bytes:
+            if files_read >= max_files or bytes_read >= max_bytes:
                 break
-            if time.perf_counter() - started >= self.timeout_seconds:
+            if time.perf_counter() - started >= timeout_seconds:
                 break
             try:
                 text = path.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 continue
-            chunk = text[: self.max_bytes - bytes_read]
+            chunk = text[: max_bytes - bytes_read]
             context_parts.append(f"--- {path.name} ---\n{chunk}")
             files_read += 1
             bytes_read += len(chunk.encode())
@@ -79,7 +89,7 @@ class NaiveRunner:
 
         context = "\n\n".join(context_parts) if context_parts else "(no files read)"
         response = self.gatekeeper.send(
-            self.provider,
+            req.provider if req else self.provider,
             [
                 {
                     "role": "user",
@@ -115,6 +125,10 @@ class NaiveRunner:
             parser_status=parser_status,
             gate_status="pass_without_gate",
             limitations=limitations,
-            evidence_class="fixture",
+            evidence_class=req.evidence_class if req else "fixture",
             telemetry_available=False,
+            run_id=req.run_id if req else "",
+            mode=req.mode if req else "",
+            config_hash=req.controlled_config_hash() if req else "",
+            target_commit=req.target_commit if req else "unknown",
         )

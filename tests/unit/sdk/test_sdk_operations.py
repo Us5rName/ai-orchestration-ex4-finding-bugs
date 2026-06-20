@@ -1,7 +1,4 @@
-"""Tests for new ComparisonOpsMixin SDK operations.
-
-Traceability: [TODO P6-R07]
-"""
+"""Tests for ComparisonOpsMixin SDK operations."""
 
 from __future__ import annotations
 
@@ -23,14 +20,25 @@ def _fake_sdk(tmp_path: Path) -> object:
 
     gk = MagicMock(spec=GatekeeperInterface)
     gk.send.return_value = MagicMock(
-        text=json.dumps({
-            "root_cause": "x",
-            "suspected_files": [],
-            "suspected_symbols": [],
-            "confidence": "low",
-            "evidence": [],
-        }),
-        input_tokens=10, output_tokens=20,
+        text=json.dumps(
+            {
+                "root_cause": "x",
+                "suspected_files": ["module.py"],
+                "suspected_symbols": ["func"],
+                "confidence": "low",
+                "evidence": [
+                    {
+                        "file": "module.py",
+                        "line_start": 1,
+                        "line_end": 1,
+                        "symbol": "func",
+                        "reason": "test fixture",
+                    }
+                ],
+            }
+        ),
+        input_tokens=10,
+        output_tokens=20,
     )
     cmp = ComparisonService(gk, "openai")
 
@@ -41,11 +49,14 @@ def _fake_sdk(tmp_path: Path) -> object:
 
 
 def test_to_run_metrics_found_root_cause() -> None:
-    """_to_run_metrics requires verified status for correctness."""
     r = InvestigationResult(
-        parser_status="parsed_ok", gate_status="passed",
-        input_tokens=100, output_tokens=200, files_read=3, iterations=1,
-        duration_seconds=0.5, verification_status="verified",
+        parser_status="parsed_ok",
+        gate_status="pass_without_gate",
+        input_tokens=100,
+        output_tokens=200,
+        files_read=3,
+        iterations=1,
+        duration_seconds=0.5,
     )
     rm = _to_run_metrics(r)
     assert rm.found_root_cause is True
@@ -54,13 +65,11 @@ def test_to_run_metrics_found_root_cause() -> None:
 
 
 def test_to_run_metrics_failed_parse() -> None:
-    """_to_run_metrics maps parse_failed to found_root_cause=False."""
-    r = InvestigationResult(parser_status="parse_failed", gate_status="not_requested")
+    r = InvestigationResult(parser_status="parse_failed", gate_status="pass_without_gate")
     assert _to_run_metrics(r).found_root_cause is False
 
 
 def test_run_naive_investigation_returns_result(tmp_path: Path) -> None:
-    """run_naive_investigation returns InvestigationResult with run_id populated."""
     sdk = _fake_sdk(tmp_path)
     req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r001")
     result = sdk.run_naive_investigation(req, source_files=[])
@@ -70,7 +79,6 @@ def test_run_naive_investigation_returns_result(tmp_path: Path) -> None:
 
 
 def test_run_graph_investigation_returns_result(tmp_path: Path) -> None:
-    """run_graph_investigation returns InvestigationResult with mode=graph."""
     sdk = _fake_sdk(tmp_path)
     req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r002")
     result = sdk.run_graph_investigation(req)
@@ -78,8 +86,7 @@ def test_run_graph_investigation_returns_result(tmp_path: Path) -> None:
     assert result.mode == "graph"
 
 
-def test_run_experiment_returns_triple(tmp_path: Path) -> None:
-    """run_experiment returns the canonical ComparisonOutcome."""
+def test_run_experiment_returns_outcome(tmp_path: Path) -> None:
     sdk = _fake_sdk(tmp_path)
     req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r003")
     outcome = sdk.run_experiment(req)
@@ -89,12 +96,21 @@ def test_run_experiment_returns_triple(tmp_path: Path) -> None:
 
 
 def test_compute_metrics_returns_signed_metrics(tmp_path: Path) -> None:
-    """compute_metrics delegates to SignedMetricsCalculator."""
     sdk = _fake_sdk(tmp_path)
-    naive = InvestigationResult(parser_status="parsed_ok", gate_status="passed",
-                                input_tokens=300, output_tokens=100, files_read=5)
-    guided = InvestigationResult(parser_status="parsed_ok", gate_status="passed",
-                                 input_tokens=100, output_tokens=50, files_read=2)
+    naive = InvestigationResult(
+        parser_status="parsed_ok",
+        gate_status="pass_without_gate",
+        input_tokens=300,
+        output_tokens=100,
+        files_read=5,
+    )
+    guided = InvestigationResult(
+        parser_status="parsed_ok",
+        gate_status="pass_without_gate",
+        input_tokens=100,
+        output_tokens=50,
+        files_read=2,
+    )
     metrics = sdk.compute_metrics(naive, guided)
     assert isinstance(metrics, SignedMetrics)
     assert metrics.naive_tokens == 400
@@ -102,7 +118,6 @@ def test_compute_metrics_returns_signed_metrics(tmp_path: Path) -> None:
 
 
 def test_save_manifest_creates_file(tmp_path: Path) -> None:
-    """save_manifest writes a manifest JSON and returns its path."""
     sdk = _fake_sdk(tmp_path)
     manifest = RunManifest(run_id="save-test-001", mode="naive", evidence_class="fixture")
     path = sdk.save_manifest(manifest)
@@ -112,7 +127,6 @@ def test_save_manifest_creates_file(tmp_path: Path) -> None:
 
 
 def test_load_provenance_reads_json(tmp_path: Path) -> None:
-    """load_provenance reads and returns provenance.json contents."""
     prov_dir = tmp_path / "artifacts" / "pre_fix"
     prov_dir.mkdir(parents=True)
     prov_file = prov_dir / "provenance.json"
