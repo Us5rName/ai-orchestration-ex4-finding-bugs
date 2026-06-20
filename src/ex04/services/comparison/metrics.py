@@ -20,7 +20,11 @@ class MetricsCalculator:
 
     @staticmethod
     def _savings(naive_value: float, guided_value: float) -> float:
-        """Calculate savings percentage, handling zero baselines."""
+        """Calculate signed savings percentage (negative = regression).
+
+        Returns 0.0 when the naive baseline is zero or negative.
+        Negative values are preserved — regressions are valid evidence.
+        """
         if naive_value <= 0:
             return 0.0
-        return max(0.0, ((naive_value - guided_value) / naive_value) * 100)
+        return ((naive_value - guided_value) / naive_value) * 100
