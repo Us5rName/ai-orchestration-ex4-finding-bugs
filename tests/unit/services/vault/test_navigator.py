@@ -79,6 +79,15 @@ class TestVaultNavigator:
 
             assert results == []
 
+    def test_navigate_empty_query_returns_empty(self) -> None:
+        """Test that an empty/whitespace query returns [] (not the whole vault)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            navigator = VaultNavigator(vault_path=vault_path)
+            assert navigator.navigate("") == []
+            assert navigator.navigate("   ") == []
+
     def test_navigate_searches_title_and_content(self) -> None:
         """Test that navigate() searches both title and content."""
         with tempfile.TemporaryDirectory() as tmpdir:

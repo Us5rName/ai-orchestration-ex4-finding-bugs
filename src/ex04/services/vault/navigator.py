@@ -55,6 +55,11 @@ class VaultNavigator:
         Returns:
             List of dicts with 'title', 'path', 'content' keys.
         """
+        # An empty/whitespace query would substring-match every note; treat
+        # it as "no query" and return nothing rather than the whole vault.
+        if not query.strip():
+            return []
+
         if not self.vault_path.exists():
             return []
 
