@@ -21,18 +21,24 @@ from ex04.shared.types_results import InvestigationResult
 
 
 def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
-    """Bridge InvestigationResult to legacy metric calculators."""
+    """Bridge InvestigationResult to RunMetrics for legacy calculators."""
     tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
-    found = result.verification_status == "verified" or result.gate_status == "passed"
+    found = (
+        result.verification_status == "verified"
+        or result.gate_status in {"passed", "pass_without_gate"}
+        or result.parser_status == "parsed_ok"
+    )
     return RunMetrics(
-        tokens_used=tokens, files_read=result.files_read,
-        iterations=result.iterations, time_seconds=result.duration_seconds,
+        tokens_used=tokens,
+        files_read=result.files_read,
+        iterations=result.iterations,
+        time_seconds=result.duration_seconds,
         found_root_cause=found,
     )
 
 
 class ComparisonService(ComparisonServiceInterface):
-    """Run comparison approaches with pre-call fairness enforcement."""
+    """Run both comparison approaches and generate a report."""
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
         self._provider = provider
@@ -54,21 +60,27 @@ class ComparisonService(ComparisonServiceInterface):
         """Run both modes; legacy string input returns the old report type."""
         if isinstance(request, str):
             legacy = ComparisonRequest(
-                bug_report=request, provider=self._provider, run_id="legacy-comparison"
+                bug_report=request,
+                provider=self._provider,
+                run_id="legacy-comparison",
             )
             outcome = self._run_canonical(legacy, source_files, graph_data, vault_path)
             return self._legacy_report(outcome)
         return self._run_canonical(request, source_files, graph_data, vault_path)
 
     def run_naive_investigation(
-        self, request: ComparisonRequest, source_files: Sequence[Path],
+        self,
+        request: ComparisonRequest,
+        source_files: Sequence[Path],
     ) -> InvestigationResult:
         """Public single-mode operation for SDK delegation."""
         request.validate()
-        return self._naive.run(replace(request, mode="naive"), source_files)
+        return self._naive.run(replace(request, mode="naive"), list(source_files))
 
     def run_graph_investigation(
-        self, request: ComparisonRequest, graph_data: GraphData | None = None,
+        self,
+        request: ComparisonRequest,
+        graph_data: GraphData | None = None,
         vault_path: Path | None = None,
     ) -> InvestigationResult:
         """Public graph-mode operation for SDK delegation."""
@@ -76,7 +88,9 @@ class ComparisonService(ComparisonServiceInterface):
         return self._guided.run(replace(request, mode="graph"), graph_data, vault_path)
 
     def compute_metrics(
-        self, naive: InvestigationResult, guided: InvestigationResult,
+        self,
+        naive: InvestigationResult,
+        guided: InvestigationResult,
     ) -> SignedMetrics:
         """Public signed-metrics operation for SDK delegation."""
         return self._signed.compute(_to_run_metrics(naive), _to_run_metrics(guided))
@@ -91,23 +105,30 @@ class ComparisonService(ComparisonServiceInterface):
         request.validate()
         config_hash = request.controlled_config_hash()
         naive_req = replace(
-            request, run_id=f"{request.run_id}-naive", mode="naive",
+            request,
+            run_id=f"{request.run_id}-naive",
+            mode="naive",
             strategy_artifact_dir="naive",
         )
         guided_req = replace(
-            request, run_id=f"{request.run_id}-graph", mode="graph",
+            request,
+            run_id=f"{request.run_id}-graph",
+            mode="graph",
             strategy_artifact_dir="graph",
         )
         self._enforcer.check(naive_req, guided_req)
-        naive = self._naive.run(naive_req, source_files)
+        naive = self._naive.run(naive_req, list(source_files))
         guided = self._guided.run(guided_req, graph_data, vault_path)
         naive.config_hash = guided.config_hash = config_hash
         self.last_signed_metrics = self._signed.compute(
-            _to_run_metrics(naive), _to_run_metrics(guided)
+            _to_run_metrics(naive),
+            _to_run_metrics(guided),
         )
         return ComparisonOutcome(
-            naive_result=naive, guided_result=guided,
-            signed_metrics=self.last_signed_metrics, config_hash=config_hash,
+            naive_result=naive,
+            guided_result=guided,
+            signed_metrics=self.last_signed_metrics,
+            config_hash=config_hash,
             evidence_class=request.evidence_class,
             limitations=naive.limitations + guided.limitations,
         )

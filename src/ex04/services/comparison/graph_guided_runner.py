@@ -1,12 +1,11 @@
 """Graph Guided Runner — executes graph-guided investigation workflow.
 
-Uses ranked graph entities (by degree centrality), relationships, source
-anchors, and vault notes (index.md → hot.md) to provide focused context.
+Uses bug-report-sensitive ranked graph entities, relationships, source
+anchors, and vault notes to provide focused context. The independent
+variable vs. NaiveRunner. Every entity sent to the model is recorded
+as a StructuredEvidence entry in the returned InvestigationResult.
 
-Context acquisition strategy: graph → vault → targeted source anchors.
-This is the independent variable vs. NaiveRunner.
-
-Traceability: [PRD-GGI §Contracts], [TODO T6.02, T6.04], [PRD-CE §12.3]
+Traceability: [PRD-GGI §Contracts], [TODO P6-R04], [P6-R04-ext]
 """
 
 from __future__ import annotations
@@ -30,16 +29,9 @@ from ex04.shared.types_results import InvestigationResult
 def _legacy_request(bug_report: str, provider: str) -> ComparisonRequest:
     return ComparisonRequest(bug_report=bug_report, provider=provider, run_id="legacy-graph")
 
-_MAX_ENTITIES = 20
-_MAX_VAULT_NOTES = 3
-
 
 class GraphGuidedRunner:
-    """Run a focused graph/vault-guided comparison pass.
-
-    Context is derived exclusively from graph_data and the vault — no
-    filesystem scan of source files is performed.
-    """
+    """Run a focused graph/vault-guided comparison pass."""
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
         self.gatekeeper = gatekeeper
@@ -69,7 +61,10 @@ class GraphGuidedRunner:
         response = self._call_provider(req, graph_text, vault_text, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         if parsed and req.target_snapshot_path:
-            anchors, anchor_lims = validate_evidence_anchors(parsed, Path(req.target_snapshot_path))
+            anchors, anchor_lims = validate_evidence_anchors(
+                parsed,
+                Path(req.target_snapshot_path),
+            )
             evidence.extend(anchors)
             limitations.extend(anchor_lims)
         self._mark_referenced(parsed, evidence)
@@ -103,11 +98,18 @@ class GraphGuidedRunner:
         )
 
     def _call_provider(
-        self, req: ComparisonRequest, graph_text: str, vault_text: str,
-        ledger: BudgetLedger, trace: TraceRecorder,
+        self,
+        req: ComparisonRequest,
+        graph_text: str,
+        vault_text: str,
+        ledger: BudgetLedger,
+        trace: TraceRecorder,
     ):
         ledger.check(models=1, iterations=1)
-        content = f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n{graph_text}\n\n{vault_text}\n\n{JSON_SCHEMA}"
+        content = (
+            f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n"
+            f"{graph_text}\n\n{vault_text}\n\n{JSON_SCHEMA}"
+        )
         messages: list[Message] = [{"role": "user", "content": content}]
         response = self.gatekeeper.send(req.provider, messages)
         ledger.record(models=1, iterations=1)
@@ -116,7 +118,8 @@ class GraphGuidedRunner:
 
     @staticmethod
     def _mark_referenced(
-        parsed: dict[str, object] | None, evidence: list[StructuredEvidence]
+        parsed: dict[str, object] | None,
+        evidence: list[StructuredEvidence],
     ) -> None:
         if not parsed:
             return
