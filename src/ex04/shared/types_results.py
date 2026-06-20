@@ -64,7 +64,9 @@ class InvestigationResult:
 
     Run-level tracking: run_id, mode, config_hash, target_commit;
     parser_status ('not_run'|'parsed_ok'|'parse_failed'|'empty');
-    gate_status ('not_run'|'pass'|'fail'|'skipped'|'blocked');
+    diagnosis_status ('unverified'|'grounded_candidate'|'rejected');
+    gate_status ('not_requested'|'not_run'|'passed'|'failed'|'blocked'|'inconclusive');
+    verification_status ('unverified'|'verified'|'rejected'|'blocked');
     evidence list, limitations, telemetry_available, input/output_tokens,
     bytes_read, tool_calls, model_calls, iterations, duration_seconds,
     estimated_cost_usd, evidence_class, trace_path.
@@ -86,20 +88,25 @@ class InvestigationResult:
     config_hash: str = ""
     target_commit: str = "unknown"
     parser_status: str = "not_run"
-    gate_status: str = "not_run"
+    diagnosis_status: str = "unverified"
+    gate_status: str = "not_requested"
+    verification_status: str = "unverified"
     evidence: list[StructuredEvidence] = field(default_factory=list)
     limitations: list[str] = field(default_factory=list)
     telemetry_available: bool = False
     input_tokens: int | None = None
     output_tokens: int | None = None
+    context_tokens: int = 0
     bytes_read: int = 0
     tool_calls: int = 0
     model_calls: int = 0
     iterations: int = 0
+    retries: int = 0
     duration_seconds: float = 0.0
     estimated_cost_usd: float | None = None
     evidence_class: str = "fixture"
     trace_path: str = ""
+    trace_hash: str = ""
 
 
 @dataclass

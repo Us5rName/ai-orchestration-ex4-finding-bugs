@@ -40,11 +40,16 @@ def _make_files(tmp: Path, count: int, size: int = 100) -> list[Path]:
 
 
 def _valid_json(files: list[str] | None = None) -> str:
+    first = (files or ["module_0.py"])[0]
     return json.dumps({
         "root_cause": "off-by-one in loop",
         "suspected_files": files or ["module_0.py"],
         "suspected_symbols": ["process_data"],
         "confidence": "high",
+        "evidence": [{
+            "file": first, "line_start": 1, "line_end": 1,
+            "symbol": "process_data", "reason": "reported failure location",
+        }],
     })
 
 
@@ -146,9 +151,12 @@ def test_result_is_investigation_result() -> None:
 
 
 @pytest.mark.parametrize("text,expected_status", [
-    ('{"root_cause":"x","suspected_files":["f.py"],"suspected_symbols":["g"]}', "parsed_ok"),
-    ('```json\n{"root_cause":"x","suspected_files":["f.py"],"suspected_symbols":["g"]}\n```',
-     "parsed_ok"),
+    (json.dumps({
+        "root_cause": "x", "suspected_files": ["f.py"], "suspected_symbols": ["g"],
+        "confidence": "low",
+        "evidence": [{"file": "f.py", "line_start": 1, "line_end": 1,
+                      "symbol": "g", "reason": "anchor"}],
+    }), "parsed_ok"),
     ("not json at all", "parse_failed"),
     ('{"root_cause":"x"}', "parse_failed"),
     ("", "empty"),

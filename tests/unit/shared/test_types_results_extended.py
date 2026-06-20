@@ -40,18 +40,23 @@ def test_investigation_result_new_fields_defaults() -> None:
     assert res.config_hash == ""
     assert res.target_commit == "unknown"
     assert res.parser_status == "not_run"
-    assert res.gate_status == "not_run"
+    assert res.diagnosis_status == "unverified"
+    assert res.gate_status == "not_requested"
+    assert res.verification_status == "unverified"
     assert res.telemetry_available is False
     assert res.input_tokens is None
     assert res.output_tokens is None
+    assert res.context_tokens == 0
     assert res.bytes_read == 0
     assert res.tool_calls == 0
     assert res.model_calls == 0
     assert res.iterations == 0
+    assert res.retries == 0
     assert res.duration_seconds == 0.0
     assert res.estimated_cost_usd is None
     assert res.evidence_class == "fixture"
     assert res.trace_path == ""
+    assert res.trace_hash == ""
 
 
 def test_investigation_result_evidence_list() -> None:
