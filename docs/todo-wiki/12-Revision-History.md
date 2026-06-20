@@ -18,6 +18,7 @@
 | 1.12 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
 | 1.13 | 2026-06-20 | Codex | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
 | 1.14 | 2026-06-20 | Codex | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |
+| 1.15 | 2026-06-20 | Lahav | Mark T5.01 Done: cumulative files_read, compare_target(), _comparison_inputs.py helper, real sources + vault in full_pipeline(), CLI compare requires target_path. Update T5.02 CLI DoD with @file, exit codes, and compare_target routing. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD FR-6.1], [PRD NFR-5]. |
 
 ---
 

@@ -106,6 +106,8 @@ def count_tokens(self, text: str) -> int: ...
 def reverse_engineer(self, graph_data: GraphData) -> str: ...
 @abstractmethod
 def report(self, investigation: InvestigationResult) -> str: ...
+@abstractmethod
+def identify_patterns(self, graph_data: GraphData) -> list[str]: ...
 ```
 
 **AgentServiceInterface** (`services/agent/interface.py`, Phase 4 T4.07–T4.15):
@@ -225,13 +227,58 @@ class Ex04SDK:
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
     ) -> ComparisonReport: ...
+    def compare_target(
+        self,
+        target_path: str | Path,
+        bug_report: str,
+    ) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> str: ...
+    def generate_report(self, investigation: InvestigationResult) -> str: ...
+    def identify_patterns(self, target_path: str) -> list[str]: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
 `from_config()` is the concrete wiring point: it builds the Phase 4 service facades
-(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`) and the
-Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
+(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`, `ComparisonService`)
+from `config/setup.json`. Concrete service construction is **only allowed in `sdk/_wiring.py`**;
+`sdk/sdk.py` imports interfaces only.
+
+### 3.2.1 Comparison Input Helper (`sdk/_comparison_inputs.py`)
+
+Shared helper for deterministic source-file discovery and vault-directory resolution.
+Not part of the public SDK API — used by `compare_target()` and `full_pipeline()`.
+
+```python
+def discover_source_files(
+    target_path: Path | str,
+    config: dict[str, Any] | None = None,
+) -> list[Path]:
+    """Recursively discover .py files, excluding generated/vendor/cache dirs.
+
+    Excluded dirs: .git, .venv, venv, env, __pycache__, .mypy_cache,
+    .pytest_cache, .ruff_cache, build, dist, site-packages, node_modules.
+    Sorts results deterministically. Enforces config["comparison"]["naive_file_limit"].
+    Raises FileNotFoundError if target missing or no eligible files found.
+    Raises NotADirectoryError if target is a file.
+    """
+
+def resolve_vault_dir(vault: dict[str, Path]) -> Path | None:
+    """Resolve vault directory from the artifact map.
+
+    Prefers vault["index"].parent; falls back to first value's parent.
+    Returns None for empty vault.
+    """
+```
+
+### 3.2.2 Architecture Boundary Rules
+
+| Rule | Allowed | Forbidden |
+|---|---|---|
+| Concrete construction | `sdk/_wiring.py` | Any other module |
+| Interface imports | All SDK/service modules | — |
+| Package-local re-exports | `services/<pkg>/__init__.py` | — |
+| Cross-service concrete imports | — | Any domain service module |
+| CLI service imports | — | `__main__.py` must use SDK only |
 
 ## 3.3 Graph Service — Grphify Integration
 
@@ -357,11 +404,14 @@ class AgentState(TypedDict):
     vault_context: str
     suspects: list[Suspect]
     inspected_code: str
+    files_read: int        # cumulative across all retry passes (CodeInspectionNode)
     root_cause: str
     proposed_fix: str
+    fix_diff: str          # unified diff of the applied change, when available
     fix_applied: bool
     test_results: dict
     token_usage: TokenMetrics
+    iterations: int        # verify→fix cycles completed (bounds retry loop)
 
 # workflow.py
 class WorkflowBuilder:

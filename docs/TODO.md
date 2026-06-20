@@ -1123,7 +1123,7 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.2 SDK Module] |
 | **PRD Reference** | [PRD NFR-5] SDK-first |
@@ -1135,20 +1135,19 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 - [x] `run_graphify(target_path)` delegates to Graph Service
 - [x] `build_vault(graph)` delegates to Vault Service
 - [x] `investigate_bug(bug_report)` delegates to Agent Service
-- [x] `run_comparison(bug_report)` delegates to Comparison Service
+- [x] `run_comparison(bug_report, source_files, ...)` delegates to Comparison Service
+- [x] `compare_target(target_path, bug_report)` orchestrates full comparison flow
 - [x] `reverse_engineer(target_path)` delegates to Analysis Service
-- [ ] `full_pipeline(target_path, bug_report)` executes complete flow
+- [x] `generate_report(investigation)` delegates to Analysis Service
+- [x] `identify_patterns(target_path)` delegates to Analysis Service
+- [x] `full_pipeline(target_path, bug_report)` executes complete flow with real sources + vault
 - [x] All methods have docstrings
-- [x] File ≤ 150 lines — extract helper methods if needed
-
-**Remaining**: `full_pipeline()` still depends on the Phase 6 comparison runners;
-the current `ComparisonService` facade fails explicitly until Phase 6.
+- [x] File ≤ 150 lines — `_wiring.py` and `_comparison_inputs.py` extracted
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/sdk/test_sdk.py -v --cov=ex04.sdk.sdk --cov-report=term-missing
-# Tests with all services mocked
+uv run pytest tests/unit/sdk/test_sdk.py tests/integration/ -v
 ```
 
 ---
@@ -1165,8 +1164,11 @@ uv run pytest tests/unit/sdk/test_sdk.py -v --cov=ex04.sdk.sdk --cov-report=term
 **Definition of Done**:
 
 - [x] CLI accepts commands: `graphify`, `investigate`, `compare`, `pipeline`
+- [x] `compare` requires `target_path` argument; delegates to `sdk.compare_target()`
 - [x] CLI loads config from `config/setup.json` (or `--config` flag)
 - [x] CLI delegates all logic to SDK — no business logic in CLI
+- [x] `@file` syntax supported for bug_report arguments
+- [x] Exit codes: 0 success, 2 FileNotFoundError, 3 NotImplementedError, 1 other
 - [x] Proper error handling and logging
 
 **Independent Verification**:
@@ -1733,3 +1735,4 @@ graph TD
 | 1.11 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
 | 1.12 | 2026-06-20 | Codex | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
 | 1.14 | 2026-06-20 | Codex | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |
+| 1.15 | 2026-06-20 | Lahav | Mark T5.01 Done: cumulative files_read, compare_target(), _comparison_inputs.py helper, real sources + vault in full_pipeline(), CLI compare requires target_path. Update T5.02 CLI DoD with @file, exit codes, and compare_target routing. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD FR-6.1], [PRD NFR-5]. |
