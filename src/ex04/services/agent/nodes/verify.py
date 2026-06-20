@@ -26,13 +26,16 @@ class VerificationNode:
     """
 
     def __call__(self, state: AgentState) -> AgentState:
-        """Run verification tests.
+        """Run verification tests and count the completed iteration.
+
+        Incrementing ``iterations`` here lets the workflow's conditional edge
+        bound the verify→suspect retry loop by ``max_iterations``.
 
         Args:
             state: Current agent state.
 
         Returns:
-            State with test_results populated.
+            State with test_results populated and the iteration counter bumped.
         """
         logger.info("VerificationNode: running tests")
-        return state
+        return {**state, "iterations": state.get("iterations", 0) + 1}

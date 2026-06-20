@@ -92,7 +92,7 @@ def identify_patterns(graph_data: GraphData) -> list[str]:
     incoming: dict[str, int] = defaultdict(int)
     for rel in graph_data.relationships:
         incoming[rel.target] += 1
-    for target, count in incoming.items():
+    for target, count in sorted(incoming.items()):
         if count >= 3:
             lines.append(f"- **Central Component**: {target} has {count} incoming relationships")
 

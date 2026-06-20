@@ -56,6 +56,11 @@ class TestAgentState:
         state: AgentState = {"token_usage": TokenMetrics()}
         assert isinstance(state["token_usage"], TokenMetrics)
 
+    def test_agent_state_has_iterations(self) -> None:
+        """Test that AgentState includes the iterations counter field."""
+        state: AgentState = {"iterations": 3}
+        assert state["iterations"] == 3
+
     def test_agent_state_all_fields(self) -> None:
         """Test that AgentState can hold all fields simultaneously."""
         state: AgentState = {

@@ -79,6 +79,15 @@ class TestVaultNavigator:
 
             assert results == []
 
+    def test_navigate_empty_query_returns_empty(self) -> None:
+        """Test that an empty/whitespace query returns [] (not the whole vault)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            navigator = VaultNavigator(vault_path=vault_path)
+            assert navigator.navigate("") == []
+            assert navigator.navigate("   ") == []
+
     def test_navigate_searches_title_and_content(self) -> None:
         """Test that navigate() searches both title and content."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -90,6 +99,35 @@ class TestVaultNavigator:
             assert len(results) >= 1
             titles = [r["title"] for r in results]
             assert "User" in titles
+
+    def test_navigate_searches_root_notes(self) -> None:
+        """Root-level notes (index.md, hot.md) are searched, not just notes/."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            (vault_path / "hot.md").write_text(
+                "# Hot Area\n\nPrimary Focus: payment_processor", encoding="utf-8"
+            )
+            navigator = VaultNavigator(vault_path=vault_path)
+            results = navigator.navigate("payment_processor")
+
+            paths = [Path(r["path"]).name for r in results]
+            assert "hot.md" in paths
+
+    def test_navigate_title_falls_back_to_filename(self) -> None:
+        """A note without a frontmatter title uses its filename stem as title."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            notes_dir = vault_path / "notes"
+            notes_dir.mkdir(parents=True, exist_ok=True)
+            (notes_dir / "no_title.md").write_text(
+                "# Heading\n\npayment logic here", encoding="utf-8"
+            )
+            navigator = VaultNavigator(vault_path=vault_path)
+            results = navigator.navigate("payment")
+
+            titles = [r["title"] for r in results]
+            assert "no_title" in titles
 
     def test_navigate_empty_vault(self) -> None:
         """Test that navigate() handles empty vault gracefully."""

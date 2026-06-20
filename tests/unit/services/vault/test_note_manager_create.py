@@ -52,6 +52,17 @@ class TestNoteManagerCreateNote:
             assert "[[Auth]]" in content
             assert "[[User]]" in content
 
+    def test_create_note_escapes_quotes_in_title(self) -> None:
+        """A title containing a double quote must not break the frontmatter."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            vault_path.mkdir(parents=True, exist_ok=True)
+            manager = NoteManager(vault_path=vault_path)
+            result = manager.create_note(title='Weird "q" name', content="b", links=[])
+
+            content = result.read_text(encoding="utf-8")
+            assert 'title: "Weird \\"q\\" name"' in content
+
     def test_create_note_slugifies_title(self) -> None:
         """Test that create_note() slugifies the title for the filename."""
         with tempfile.TemporaryDirectory() as tmpdir:

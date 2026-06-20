@@ -23,6 +23,7 @@ from ex04.services.vault.builder_helpers import (
     build_hot_content,
     build_index_content,
 )
+from ex04.services.vault.sanitize import safe_name
 from ex04.shared.types import GraphData
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,7 @@ class VaultBuilder:
 
         created: list[Path] = []
         for entity in graph_data.entities:
-            note_path = notes_dir / f"{entity.name}.md"
+            note_path = notes_dir / f"{safe_name(entity.name)}.md"
             content = build_entity_content(entity, relations, entity_names)
             note_path.write_text(content, encoding="utf-8")
             created.append(note_path)

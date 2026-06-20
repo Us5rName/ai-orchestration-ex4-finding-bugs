@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from ex04.services.vault.sanitize import safe_name, yaml_double_quote
 from ex04.shared.types import Community, Entity, GraphData
 
 
@@ -31,7 +32,7 @@ def build_entity_content(
     """
     lines: list[str] = []
     lines.append("---")
-    lines.append(f'title: "{entity.name}"')
+    lines.append(f"title: {yaml_double_quote(entity.name)}")
     lines.append(f"tags: [entity, {entity.kind}]")
     lines.append(f"date: {datetime.now().strftime('%Y-%m-%d')}")
     lines.append("---")
@@ -52,7 +53,7 @@ def build_entity_content(
         lines.append("## Related")
         for target in related:
             if target in entity_names:
-                lines.append(f"- [[{target}]]")
+                lines.append(f"- [[{safe_name(target)}]]")
         lines.append("")
 
     return "\n".join(lines)
@@ -75,7 +76,7 @@ def build_index_content(graph_data: GraphData) -> str:
 
     lines.append("## Entities")
     for entity in graph_data.entities:
-        lines.append(f"- [[notes/{entity.name}|{entity.name}]] ({entity.kind})")
+        lines.append(f"- [[notes/{safe_name(entity.name)}|{entity.name}]] ({entity.kind})")
     lines.append("")
 
     if graph_data.relationships:
@@ -105,7 +106,7 @@ def _build_community_section(comm: Community) -> list[str]:
     lines: list[str] = []
     lines.append(f"### {comm.name}")
     for ent in comm.entities:
-        lines.append(f"- [[notes/{ent}|{ent}]]")
+        lines.append(f"- [[notes/{safe_name(ent)}|{ent}]]")
     lines.append("")
     return lines
 
@@ -130,14 +131,14 @@ def build_hot_content(graph_data: GraphData) -> str:
         lines.append(f"## Primary Focus: {largest.name}")
         lines.append("Entities in this community:")
         for ent in largest.entities:
-            lines.append(f"- [[notes/{ent}|{ent}]]")
+            lines.append(f"- [[notes/{safe_name(ent)}|{ent}]]")
         lines.append("")
 
     file_entities = [e for e in graph_data.entities if e.kind == "file"]
     if file_entities:
         lines.append("## Source Files")
         for ent in file_entities:
-            lines.append(f"- [[notes/{ent.name}|{ent.name}]]")
+            lines.append(f"- [[notes/{safe_name(ent.name)}|{ent.name}]]")
         lines.append("")
 
     return "\n".join(lines)

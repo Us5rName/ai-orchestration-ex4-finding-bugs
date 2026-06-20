@@ -6,6 +6,7 @@ configures the control flow edges including the retry loop.
 
 from unittest.mock import patch
 
+from ex04.services.agent.nodes.verify import VerificationNode
 from ex04.services.agent.workflow import WorkflowBuilder
 
 
@@ -159,3 +160,26 @@ class TestWorkflowBuilderEdges:
             routes = cond_call[0][2]  # third positional arg is the routes dict
             assert "pass" in routes
             assert routes["pass"] == "__end__"
+
+
+class TestVerifyRoute:
+    """Tests for the bounded verify→suspect retry routing."""
+
+    def test_retries_when_failed_under_limit(self) -> None:
+        builder = WorkflowBuilder(max_iterations=5)
+        state = {"test_results": {"failed": 2}, "iterations": 1}
+        assert builder._verify_route(state) == "retry"
+
+    def test_stops_at_max_iterations_even_when_failing(self) -> None:
+        builder = WorkflowBuilder(max_iterations=3)
+        state = {"test_results": {"failed": 2}, "iterations": 3}
+        assert builder._verify_route(state) == "pass"
+
+    def test_passes_when_no_failures(self) -> None:
+        builder = WorkflowBuilder()
+        state = {"test_results": {"failed": 0}, "iterations": 0}
+        assert builder._verify_route(state) == "pass"
+
+    def test_verify_node_increments_iterations(self) -> None:
+        result = VerificationNode()({"iterations": 2})
+        assert result["iterations"] == 3

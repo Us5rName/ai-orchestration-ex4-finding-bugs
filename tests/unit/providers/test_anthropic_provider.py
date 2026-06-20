@@ -65,10 +65,10 @@ class TestAnthropicProvider:
 
     @patch("ex04.providers.anthropic_provider.Anthropic")
     def test_count_tokens(self, mock_anthropic):
-        """count_tokens() delegates to Anthropic tokenizer."""
+        """count_tokens() uses the messages.count_tokens endpoint."""
         mock_client = MagicMock()
         mock_anthropic.return_value = mock_client
-        mock_client.count_tokens.return_value = 42
+        mock_client.messages.count_tokens.return_value = MagicMock(input_tokens=42)
 
         provider = AnthropicProvider(
             {"api_key_env": "ANTHROPIC_API_KEY", "model": "claude-sonnet-4-20250514"}
@@ -76,7 +76,27 @@ class TestAnthropicProvider:
         count = provider.count_tokens("hello world")
 
         assert count == 42
-        mock_client.count_tokens.assert_called_once_with(text="hello world")
+        mock_client.messages.count_tokens.assert_called_once_with(
+            model="claude-sonnet-4-20250514",
+            messages=[{"role": "user", "content": "hello world"}],
+        )
+
+    @patch("ex04.providers.anthropic_provider.Anthropic")
+    def test_chat_passes_max_tokens(self, mock_anthropic):
+        """chat() always sends the required max_tokens to the Messages API."""
+        mock_client = MagicMock()
+        mock_anthropic.return_value = mock_client
+        mock_client.messages.create.return_value = self._make_mock_response()
+
+        provider = AnthropicProvider(
+            {"api_key_env": "ANTHROPIC_API_KEY", "model": "claude-sonnet-4-20250514", "max_tokens": 256}
+        )
+        provider.chat([{"role": "user", "content": "hello"}])
+
+        call_kwargs = mock_client.messages.create.call_args.kwargs
+        assert call_kwargs["max_tokens"] == 256
+        # No system message → 'system' must be omitted, not passed as None.
+        assert "system" not in call_kwargs
 
     @patch("ex04.providers.anthropic_provider.Anthropic")
     def test_chat_empty_response(self, mock_anthropic):

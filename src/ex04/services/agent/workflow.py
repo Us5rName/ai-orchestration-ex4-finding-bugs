@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ex04.services.agent.nodes.analysis import BugAnalysisNode
 from ex04.services.agent.nodes.fix import FixGenerationNode
@@ -30,20 +31,31 @@ from ex04.services.agent.state import AgentState
 
 logger = logging.getLogger(__name__)
 
+# Fallback when the caller does not supply config.agent.max_iterations.
+_DEFAULT_MAX_ITERATIONS = 5
+
 
 class WorkflowBuilder:
     """Assembles the LangGraph debugging workflow.
 
     Registers all 7 investigation nodes and configures the control flow:
-    a linear pipeline with a conditional retry loop from verify back
-    to suspect when tests fail.
+    a linear pipeline with a conditional retry loop from verify back to
+    suspect when tests fail, bounded by ``max_iterations``.
 
     Attributes:
-        None — stateless builder.
+        max_iterations: Cap on verify→suspect retries before forcing END.
     """
 
-    @staticmethod
-    def build() -> StateGraph:
+    def __init__(self, max_iterations: int = _DEFAULT_MAX_ITERATIONS) -> None:
+        """Initialize with a retry cap.
+
+        Args:
+            max_iterations: Maximum verify→suspect retry cycles. The agent
+                service should pass ``config['agent']['max_iterations']``.
+        """
+        self.max_iterations = max_iterations
+
+    def build(self) -> CompiledStateGraph:
         """Build and compile the LangGraph debugging workflow.
 
         Creates a StateGraph with AgentState, registers all 7 nodes,
@@ -51,7 +63,7 @@ class WorkflowBuilder:
         the graph for execution.
 
         Returns:
-            Compiled StateGraph ready for execution.
+            Compiled graph ready for execution.
         """
         graph = StateGraph(AgentState)
 
@@ -76,30 +88,31 @@ class WorkflowBuilder:
         # Conditional retry: verify → suspect (if tests fail) or END
         graph.add_conditional_edges(
             "verify",
-            WorkflowBuilder._verify_route,
+            self._verify_route,
             {"retry": "suspect", "pass": END},
         )
 
         compiled = graph.compile()
-        logger.info("Compiled debugging workflow with 7 nodes")
+        logger.info("Compiled debugging workflow with 7 nodes (max_iterations=%d)", self.max_iterations)
         return compiled
 
-    @staticmethod
-    def _verify_route(state: AgentState) -> str:
+    def _verify_route(self, state: AgentState) -> str:
         """Determine next step after verification.
 
-        Routes to 'suspect' for retry if tests failed, or to END
-        if tests passed.
+        Routes to 'suspect' to retry when tests still fail and the retry
+        budget is not exhausted; otherwise routes to END. Bounding by
+        ``max_iterations`` prevents an unbounded loop (and the resulting
+        LangGraph GraphRecursionError) when a fix never passes.
 
         Args:
-            state: Current agent state with test_results.
+            state: Current agent state with test_results and iterations.
 
         Returns:
             'retry' to loop back to suspect, or 'pass' to end.
         """
-        test_results = state.get("test_results", {})
-        failed = test_results.get("failed", 0)
+        failed = state.get("test_results", {}).get("failed", 0)
+        iterations = state.get("iterations", 0)
 
-        if failed > 0:
+        if failed > 0 and iterations < self.max_iterations:
             return "retry"
         return "pass"

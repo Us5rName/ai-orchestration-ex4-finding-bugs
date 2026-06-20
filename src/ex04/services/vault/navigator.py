@@ -55,19 +55,22 @@ class VaultNavigator:
         Returns:
             List of dicts with 'title', 'path', 'content' keys.
         """
-        if not self.vault_path.exists():
+        # An empty/whitespace query would substring-match every note; treat
+        # it as "no query" and return nothing rather than the whole vault.
+        if not query.strip():
             return []
 
-        notes_dir = self.vault_path / "notes"
-        if not notes_dir.exists():
+        if not self.vault_path.exists():
             return []
 
         results: list[dict[str, str]] = []
         query_lower = query.lower()
 
-        for md_file in sorted(notes_dir.glob("*.md")):
+        # Search every note in the vault, including the curated root-level
+        # index.md and hot.md (the bug focus area), not just notes/.
+        for md_file in sorted(self.vault_path.rglob("*.md")):
             content = md_file.read_text(encoding="utf-8")
-            title = self._extract_title(content)
+            title = self._extract_title(content, md_file)
 
             if query_lower in title.lower() or query_lower in content.lower():
                 wikilinks = _WIKILINK_RE.findall(content)
@@ -83,16 +86,17 @@ class VaultNavigator:
         return results
 
     @staticmethod
-    def _extract_title(content: str) -> str:
+    def _extract_title(content: str, md_file: Path) -> str:
         """Extract the title from a markdown note's frontmatter.
 
         Args:
             content: Full markdown content of the note.
+            md_file: Path to the note, used for the filename fallback.
 
         Returns:
-            The title string, or the filename if no frontmatter title.
+            The frontmatter title, or the filename stem if none is present.
         """
         for line in content.splitlines():
             if line.startswith("title:"):
                 return line.split(":", 1)[1].strip().strip('"').strip("'")
-        return ""
+        return md_file.stem
