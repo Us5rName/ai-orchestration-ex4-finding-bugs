@@ -9,12 +9,12 @@ Implementation: Phase 3 (T3.02)
 from __future__ import annotations
 
 import os
-from typing import Any
 
 import tiktoken
 from openai import OpenAI
 
 from ex04.providers.interface import Message, ProviderInterface, ProviderResponse
+from ex04.providers.types import ProviderConfig
 
 # Current default tokenizer for the GPT-4o family; used when a model name
 # (e.g. a custom/proxy/local endpoint model) is not in tiktoken's registry.
@@ -30,7 +30,7 @@ class OpenAIProvider(ProviderInterface):
         _encoding: Tiktoken encoding for the default model.
     """
 
-    def __init__(self, config: dict[str, Any]) -> None:
+    def __init__(self, config: ProviderConfig) -> None:
         """Initialize OpenAI provider.
 
         Args:
