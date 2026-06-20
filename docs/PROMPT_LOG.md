@@ -639,6 +639,59 @@ tests/unit/services/analysis/
 **Validation**: Confirmed that the Phase 8 final-checklist NFR-3 item is unchecked in both mirrored documents.
 ---
 
+### Prompt 41 — Plan Documentation Alignment: Remove Undefined Types
+
+**Prompt**: "go over section 3 of the plan, and tell me what items have missing or inconsistent with actual implementation signatures defined and why" → "go for it" → "Add what was done to the prompt log"
+
+**Context**: Section 3 (Module Design) of the plan referenced 9 types that were never defined in any types module: `Config`, `GraphResult`, `VaultResult`, `EngineeringResult`, `Node`, `Note`, `Pattern`, `QueueItem`, `Entry`. The actual implementation uses simpler, more direct types (`GraphData`, `dict[str, Path]`, `str`, `list[str]`, `dict`). The PRD never mandated these wrapper types — it specifies functional outcomes only.
+
+**Investigation**: Read full PLAN.md (§3.2 SDK, §3.3 Graph, §3.4 Vault, §3.6 Analysis, §4.1 Data Flow, §6 OOP Schema, §8.1 API Contract), PRD.md (§5 Functional Requirements, §6 NFRs), and all actual implementation files (sdk.py, interface.py files, types.py, types_metrics.py, types_results.py, gatekeeper.py, config.py, vault/builder.py, vault/navigator.py, graph/analyzer.py, analysis/reverse_engineer.py, agent/workflow.py).
+
+**Decision**: Don't create the phantom types. Align documentation to existing implementation. The existing types already satisfy all PRD requirements:
+- [PRD FR-1.1]: "produce graph.json" → `GraphData` IS the parsed graph.json
+- [PRD FR-2.1-2.4]: "index.md, hot.md, component notes" → `dict[str, Path]` maps names to paths
+- [PRD FR-3.1-3.2]: "block diagram + OOP schema" → `str` containing Mermaid blocks
+- [PRD NFR-5]: "All business logic flows through SDK" → satisfied by existing delegation
+- [PLAN ADR-005]: "Contract-First Parallel Development" → service interfaces ARE the contracts
+
+**Files modified** (PLAN.md monolith + plan-wiki sync):
+
+| File | Sections | Changes |
+|---|---|---|
+| `docs/PLAN.md` | §3.2, §3.3, §3.4, §3.6, §4.1, §6, §8.1, §12 | All signatures + revision history v1.04 |
+| `docs/plan-wiki/03-Module-Design.md` | §3.2, §3.3, §3.4, §3.6 | SDK, Graph, Vault, Analysis signatures |
+| `docs/plan-wiki/04-Data-Flow.md` | §4.1 | Sequence diagram types |
+| `docs/plan-wiki/06-OOP-Schema.md` | §6 | Class diagram signatures |
+| `docs/plan-wiki/08-API-Contract.md` | §8.1 | SDK public API signatures |
+| `docs/plan-wiki/12-Revision-History.md` | — | v1.04 entry |
+
+**Types removed** (9 undefined types → actual replacements):
+
+| Phantom Type | Replacement | Used In |
+|---|---|---|
+| `Config` | `dict[str, Any] \| None` | SDK `__init__` |
+| `GraphResult` | `GraphData` | `run_graphify()` return |
+| `VaultResult` | `dict[str, Path]` | `build_vault()` return, `VaultBuilder.build()` |
+| `EngineeringResult` | `str` | `reverse_engineer()` return |
+| `Node` | `str` | `find_god_nodes()` return |
+| `Note` | `dict[str, str]` | `VaultNavigator.navigate()` return |
+| `Pattern` | (removed) | `identify_patterns` → module-level function, not class method |
+| `QueueItem` | (removed) | `APIGatekeeper` uses `deque[dict]` internally |
+| `Entry` | `dict` | `get_call_log()` return |
+
+**Signatures fixed** (10 classes across monolith + wiki):
+- `Ex04SDK.__init__`: param order + types
+- `Ex04SDK.run_graphify`, `build_vault`, `investigate_bug`, `run_comparison`, `reverse_engineer`: return types + params
+- `VaultBuilder`: added `__init__`, removed `create_index`/`create_hot`
+- `VaultNavigator`: `navigate(query)` replacing `find_relevant_notes`/`navigate_from_index`
+- `GraphAnalyzer.find_god_nodes`: `list[str]` + `min_degree` param
+- `ReverseEngineer`: `reverse_engineer(graph_data) → str` replacing `identify_patterns`
+- `WorkflowBuilder`, `GraphRunner`, `APIGatekeeper`, `ConfigManager`: signatures matching code
+
+**Traceability**: [PLAN §3.2 SDK Module], [PLAN §3.3 Graph Service], [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PLAN §4.1 Data Flow], [PLAN §6 OOP Schema], [PLAN §8.1 API Contract], [PRD §5.1 FR-1.1], [PRD §5.2 FR-2.1-2.4], [PRD §5.3 FR-3.1-3.2], [PRD §6 NFR-5], [PLAN ADR-005]
+
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -666,3 +719,5 @@ tests/unit/services/analysis/
 | 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
 | 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |
 | 1.24 | 2026-06-20 | Added Prompt 48 — reverted mistaken Phase 8 checklist updates in TODO and todo-wiki, leaving Phase 8 pending for final verification. |
+| 1.25 | 2026-06-20 | Added Prompt 41 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
+| 1.26 | 2026-06-20 | Added Prompt 42 — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |

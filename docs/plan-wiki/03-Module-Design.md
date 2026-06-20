@@ -226,6 +226,7 @@ class Ex04SDK:
         vault_path: Path | None = None,
     ) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> str: ...
+    def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
@@ -423,6 +424,7 @@ class VerificationNode:
 | `reverse_engineer.py` | Extract architectural and OOP schemas from code/graph |
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
+| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -442,8 +444,14 @@ class DiagramGenerator:
     def save_diagram(self, content: str, name: str, path: Path) -> Path: ...
 
 class BugReporter:
-    """Generate structured bug analysis report."""
+    """Generate structured bug analysis reports."""
     def generate(self, investigation: InvestigationResult) -> str: ...
+
+class OrphanDetector:
+    """Find graph entities with no incoming edges and generate documentation stubs. [PRD FR-7.5]"""
+    def find_orphans(self, graph: GraphData) -> list[Entity]: ...
+    def generate_stub(self, entity: Entity) -> str: ...
+    def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
 ```
 
 ## 3.7 Comparison Service — Token Savings Proof
@@ -624,6 +632,14 @@ class ComparisonReport:
     metrics: ComparisonMetrics = field(default_factory=ComparisonMetrics)
     narrative: str = ""
     token_savings: int = 0
+
+@dataclass
+class OrphanReport:
+    orphans: list[Entity] = field(default_factory=list)
+    stubs: dict[str, str] = field(default_factory=dict)
+    report_path: Path | None = None
+    total_entities: int = 0
+    orphan_count: int = 0
 
 types_results.py:
 @dataclass

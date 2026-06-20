@@ -518,6 +518,7 @@ class Ex04SDK:
         vault_path: Path | None = None,
     ) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> str: ...
+    def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
@@ -716,6 +717,7 @@ class VerificationNode:
 | `reverse_engineer.py` | Extract architectural and OOP schemas from code/graph |
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
+| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -735,8 +737,14 @@ class DiagramGenerator:
     def save_diagram(self, content: str, name: str, path: Path) -> Path: ...
 
 class BugReporter:
-    """Generate structured bug analysis report."""
+    """Generate structured bug analysis reports."""
     def generate(self, investigation: InvestigationResult) -> str: ...
+
+class OrphanDetector:
+    """Find graph entities with no incoming edges and generate documentation stubs. [PRD FR-7.5]"""
+    def find_orphans(self, graph: GraphData) -> list[Entity]: ...
+    def generate_stub(self, entity: Entity) -> str: ...
+    def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
 ```
 
 ### 3.7 Comparison Service — Token Savings Proof
@@ -917,6 +925,14 @@ class ComparisonReport:
     metrics: ComparisonMetrics = field(default_factory=ComparisonMetrics)
     narrative: str = ""
     token_savings: int = 0
+
+@dataclass
+class OrphanReport:
+    orphans: list[Entity] = field(default_factory=list)
+    stubs: dict[str, str] = field(default_factory=dict)
+    report_path: Path | None = None
+    total_entities: int = 0
+    orphan_count: int = 0
 
 types_results.py:
 @dataclass
@@ -1190,6 +1206,7 @@ classDiagram
         +investigate_bug(bug_report, graph_path, vault_path) InvestigationResult
         +run_comparison(bug_report, source_files, graph_data, vault_path) ComparisonReport
         +reverse_engineer(target_path) str
+        +detect_orphans(graph_data, output_dir) OrphanReport
         +full_pipeline(target_path, bug_report) PipelineResult
     }
 
@@ -1245,6 +1262,20 @@ classDiagram
     class BugReporter {
         +generate(investigation) str
         +_format_sections(data) str
+    }
+
+    class OrphanDetector {
+        +find_orphans(graph) list~Entity~
+        +generate_stub(entity) str
+        +detect_and_report(graph, output_dir) OrphanReport
+    }
+
+    class OrphanReport {
+        +orphans: list~Entity~
+        +stubs: dict~str, str~
+        +report_path: Path
+        +total_entities: int
+        +orphan_count: int
     }
 
     ProviderInterface <|-- OpenAIProvider
@@ -1349,6 +1380,9 @@ class Ex04SDK:
 
     def reverse_engineer(self, target_path: str) -> str: ...
     """Extract architectural and OOP schemas. [PRD FR-3.1-3.3]"""
+
+    def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
+    """Find graph entities with no incoming edges and generate doc stubs. [PRD FR-7.5]"""
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
     """Execute complete pipeline: graphify → vault → investigate → compare → report."""
@@ -1611,3 +1645,4 @@ Maps every PRD requirement to its architectural location:
 | 1.03 | 2026-06-20 | Lahav | Fill missing signatures in §3: added all 6 service interface ABCs (§3.1.1), all 7 agent node classes (§3.5), shared layer Gatekeeper/ConfigManager/TokenTracker signatures, and complete dataclass types (§3.9) — sourced from actual implementation code (Traceability: [CLAUDE.md §3 SDK-First], [CLAUDE.md §4 Golden Rules]) |
 | 1.04 | 2026-06-20 | Lahav | Align §3.2/3.3/3.4/3.6/4.1/6/8.1 with actual implementation: removed undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry); replaced with actual types (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures to match code (Traceability: [PLAN §3.2 SDK Module], [PLAN §3.3 Graph Service], [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PLAN §4.1 Data Flow], [PLAN §6 OOP Schema], [PLAN §8.1 API Contract], [PRD §5.1 FR-1.1], [PRD §5.2 FR-2.1-2.4], [PRD §5.3 FR-3.1-3.2], [PRD §6 NFR-5]) |
 | 1.05 | 2026-06-20 | Lahav | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
+| 1.06 | 2026-06-20 | Lahav | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
