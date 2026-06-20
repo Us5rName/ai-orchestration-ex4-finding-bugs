@@ -8,11 +8,9 @@
 | 1.01 | 2026-06-19 | Lahav | Phase 1 implemented: structure, config, types, interfaces, mocks. ProviderFactory.create/register uncovered (78%) — expected, requires Phase 3 providers. |
 | 1.02 | 2026-06-19 | Lahav | Phase 2 implemented (contract-first): version, types, ConfigManagerInterface, GatekeeperInterface, TokenTrackerInterface. Added Contract → Implementation Mapping tables to Phase 1 and Phase 2 wikis. Added "Why Coverage Is Below 85%" section to Phase 1 wiki explaining uncovered stubs are deferred to their specific phases. |
 | 1.03 | 2026-06-19 | Lahav | Phase 2 committed to phase2 branch (4 commits): source contracts, 48 tests, wiki updates with contract-first approach, phase implementation comments added to all 6 interface stubs (providers/interface, services/graph/vault/agent/analysis/comparison). All 48 tests pass, ruff 0 violations, shared layer 100% coverage. |
-<<<<<<< HEAD
 | 1.04 | 2026-06-19 | Lahav | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
-=======
-| 1.04 | 2026-06-19 | Lahav | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
->>>>>>> 3c832f6 (docs: Phase 4 gap analysis — add T4.00 Config impl + T4.002 Gatekeeper impl)
+| 1.05 | 2026-06-19 | Lahav | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
+| 1.06 | 2026-06-20 | Eviatar | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of both branches). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Renumbered the duplicated v1.04 gap-analysis entry to v1.05 to remove the version collision. Traceability: git merge of HEAD + 3c832f6. |
 
 ---
 

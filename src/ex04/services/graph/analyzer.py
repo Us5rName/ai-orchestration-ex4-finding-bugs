@@ -1,7 +1,14 @@
-"""Graph Analyzer — analyzes graph structure for insights.
+"""Graph Analyzer — lightweight structural heuristics over a parsed graph.
 
-Computes centrality rankings, identifies God nodes (high-degree
-entities), and detects community clusters in code graphs.
+Provides cheap, dependency-free graph signals computed directly from
+GraphData:
+  - god nodes / centrality ranking via **degree** (not betweenness/PageRank)
+  - communities via **connected components** (not Leiden/Louvain)
+
+These are deliberately simple heuristics for fast, offline triage. For
+richer analysis (Leiden communities, BFS/affected traversal), use Grphify's
+own ``graphify query`` / ``graphify affected`` against the built graph.json
+and the node-level ``community`` metadata the parser already surfaces.
 
 Implementation: Phase 4 (T4.03)
 """
@@ -17,10 +24,12 @@ logger = logging.getLogger(__name__)
 
 
 class GraphAnalyzer:
-    """Analyze graph for centrality, communities, and God Nodes.
+    """Analyze a graph with degree-based and connected-component heuristics.
 
-    Provides methods to compute node degree centrality, rank nodes
-    by proximity to a reference node, and detect community clusters.
+    Computes node **degree** centrality, ranks nodes relative to a reference
+    node, and detects clusters via **connected components**. These are
+    lightweight approximations — see the module docstring for when to prefer
+    Grphify's native algorithms.
     """
 
     def find_god_nodes(self, graph: GraphData, min_degree: int = 2) -> list[str]:

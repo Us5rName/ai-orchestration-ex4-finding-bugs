@@ -11,20 +11,19 @@ wheels/
 .venv/*
 
 # Environment files
-ASSIGNMENT.md
 .env.local
 .env.*.local
 ex04.pdf
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-<<<<<<< HEAD
-#Misc
+# Misc
 .coverage
-=======
-# Assignment spec (kept locally, not tracked in repo)
 ASSIGNMENT.md
->>>>>>> 5bb4f5f (Merge pull request #1 from Us5rName/docs/init-claude-md-and-rename-spec)
+# Stray Graphify output written into the repo root during local probing.
+# Nested evidence dirs (e.g. graph-home/.../graphify-out/) stay trackable.
+/graphify-out/

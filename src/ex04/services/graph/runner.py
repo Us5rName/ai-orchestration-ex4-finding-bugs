@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 class GraphRunner:
     """Execute Grphify CLI on a target codebase.
 
-    Runs the Grphify CLI tool via subprocess to build a code graph.
-    Creates the output directory if needed and returns the path to
-    the generated graph.json file.
+    Runs ``graphify extract <path> --out <path>`` via subprocess to build a
+    code graph. Grphify writes to ``<path>/graphify-out/graph.json``; this
+    runner returns the path to that generated file.
 
     Attributes:
         command: The Grphify CLI command to execute.
@@ -52,10 +52,11 @@ class GraphRunner:
         if not target.exists():
             raise FileNotFoundError(f"Target codebase not found: {target_path}")
 
+        # Grphify always writes to <out>/graphify-out/graph.json. Using the
+        # target as the output root keeps Grphify's default convention.
         output_dir = target / "graphify-out"
-        output_dir.mkdir(parents=True, exist_ok=True)
 
-        cmd = [self.command, target_path, "--output", str(output_dir)]
+        cmd = [self.command, "extract", target_path, "--out", target_path]
         logger.info("Running Grphify: %s", " ".join(cmd))
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)

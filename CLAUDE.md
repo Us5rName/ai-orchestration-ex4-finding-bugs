@@ -23,7 +23,7 @@ You are a Professional Software Engineer operating at the highest level of excel
 >
 > **Rule**: When modifying any documentation file (PRD, PLAN, TODO, PROMPT_LOG, plan-wiki/*, todo-wiki/*), always update its `## Revision History` table with the change description and version bump.
 >
-> **Rule (Traceability)**: Every change must cite its source: TODO changes cite the PLAN, PLAN changes cite the PRD, PRD changes cite the HW spec (`ex04.md`). Include the specific section/requirement reference.
+> **Rule (Traceability)**: Every change must cite its source: TODO changes cite the PLAN, PLAN changes cite the PRD, PRD changes cite the HW spec ([ASSIGNMENT.md](ASSIGNMENT.md)). Include the specific section/requirement reference.
 >
 > **Rule (Wiki ↔ Monolith Sync)**: Changes to `plan-wiki/` must be mirrored in `docs/PLAN.md`, and changes to `todo-wiki/` must be mirrored in `docs/TODO.md`. Keep both representations in sync.
 
