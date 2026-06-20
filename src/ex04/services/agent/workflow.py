@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from ex04.services.agent.nodes.analysis import BugAnalysisNode
 from ex04.services.agent.nodes.fix import FixGenerationNode
@@ -54,7 +55,7 @@ class WorkflowBuilder:
         """
         self.max_iterations = max_iterations
 
-    def build(self) -> StateGraph:
+    def build(self) -> CompiledStateGraph:
         """Build and compile the LangGraph debugging workflow.
 
         Creates a StateGraph with AgentState, registers all 7 nodes,
@@ -62,7 +63,7 @@ class WorkflowBuilder:
         the graph for execution.
 
         Returns:
-            Compiled StateGraph ready for execution.
+            Compiled graph ready for execution.
         """
         graph = StateGraph(AgentState)
 
