@@ -1,30 +1,10 @@
-"""Runtime fairness enforcement for controlled comparison experiments.
-
-Verifies that naive and graph-guided ExperimentConfig instances are
-identical on all controlled fields before any provider call is made.
-Also provides a deterministic configuration hash for manifest linkage.
-
-Traceability: [PRD-CE §Fairness], [TODO P6-R05]
-"""
+"""Runtime fairness enforcement for controlled comparison experiments."""
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import asdict
 
-from ex04.shared.types_experiment import ExperimentConfig
-
-_CONTROLLED_FIELDS = (
-    "provider",
-    "model",
-    "system_prompt",
-    "max_model_calls",
-    "max_tool_calls",
-    "max_iterations",
-    "token_budget",
-    "prompt_version",
-)
+from ex04.shared.types_request import CONTROLLED, ComparisonRequest, classified_field_names
 
 
 class FairnessViolationError(RuntimeError):
@@ -34,40 +14,33 @@ class FairnessViolationError(RuntimeError):
 class FairnessEnforcer:
     """Enforce experiment fairness before any provider call.
 
-    Compares all controlled fields between the naive and graph-guided
-    ExperimentConfig instances. If any field differs, raises
-    FairnessViolationError with the name of the offending field.
+    Compares all fields classified as controlled. If any differs, raises
+    FairnessViolationError with the field name and both values.
+    Must be called before gatekeeper.send() — no exceptions.
     """
 
     def check(
-        self, naive_cfg: ExperimentConfig, guided_cfg: ExperimentConfig
+        self, naive_req: ComparisonRequest, guided_req: ComparisonRequest
     ) -> None:
         """Assert that all controlled fields are identical.
 
         Args:
-            naive_cfg: Configuration for the naive run.
-            guided_cfg: Configuration for the graph-guided run.
+            naive_req: ComparisonRequest for the naive run.
+            guided_req: ComparisonRequest for the graph-guided run.
 
         Raises:
             FairnessViolationError: If any controlled field differs.
         """
-        naive_dict = asdict(naive_cfg)
-        guided_dict = asdict(guided_cfg)
-        for field in _CONTROLLED_FIELDS:
-            if naive_dict[field] != guided_dict[field]:
+        naive_dict, guided_dict = asdict(naive_req), asdict(guided_req)
+        for field in classified_field_names(CONTROLLED):
+            naive_val, guided_val = naive_dict[field], guided_dict[field]
+            if naive_val != guided_val:
                 raise FairnessViolationError(
                     f"Fairness violation: field '{field}' differs between "
-                    f"naive ({naive_dict[field]!r}) and guided "
-                    f"({guided_dict[field]!r})."
+                    f"naive ({naive_val!r}) and guided ({guided_val!r})."
                 )
 
     @staticmethod
-    def config_hash(config: ExperimentConfig) -> str:
-        """Return a stable 16-character SHA-256 prefix of the config.
-
-        Only controlled fields are hashed to produce a stable key that
-        is identical for any two fair configs.
-        """
-        controlled = {f: getattr(config, f) for f in _CONTROLLED_FIELDS}
-        serialised = json.dumps(controlled, sort_keys=True)
-        return hashlib.sha256(serialised.encode()).hexdigest()[:16]
+    def config_hash(req: ComparisonRequest) -> str:
+        """Return the full stable SHA-256 digest of the controlled fields."""
+        return req.controlled_config_hash()
