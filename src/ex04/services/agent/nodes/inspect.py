@@ -61,10 +61,8 @@ class CodeInspectionNode:
     def __call__(self, state: AgentState) -> AgentState:
         """Inspect code for all ranked suspects.
 
-        Reads source files for each suspect, formats snippets with file
-        path headers and line numbers, records files_read for metrics,
-        calls the LLM via gatekeeper to annotate suspicious patterns,
-        and appends both raw snippets and LLM analysis to inspected_code.
+        Reads source files, formats snippets, accumulates files_read
+        (cumulative across retries), calls the gatekeeper LLM.
 
         Args:
             state: Current agent state with suspects list.
