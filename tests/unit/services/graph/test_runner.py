@@ -39,6 +39,27 @@ class TestGraphRunnerExecute:
             assert isinstance(result, Path)
 
     @patch("subprocess.run")
+    def test_execute_uses_extract_subcommand(self, mock_run: MagicMock) -> None:
+        """execute() invokes ``graphify extract <path> --out <path>``."""
+        mock_run.return_value = MagicMock(returncode=0, stdout="{}")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir) / "test_codebase"
+            target.mkdir()
+            (target / "graphify-out").mkdir()
+            (target / "graphify-out" / "graph.json").write_text("{}")
+
+            GraphRunner().execute(str(target))
+
+            cmd = mock_run.call_args.args[0]
+            assert cmd[0] == "graphify"
+            assert cmd[1] == "extract"
+            assert str(target) in cmd
+            assert "--out" in cmd
+            # Output is read from <target>/graphify-out/, not a nested path.
+            assert "--output" not in cmd
+
+    @patch("subprocess.run")
     def test_execute_returns_graph_json_path(self, mock_run: MagicMock) -> None:
         """Test that execute() returns path to graph.json."""
         mock_run.return_value = MagicMock(returncode=0, stdout="{}")
@@ -76,21 +97,19 @@ class TestGraphRunnerExecute:
             runner.execute("/nonexistent/path")
 
     @patch("subprocess.run")
-    def test_execute_creates_output_dir(self, mock_run: MagicMock) -> None:
-        """Test that execute() creates output directory if needed."""
+    def test_execute_reads_graphify_out_location(self, mock_run: MagicMock) -> None:
+        """execute() returns graph.json from <target>/graphify-out/."""
         mock_run.return_value = MagicMock(returncode=0, stdout="{}")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir) / "test_codebase"
             target.mkdir()
 
-            # Pre-create graph.json so the runner's post-check passes
+            # Grphify writes here; simulate its output so the post-check passes.
             output_dir = target / "graphify-out"
             output_dir.mkdir()
             (output_dir / "graph.json").write_text("{}")
 
-            runner = GraphRunner()
-            result = runner.execute(str(target))
+            result = GraphRunner().execute(str(target))
 
-            # Verify execute() returns the graph.json path
-            assert result.name == "graph.json"
+            assert result == output_dir / "graph.json"

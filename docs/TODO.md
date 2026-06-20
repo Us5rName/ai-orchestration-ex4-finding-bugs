@@ -1706,15 +1706,9 @@ graph TD
 
 | Metric | Value |
 |---|---|
-<<<<<<< HEAD
-| Total tasks | 43 |
-| P0 (critical) | 37 |
-| P1 (important) | 6 |
-=======
-| Total tasks | 44 |
+| Total tasks | 45 |
 | P0 (critical) | 39 |
-| P1 (important) | 5 |
->>>>>>> 3c832f6 (docs: Phase 4 gap analysis — add T4.00 Config impl + T4.002 Gatekeeper impl)
+| P1 (important) | 6 |
 | Phases | 8 |
 | Estimated total implementation time | ~29.5 hours (excluding LLM API time) |
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
@@ -1723,11 +1717,9 @@ graph TD
 
 ## 12. Revision History
 
-| Version | Date | Author | Change |
-|---|---|---|---|
-| 1.00 | 2026-06-19 | Lahav | Initial task tracking document |
-<<<<<<< HEAD
-| 1.01 | 2026-06-19 | Lahav | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
-=======
-| 1.04 | 2026-06-19 | Lahav | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
->>>>>>> 3c832f6 (docs: Phase 4 gap analysis — add T4.00 Config impl + T4.002 Gatekeeper impl)
+| Version | Date | Author   | Change |
+|---|---|----------|---|
+| 1.00 | 2026-06-19 | Lahav    | Initial task tracking document |
+| 1.01 | 2026-06-19 | Lahav    | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
+| 1.04 | 2026-06-19 | Lahav    | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
+| 1.05 | 2026-06-20 | Evyatar  | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of v1.01 + v1.04). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Traceability: git merge of HEAD + 3c832f6. |

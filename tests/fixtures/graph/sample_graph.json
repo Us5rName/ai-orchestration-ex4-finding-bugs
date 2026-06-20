@@ -1,0 +1,214 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "calc.py",
+      "file_type": "code",
+      "source_file": "calc.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "calc",
+      "community": 0,
+      "community_name": "Community 0",
+      "norm_label": "calc.py"
+    },
+    {
+      "label": "add()",
+      "file_type": "code",
+      "source_file": "calc.py",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "calc_add",
+      "community": 0,
+      "community_name": "Community 0",
+      "norm_label": "add()"
+    },
+    {
+      "label": "double()",
+      "file_type": "code",
+      "source_file": "calc.py",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "calc_double",
+      "community": 0,
+      "community_name": "Community 0",
+      "norm_label": "double()"
+    },
+    {
+      "label": "Calculator",
+      "file_type": "code",
+      "source_file": "calc.py",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "calc_calculator",
+      "community": 1,
+      "community_name": "Community 1",
+      "norm_label": "calculator"
+    },
+    {
+      "label": ".compute()",
+      "file_type": "code",
+      "source_file": "calc.py",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "calc_calculator_compute",
+      "community": 0,
+      "community_name": "Community 0",
+      "norm_label": ".compute()"
+    },
+    {
+      "label": "Tiny sample module for graphify schema probing.",
+      "file_type": "rationale",
+      "source_file": "calc.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "calc_rationale_1",
+      "community": 0,
+      "community_name": "Community 0",
+      "norm_label": "tiny sample module for graphify schema probing."
+    },
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "main",
+      "community": 1,
+      "community_name": "Community 1",
+      "norm_label": "main.py"
+    },
+    {
+      "label": "run()",
+      "file_type": "code",
+      "source_file": "main.py",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "main_run",
+      "community": 1,
+      "community_name": "Community 1",
+      "norm_label": "run()"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "calc",
+      "target": "calc_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "calc",
+      "target": "calc_calculator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "calc",
+      "target": "calc_double",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "calc_rationale_1",
+      "target": "calc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "main",
+      "target": "calc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "calc_double",
+      "target": "calc_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "calc_calculator_compute",
+      "target": "calc_double",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "calc.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "calc_calculator",
+      "target": "calc_calculator_compute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "main",
+      "target": "calc_calculator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "main_run",
+      "target": "calc_calculator",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "main",
+      "target": "main_run",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "1d6c1867d994d59f3d7e37e5e95ecc8f7775d787"
+}
