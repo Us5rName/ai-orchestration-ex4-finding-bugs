@@ -114,6 +114,21 @@ class TestVaultNavigator:
             paths = [Path(r["path"]).name for r in results]
             assert "hot.md" in paths
 
+    def test_navigate_title_falls_back_to_filename(self) -> None:
+        """A note without a frontmatter title uses its filename stem as title."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            notes_dir = vault_path / "notes"
+            notes_dir.mkdir(parents=True, exist_ok=True)
+            (notes_dir / "no_title.md").write_text(
+                "# Heading\n\npayment logic here", encoding="utf-8"
+            )
+            navigator = VaultNavigator(vault_path=vault_path)
+            results = navigator.navigate("payment")
+
+            titles = [r["title"] for r in results]
+            assert "no_title" in titles
+
     def test_navigate_empty_vault(self) -> None:
         """Test that navigate() handles empty vault gracefully."""
         with tempfile.TemporaryDirectory() as tmpdir:
