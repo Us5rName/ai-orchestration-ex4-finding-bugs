@@ -58,6 +58,9 @@ class Ex04SDK:
     def identify_patterns(self, target_path: str) -> list[str]: ...
     # Design pattern identification from graph.
 
+    def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
+    """Find graph entities with no incoming edges and generate doc stubs. [PRD FR-7.5]"""
+
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
     # Complete pipeline: graphify → vault → investigate → compare (real sources) → report.
     # Discovers real Python source files deterministically; passes vault dir to comparison.

@@ -73,6 +73,7 @@ classDiagram
         +investigate_bug(bug_report) InvestigationResult
         +run_comparison(bug_report) ComparisonReport
         +reverse_engineer(target_path) EngineeringResult
+        +detect_orphans(graph_data, output_dir) OrphanReport
         +full_pipeline(target_path, bug_report) PipelineResult
     }
 
@@ -129,6 +130,20 @@ classDiagram
     class BugReporter {
         +generate(investigation) str
         +_format_sections(data) str
+    }
+
+    class OrphanDetector {
+        +find_orphans(graph) list~Entity~
+        +generate_stub(entity) str
+        +detect_and_report(graph, output_dir) OrphanReport
+    }
+
+    class OrphanReport {
+        +orphans: list~Entity~
+        +stubs: dict~str, str~
+        +report_path: Path
+        +total_entities: int
+        +orphan_count: int
     }
 
     ProviderInterface <|-- OpenAIProvider
