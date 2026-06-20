@@ -51,17 +51,17 @@ uv run pytest tests/unit/sdk/test_sdk.py -v --cov=ex04.sdk.sdk --cov-report=term
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §1.2 High-Level Architecture — CLI] |
 | **Estimate** | 30 min |
 
 **Definition of Done**:
 
-- [ ] CLI accepts commands: `graphify`, `investigate`, `compare`, `pipeline`
-- [ ] CLI loads config from `config/setup.json` (or `--config` flag)
-- [ ] CLI delegates all logic to SDK — no business logic in CLI
-- [ ] Proper error handling and logging
+- [x] CLI accepts commands: `graphify`, `investigate`, `compare`, `pipeline`
+- [x] CLI loads config from `config/setup.json` (or `--config` flag)
+- [x] CLI delegates all logic to SDK — no business logic in CLI
+- [x] Proper error handling and logging
 
 **Independent Verification**:
 

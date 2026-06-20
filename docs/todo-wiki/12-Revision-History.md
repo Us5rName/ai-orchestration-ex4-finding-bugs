@@ -16,6 +16,7 @@
 | 1.09 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
 | 1.10 | 2026-06-20 | Codex | Mark T4.09-T4.11 and T4.13-T4.15 done after activating agent nodes with context loading, Gatekeeper-backed analysis/root-cause/fix calls, suspect ranking, and subprocess verification; mark T4.12 partial for snippet inspection only. Traceability: [PLAN §3.5], [PRD FR-4.2 to FR-4.6], [PRD FR-5.1], [PRD NFR-6]. |
 | 1.11 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
+| 1.12 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
 
 ---
 

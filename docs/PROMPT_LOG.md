@@ -608,6 +608,22 @@ tests/unit/services/analysis/
 **Validation**: `uv run pytest --no-cov tests/unit/services/comparison tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/comparison src/ex04/sdk/sdk.py tests/unit/services/comparison tests/unit/sdk/test_sdk.py`.
 ---
 
+### Prompt 47 — Stale T4.07/T5.02 Documentation Reconciliation
+
+**Prompt**: "Docs are still stale: many implemented Phase 4 tasks are still marked Not Started, and T5.02 CLI is implemented but still marked Not Started."
+
+**Context**: `AgentState` and the CLI entry point were already implemented and tested, but the mirrored TODO documents still listed T4.07 and T5.02 as Not Started.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.07 | Marked the AgentState state-definition checklist complete | `docs/TODO.md`, `docs/todo-wiki/05-Phase-4-Services.md` |
+| T5.02 | Marked the CLI command, configuration, SDK-delegation, and error-handling checklist complete | `docs/TODO.md`, `docs/todo-wiki/06-Phase-5-SDK-CLI.md` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/agent/test_state.py tests/unit/sdk/test_cli.py -q`; `uv run python -m ex04 --help`.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -633,3 +649,4 @@ tests/unit/services/analysis/
 | 1.20 | 2026-06-20 | Added Prompt 44 — T4.05 VaultNavigator contract: implemented `find_relevant_notes()` and `navigate_from_index()` with tests and mirrored TODO updates. |
 | 1.21 | 2026-06-20 | Added Prompt 45 — T4.09-T4.15 active agent nodes: context loading, Gatekeeper-backed analysis/root-cause/fix generation, suspect ranking, subprocess verification, and SDK Gatekeeper wiring. |
 | 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
+| 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |

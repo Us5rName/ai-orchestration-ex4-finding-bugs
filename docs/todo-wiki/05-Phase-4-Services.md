@@ -84,7 +84,7 @@ uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gat
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — runner.py] |
 | **PRD Reference** | [PRD FR-1.1] |
@@ -255,9 +255,9 @@ uv run pytest tests/unit/services/vault/test_note_manager.py -v --cov=ex04.servi
 
 **Definition of Done**:
 
-- [ ] `AgentState` TypedDict defined with all fields from [PLAN §3.5]
-- [ ] `Suspect` dataclass defined
-- [ ] Full docstrings
+- [x] `AgentState` TypedDict defined with all fields from [PLAN §3.5]
+- [x] `Suspect` dataclass defined
+- [x] Full docstrings
 
 **Independent Verification**:
 
