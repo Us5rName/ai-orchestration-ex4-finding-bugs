@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 
+from ex04.shared.types_results import InvestigationResult
+
 
 @dataclass
 class ExperimentConfig:
@@ -106,4 +108,18 @@ class SignedMetrics:
     duration_delta: float = 0.0
     naive_correct: bool = False
     guided_correct: bool = False
+    limitations: list[str] = field(default_factory=list)
+
+
+@dataclass
+class ComparisonOutcome:
+    """Production comparison outcome for the canonical experiment path."""
+
+    naive_result: InvestigationResult = field(default_factory=InvestigationResult)
+    guided_result: InvestigationResult = field(default_factory=InvestigationResult)
+    signed_metrics: SignedMetrics = field(default_factory=SignedMetrics)
+    config_hash: str = ""
+    manifest_paths: list[str] = field(default_factory=list)
+    report_paths: list[str] = field(default_factory=list)
+    evidence_class: str = "fixture"
     limitations: list[str] = field(default_factory=list)

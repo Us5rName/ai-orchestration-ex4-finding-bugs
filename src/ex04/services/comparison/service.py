@@ -1,7 +1,9 @@
-"""Comparison service facade for naive vs. graph-guided runs."""
+"""Comparison service facade for canonical naive vs graph-guided runs."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 from ex04.services.comparison.fairness import FairnessEnforcer
@@ -13,35 +15,26 @@ from ex04.services.comparison.report_gen import ReportGenerator
 from ex04.services.comparison.signed_metrics import SignedMetricsCalculator
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types import ComparisonReport, GraphData, RunMetrics
-from ex04.shared.types_experiment import ExperimentConfig, SignedMetrics
+from ex04.shared.types_experiment import ComparisonOutcome, SignedMetrics
+from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
 
 def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
-    """Bridge InvestigationResult to RunMetrics for legacy metric calculators."""
+    """Bridge InvestigationResult to legacy metric calculators."""
     tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
-    found = result.parser_status == "parsed_ok" and result.gate_status in (
-        "pass", "pass_without_gate"
-    )
+    found = result.verification_status == "verified" or result.gate_status == "passed"
     return RunMetrics(
-        tokens_used=tokens,
-        files_read=result.files_read,
-        iterations=result.iterations,
-        time_seconds=result.duration_seconds,
+        tokens_used=tokens, files_read=result.files_read,
+        iterations=result.iterations, time_seconds=result.duration_seconds,
         found_root_cause=found,
     )
 
 
 class ComparisonService(ComparisonServiceInterface):
-    """Run both comparison approaches and generate a report.
-
-    Before any provider call, FairnessEnforcer verifies that both modes
-    share identical controlled-variable configurations. SignedMetrics
-    (including regressions) are stored alongside the ComparisonReport.
-    """
+    """Run comparison approaches with pre-call fairness enforcement."""
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
-        """Initialize comparison collaborators."""
         self._provider = provider
         self._naive = NaiveRunner(gatekeeper, provider)
         self._guided = GraphGuidedRunner(gatekeeper, provider)
@@ -53,24 +46,52 @@ class ComparisonService(ComparisonServiceInterface):
 
     def run_comparison(
         self,
-        bug_report: str,
-        source_files: list[Path],
+        request: ComparisonRequest | str,
+        source_files: Sequence[Path],
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
-    ) -> ComparisonReport:
-        """Run naive and graph-guided approaches and compare metrics.
+    ) -> ComparisonOutcome | ComparisonReport:
+        """Run both modes; legacy string input returns the old report type."""
+        if isinstance(request, str):
+            legacy = ComparisonRequest(
+                bug_report=request, provider=self._provider, run_id="legacy-comparison"
+            )
+            outcome = self._run_canonical(legacy, source_files, graph_data, vault_path)
+            return self._legacy_report(outcome)
+        return self._run_canonical(request, source_files, graph_data, vault_path)
 
-        Raises FairnessViolationError before any provider call if the
-        shared configuration diverges between modes. Signed deltas
-        (including regressions) are stored on self.last_signed_metrics.
-        """
-        shared_cfg = ExperimentConfig(
-            bug_report=bug_report, provider=self._provider
+    def _run_canonical(
+        self,
+        request: ComparisonRequest,
+        source_files: Sequence[Path],
+        graph_data: GraphData | None,
+        vault_path: Path | None,
+    ) -> ComparisonOutcome:
+        request.validate()
+        config_hash = request.controlled_config_hash()
+        naive_req = replace(
+            request, run_id=f"{request.run_id}-naive", mode="naive",
+            strategy_artifact_dir="naive",
         )
-        self._enforcer.check(shared_cfg, shared_cfg)
-        naive = self._naive.run(bug_report, source_files)
-        guided = self._guided.run(bug_report, graph_data, vault_path)
-        naive_rm = _to_run_metrics(naive)
-        guided_rm = _to_run_metrics(guided)
-        self.last_signed_metrics = self._signed.compute(naive_rm, guided_rm)
+        guided_req = replace(
+            request, run_id=f"{request.run_id}-graph", mode="graph",
+            strategy_artifact_dir="graph",
+        )
+        self._enforcer.check(naive_req, guided_req)
+        naive = self._naive.run(naive_req, source_files)
+        guided = self._guided.run(guided_req, graph_data, vault_path)
+        naive.config_hash = guided.config_hash = config_hash
+        self.last_signed_metrics = self._signed.compute(
+            _to_run_metrics(naive), _to_run_metrics(guided)
+        )
+        return ComparisonOutcome(
+            naive_result=naive, guided_result=guided,
+            signed_metrics=self.last_signed_metrics, config_hash=config_hash,
+            evidence_class=request.evidence_class,
+            limitations=naive.limitations + guided.limitations,
+        )
+
+    def _legacy_report(self, outcome: ComparisonOutcome) -> ComparisonReport:
+        naive_rm = _to_run_metrics(outcome.naive_result)
+        guided_rm = _to_run_metrics(outcome.guided_result)
         return self._reports.generate(self._metrics.compare(naive_rm, guided_rm))
