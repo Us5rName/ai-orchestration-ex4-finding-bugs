@@ -20,7 +20,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD KPI: ≥ 85% coverage] |
 | **Estimate** | 15 min |

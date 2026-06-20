@@ -540,6 +540,105 @@ tests/unit/services/analysis/
 
 ---
 
+### Prompt 43 — Phase 4 NFR-3 Test Split
+
+**Prompt**: "Implement the remaining Phase 4 audit tasks on a separate `phase4` branch. Keep each commit focused on one responsibility and update the mirrored documentation."
+
+**Context**: The old Phase 4 audit identified three unit test files that exceeded the 150-line project limit: the Gatekeeper send tests, the agent workflow tests, and the vault navigator tests.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| NFR-3 / line-limit cleanup | Split oversized unit tests into focused files while preserving their existing assertions | `tests/unit/shared/test_gatekeeper_*.py`, `tests/unit/services/agent/test_workflow*.py`, `tests/unit/services/vault/test_navigator*.py` |
+
+**Validation**: `find src tests -type f -name '*.py' -exec wc -l {} + | awk '$1 > 150 {print}'` returned no files.
+---
+
+### Prompt 44 — T4.05 Vault Navigator Contract
+
+**Prompt**: "T4.05 is inconsistent with TODO: the implementation has `navigate()`, but TODO requires `find_relevant_notes()` and `navigate_from_index()`."
+
+**Context**: The Vault Service already exposed keyword search through `navigate()`, but the Phase 4 TODO contract required explicit keyword-search and index-wikilink navigation methods.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.05 | Added the `find_relevant_notes()` keyword-search API, added `navigate_from_index()` wikilink traversal, and kept `navigate()` as a compatibility alias | `src/ex04/services/vault/navigator.py`, `tests/unit/services/vault/test_navigator.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py -q`; `uv run ruff check src/ex04/services/vault/navigator.py tests/unit/services/vault/test_navigator.py tests/unit/services/vault/test_navigator_edge.py`.
+---
+
+### Prompt 45 — T4.09-T4.15 Active Agent Nodes
+
+**Prompt**: "T4.09, T4.10, T4.11, T4.13, T4.14, and T4.15 still return the state unchanged, or only increment iterations. The agent nodes that call an LLM do not use the Gatekeeper yet."
+
+**Context**: The LangGraph workflow existed, but most nodes were still stubs. Runtime SDK wiring also needed to pass the Gatekeeper and provider configuration into the workflow.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.09 | Loaded bounded graph and vault context from configured paths | `nodes/knowledge.py`, `nodes/common.py` |
+| T4.10 / T4.13 / T4.14 | Routed LLM prompts through the injected Gatekeeper and accumulated token usage | `nodes/analysis.py`, `nodes/rootcause.py`, `nodes/fix.py` |
+| T4.11 | Ranked and limited suspects using the configured `max_suspects` value | `nodes/suspect.py` |
+| T4.15 | Ran the verification command and populated `test_results` | `nodes/verify.py` |
+| NFR-6 | Wired `ApiGatekeeper` from SDK configuration into the agent workflow nodes | `sdk.py`, `agent/service.py`, `agent/workflow.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/agent/nodes/test_active_nodes.py tests/unit/services/agent/test_workflow.py tests/unit/services/agent/test_workflow_edges.py tests/unit/services/agent/test_agent_service.py tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/agent src/ex04/sdk/sdk.py tests/unit/services/agent tests/unit/sdk/test_sdk.py`.
+---
+
+### Prompt 46 — FR-6 Comparison Service
+
+**Prompt**: "FR-6.1 to FR-6.3 are still open because the comparison service is not implemented."
+
+**Context**: `ComparisonService` raised `NotImplementedError`, so the SDK could not run the naive baseline, the graph-guided mode, or the comparison metrics report.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T6.01 / FR-6.1 | Implemented the raw-file naive runner through the Gatekeeper | `naive_runner.py` |
+| T6.02 / FR-6.2 | Implemented the graph/vault-guided runner through the Gatekeeper | `graph_guided_runner.py` |
+| T6.03 / FR-6.3 | Implemented savings metrics with zero-baseline handling | `metrics.py` |
+| T6.04 / FR-6.3 | Implemented the Markdown narrative report object; report persistence remains open | `report_gen.py` |
+| SDK | Wired `ComparisonService` to use the same `ApiGatekeeper` and provider configuration as the agent path | `sdk.py` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/comparison tests/unit/sdk/test_sdk.py -q`; `uv run ruff check src/ex04/services/comparison src/ex04/sdk/sdk.py tests/unit/services/comparison tests/unit/sdk/test_sdk.py`.
+---
+
+### Prompt 47 — Stale T4.07/T5.02 Documentation Reconciliation
+
+**Prompt**: "Docs are still stale: many implemented Phase 4 tasks are still marked Not Started, and T5.02 CLI is implemented but still marked Not Started."
+
+**Context**: `AgentState` and the CLI entry point were already implemented and tested, but the mirrored TODO documents still listed T4.07 and T5.02 as Not Started.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| T4.07 | Marked the AgentState state-definition checklist complete | `docs/TODO.md`, `docs/todo-wiki/05-Phase-4-Services.md` |
+| T5.02 | Marked the CLI command, configuration, SDK-delegation, and error-handling checklist complete | `docs/TODO.md`, `docs/todo-wiki/06-Phase-5-SDK-CLI.md` |
+
+**Validation**: `uv run pytest --no-cov tests/unit/services/agent/test_state.py tests/unit/sdk/test_cli.py -q`; `uv run python -m ex04 --help`.
+---
+
+### Prompt 48 — Revert Mistaken Phase 8 Documentation Changes
+
+**Prompt**: "You mistakenly changed the Phase 8 documentation. Undo those changes in the wiki and TODO files, and commit the correction."
+
+**Context**: The implementation branch had checked a Phase 8 final-checklist item even though Phase 8 is reserved for final submission verification, not Phase 4 service work.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| Phase 8 documentation correction | Reverted the final-checklist `No file > 150 lines` checkbox to pending and removed the mistaken T8.03 completion-history entry | `docs/TODO.md`, `docs/todo-wiki/09-Phase-8-Final-Check.md`, `docs/todo-wiki/12-Revision-History.md` |
+
+**Validation**: Confirmed that the Phase 8 final-checklist NFR-3 item is unchecked in both mirrored documents.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -561,3 +660,9 @@ tests/unit/services/analysis/
 | 1.16 | 2026-06-20 | Added Prompt 40 — T4.12 CodeInspectionNode implementation with TDD: constructor injection of target_path, snippet extraction with file path headers and line numbers, graceful handling of missing files/invalid ranges/zero-based lines. 12 tests across 3 files (all <150 lines), 100% module coverage, 0 ruff violations. |
 | 1.17 | 2026-06-20 | Added Prompt 41 — branch hygiene/provider compatibility: hidden contract-gap note ignored, pytest root import path stabilized, Anthropic text block parsing made tolerant of mocked/SDK-shaped blocks. 293 tests pass, 98.44% coverage, 0 ruff violations. |
 | 1.18 | 2026-06-20 | Added Prompt 42 — SDK wiring and service facades: `from_config()` builds Phase 4 service facades, T4.08 marked Done, T5.01 marked Partial pending Phase 6 comparison/full_pipeline completion. 293 tests pass, 98.44% coverage, 0 ruff violations. |
+| 1.19 | 2026-06-20 | Added Prompt 43 — Phase 4 NFR-3 cleanup: split oversized Gatekeeper, workflow, and vault navigator tests; all Python files are now within the 150-line limit. |
+| 1.20 | 2026-06-20 | Added Prompt 44 — T4.05 VaultNavigator contract: implemented `find_relevant_notes()` and `navigate_from_index()` with tests and mirrored TODO updates. |
+| 1.21 | 2026-06-20 | Added Prompt 45 — T4.09-T4.15 active agent nodes: context loading, Gatekeeper-backed analysis/root-cause/fix generation, suspect ranking, subprocess verification, and SDK Gatekeeper wiring. |
+| 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
+| 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |
+| 1.24 | 2026-06-20 | Added Prompt 48 — reverted mistaken Phase 8 checklist updates in TODO and todo-wiki, leaving Phase 8 pending for final verification. |

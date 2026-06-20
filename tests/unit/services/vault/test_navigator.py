@@ -47,6 +47,17 @@ class TestVaultNavigator:
                 assert "path" in results[0]
                 assert "content" in results[0]
 
+    def test_find_relevant_notes_aliases_keyword_search(self) -> None:
+        """Contract API finds notes by keyword."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            vault_path = Path(tmpdir) / "test_vault"
+            self._setup_vault(vault_path)
+            navigator = VaultNavigator(vault_path=vault_path)
+
+            results = navigator.find_relevant_notes("authentication")
+
+            assert "auth" in [result["title"] for result in results]
+
     def test_navigate_finds_matching_notes(self) -> None:
         """Test that navigate() finds notes matching the query."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -114,71 +125,16 @@ class TestVaultNavigator:
             paths = [Path(r["path"]).name for r in results]
             assert "hot.md" in paths
 
-    def test_navigate_title_falls_back_to_filename(self) -> None:
-        """A note without a frontmatter title uses its filename stem as title."""
+    def test_navigate_from_index_follows_wikilinks(self) -> None:
+        """Index navigation follows wikilinks to matching notes."""
         with tempfile.TemporaryDirectory() as tmpdir:
             vault_path = Path(tmpdir) / "test_vault"
-            notes_dir = vault_path / "notes"
-            notes_dir.mkdir(parents=True, exist_ok=True)
-            (notes_dir / "no_title.md").write_text(
-                "# Heading\n\npayment logic here", encoding="utf-8"
+            self._setup_vault(vault_path)
+            (vault_path / "index.md").write_text(
+                "# Index\n\n- [[auth]]\n- [[missing]]", encoding="utf-8"
             )
             navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("payment")
 
-            titles = [r["title"] for r in results]
-            assert "no_title" in titles
+            results = navigator.navigate_from_index("auth")
 
-    def test_navigate_empty_vault(self) -> None:
-        """Test that navigate() handles empty vault gracefully."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir) / "test_vault"
-            vault_path.mkdir(parents=True, exist_ok=True)
-            navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("any query")
-
-            assert results == []
-
-    def test_navigate_handles_missing_notes_dir(self) -> None:
-        """Test that navigate() handles vault without notes directory."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir) / "test_vault"
-            vault_path.mkdir(parents=True, exist_ok=True)
-            navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("any query")
-
-            assert results == []
-
-    def test_navigate_parses_wikilinks(self) -> None:
-        """Test that navigate() correctly parses [[wikilinks]] in content."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir) / "test_vault"
-            self._setup_vault(vault_path)
-            navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("auth")
-
-            # Should find user.md which contains [[auth]]
-            paths = [Path(r["path"]).name for r in results]
-            assert "user.md" in paths
-
-    def test_navigate_returns_content_field(self) -> None:
-        """Test that navigate() returns non-empty content in results."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir) / "test_vault"
-            self._setup_vault(vault_path)
-            navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("authentication")
-
-            assert len(results) >= 1
-            assert len(results[0]["content"]) > 0
-
-    def test_navigate_returns_path_field(self) -> None:
-        """Test that navigate() returns valid path in results."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            vault_path = Path(tmpdir) / "test_vault"
-            self._setup_vault(vault_path)
-            navigator = VaultNavigator(vault_path=vault_path)
-            results = navigator.navigate("authentication")
-
-            assert len(results) >= 1
-            assert Path(results[0]["path"]).exists()
+            assert [result["title"] for result in results] == ["auth"]

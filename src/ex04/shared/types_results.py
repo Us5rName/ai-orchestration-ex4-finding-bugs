@@ -63,6 +63,8 @@ class InvestigationResult:
         fix_applied: Whether the fix was successfully applied.
         test_results: Test execution results dict.
         token_usage: Token metrics for the investigation.
+        original_problem: The original bug description provided by the user.
+        fix_diff: Unified diff of the applied change, when available.
     """
 
     root_cause: str = ""
@@ -71,6 +73,8 @@ class InvestigationResult:
     fix_applied: bool = False
     test_results: dict[str, Any] = field(default_factory=dict)
     token_usage: TokenMetrics = field(default_factory=TokenMetrics)
+    original_problem: str = ""
+    fix_diff: str = ""
 
 
 @dataclass

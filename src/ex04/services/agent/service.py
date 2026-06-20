@@ -8,16 +8,32 @@ from typing import Any
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.agent.state import AgentState
 from ex04.services.agent.workflow import WorkflowBuilder
+from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types import InvestigationResult
 
 
 class AgentService(AgentServiceInterface):
     """Run the LangGraph investigation workflow and expose its state."""
 
-    def __init__(self, target_path: Path, max_iterations: int = 5) -> None:
+    def __init__(
+        self,
+        target_path: Path,
+        max_iterations: int = 5,
+        max_suspects: int = 5,
+        context_limit: int = 8000,
+        gatekeeper: GatekeeperInterface | None = None,
+        provider: str = "openai",
+    ) -> None:
         """Initialize the workflow service."""
         self._target_path = target_path
-        self._builder = WorkflowBuilder(target_path=target_path, max_iterations=max_iterations)
+        self._builder = WorkflowBuilder(
+            target_path=target_path,
+            max_iterations=max_iterations,
+            max_suspects=max_suspects,
+            context_limit=context_limit,
+            gatekeeper=gatekeeper,
+            provider=provider,
+        )
         self._state: AgentState = {}
 
     def investigate(
@@ -28,6 +44,7 @@ class AgentService(AgentServiceInterface):
     ) -> InvestigationResult:
         """Run a bug investigation and return a structured result."""
         state: AgentState = {"bug_report": bug_report, "iterations": 0}
+        state["target_path"] = str(self._target_path)
         if graph_path:
             state["graph_context"] = str(graph_path)
         if vault_path:
@@ -40,6 +57,8 @@ class AgentService(AgentServiceInterface):
             proposed_fix=self._state.get("proposed_fix", ""),
             fix_applied=self._state.get("fix_applied", False),
             test_results=self._state.get("test_results", {}),
+            original_problem=self._state.get("bug_report", ""),
+            fix_diff=self._state.get("fix_diff", ""),
         )
         if "token_usage" in self._state:
             result.token_usage = self._state["token_usage"]

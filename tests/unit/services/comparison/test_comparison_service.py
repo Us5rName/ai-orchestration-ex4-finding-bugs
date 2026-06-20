@@ -1,11 +1,54 @@
-"""Tests for deferred ComparisonService facade."""
+"""Tests for ComparisonService facade."""
 
-import pytest
+from pathlib import Path
 
 from ex04.services.comparison.service import ComparisonService
+from ex04.shared.types import Entity, GraphData
+from ex04.shared.types_results import ProviderResponse
 
 
-def test_comparison_service_is_deferred_until_phase_6() -> None:
-    service = ComparisonService()
-    with pytest.raises(NotImplementedError, match="Phase 6"):
-        service.run_comparison("bug", [])
+class FakeGatekeeper:
+    """Gatekeeper fake with deterministic token counts."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
+        """Return larger token use for raw-code calls than guided calls."""
+        self.calls += 1
+        content = messages[0]["content"]
+        input_tokens = 100 if "---" in content else 30
+        return ProviderResponse(
+            text="root cause found",
+            input_tokens=input_tokens,
+            output_tokens=10,
+            provider=provider,
+            model="fake",
+        )
+
+    def get_call_log(self) -> list[dict]:
+        """Return empty logs; unused by tests."""
+        return []
+
+    def get_queue_status(self) -> dict:
+        """Return idle status; unused by tests."""
+        return {"queue_size": 0}
+
+
+def test_comparison_service_runs_both_modes(tmp_path: Path) -> None:
+    """ComparisonService returns metrics and narrative."""
+    source = tmp_path / "app.py"
+    source.write_text("def bug(): pass\n", encoding="utf-8")
+    vault = tmp_path / "vault"
+    vault.mkdir()
+    (vault / "index.md").write_text("# Index", encoding="utf-8")
+    graph = GraphData(entities=[Entity("bug", "function", "app.py", (1, 1))])
+    gatekeeper = FakeGatekeeper()
+
+    report = ComparisonService(gatekeeper, "fake").run_comparison("bug", [source], graph, vault)
+
+    assert gatekeeper.calls == 2
+    assert report.metrics.naive.files_read == 1
+    assert report.metrics.guided.files_read == 1
+    assert report.metrics.token_savings_pct > 0
+    assert "| Tokens |" in report.narrative

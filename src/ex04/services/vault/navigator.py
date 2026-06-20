@@ -8,7 +8,8 @@ during bug investigation.
 
 | Method | Input | Output | Phase |
 |---|---|---|---|
-| `navigate(query)` | str | list[dict] | P4 |
+| `find_relevant_notes(query)` | str | list[dict] | P4 |
+| `navigate_from_index(target)` | str | list[dict] | P4 |
 
 Implementation: **Phase 4** (T4.05)
 """
@@ -44,7 +45,11 @@ class VaultNavigator:
         self.vault_path = vault_path
 
     def navigate(self, query: str) -> list[dict[str, str]]:
-        """Navigate vault to find relevant context.
+        """Backward-compatible alias for ``find_relevant_notes``."""
+        return self.find_relevant_notes(query)
+
+    def find_relevant_notes(self, query: str) -> list[dict[str, str]]:
+        """Find relevant notes by keyword.
 
         Searches all .md files in the vault (title and content) for
         the given query using case-insensitive keyword matching.
@@ -84,6 +89,44 @@ class VaultNavigator:
                 logger.debug("Found match in %s (wikilinks: %s)", md_file, wikilinks)
 
         return results
+
+    def navigate_from_index(self, target: str) -> list[dict[str, str]]:
+        """Follow index wikilinks and return notes relevant to ``target``.
+
+        Args:
+            target: Case-insensitive note title, path stem, or content keyword.
+
+        Returns:
+            Linked notes from index.md that match the target. Missing and broken
+            links are ignored.
+        """
+        if not target.strip():
+            return []
+        index = self.vault_path / "index.md"
+        if not index.is_file():
+            return []
+
+        matches: list[dict[str, str]] = []
+        target_lower = target.lower()
+        for link in _WIKILINK_RE.findall(index.read_text(encoding="utf-8")):
+            note = self._resolve_note(link)
+            if note is None:
+                continue
+            content = note.read_text(encoding="utf-8")
+            title = self._extract_title(content, note)
+            haystack = f"{title}\n{note.stem}\n{content}".lower()
+            if target_lower in haystack:
+                matches.append({"title": title, "path": str(note), "content": content})
+        return matches
+
+    def _resolve_note(self, link: str) -> Path | None:
+        """Resolve an Obsidian wikilink to a markdown file in the vault."""
+        clean = link.split("|", 1)[0].split("#", 1)[0].strip()
+        candidates = [self.vault_path / f"{clean}.md", self.vault_path / "notes" / f"{clean}.md"]
+        for candidate in candidates:
+            if candidate.is_file():
+                return candidate
+        return None
 
     @staticmethod
     def _extract_title(content: str, md_file: Path) -> str:

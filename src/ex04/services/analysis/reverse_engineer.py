@@ -19,13 +19,17 @@ import logging
 from ex04.services.analysis.reverse_engineer_helpers import (
     build_block_diagram_lines,
     build_class_diagram_lines,
+    enrich_with_llm,
 )
 from ex04.services.analysis.reverse_engineer_text import (
     build_communities_section,
     build_entity_summary,
     build_relationships_section,
-    identify_patterns,
 )
+from ex04.services.analysis.reverse_engineer_text import (
+    identify_patterns as _identify_patterns,
+)
+from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types import GraphData
 
 logger = logging.getLogger(__name__)
@@ -36,14 +40,23 @@ class ReverseEngineer:
 
     Generates Mermaid diagrams (block + class) and text summaries
     including entity counts, relationships, communities, and patterns.
+    Optionally enriches the summary with LLM insights via the gatekeeper.
 
     Attributes:
         graph_data: Parsed graph data to analyze.
+        gatekeeper: Optional gatekeeper for LLM-assisted enrichment.
+        provider: LLM provider name forwarded to the gatekeeper.
     """
 
-    def __init__(self) -> None:
-        """Initialize the reverse engineer."""
+    def __init__(
+        self,
+        gatekeeper: GatekeeperInterface | None = None,
+        provider: str = "openai",
+    ) -> None:
+        """Initialize with an optional gatekeeper for LLM enrichment."""
         self.graph_data: GraphData | None = None
+        self.gatekeeper = gatekeeper
+        self.provider = provider
 
     def reverse_engineer(self, graph_data: GraphData) -> str:
         """Reverse engineer architecture from graph data.
@@ -97,40 +110,31 @@ class ReverseEngineer:
             sections.append("")
 
         sections.append("## Patterns")
-        sections.extend(identify_patterns(graph_data))
+        sections.extend(_identify_patterns(graph_data))
         sections.append("")
 
-        return "\n".join(sections)
+        summary = "\n".join(sections)
+        if self.gatekeeper is not None:
+            summary = enrich_with_llm(summary, self.gatekeeper, self.provider)
+        return summary
 
     def extract_block_schema(self, graph_data: GraphData) -> str:
-        """Extract a Mermaid block diagram from graph data.
-
-        Groups entities by source file and draws blocks with
-        relationships between them.
-
-        Args:
-            graph_data: Parsed graph data.
-
-        Returns:
-            Mermaid block diagram string.
-        """
+        """Return a fenced Mermaid block diagram for the given graph data."""
         lines: list[str] = ["```mermaid", "block"]
         lines.extend(build_block_diagram_lines(graph_data))
         lines.append("```")
         return "\n".join(lines)
 
     def extract_oop_schema(self, graph_data: GraphData) -> str:
-        """Extract a Mermaid class diagram from graph data.
-
-        Shows classes and inheritance/usage relationships.
-
-        Args:
-            graph_data: Parsed graph data.
-
-        Returns:
-            Mermaid class diagram string.
-        """
+        """Return a fenced Mermaid class diagram for the given graph data."""
         lines: list[str] = ["```mermaid", "classDiagram"]
         lines.extend(build_class_diagram_lines(graph_data))
         lines.append("```")
         return "\n".join(lines)
+
+    def identify_patterns(self, graph_data: GraphData) -> list[str]:
+        """Identify common design patterns and return markdown-formatted lines.
+
+        Delegates to the algorithmic detector in reverse_engineer_text.
+        """
+        return _identify_patterns(graph_data)
