@@ -70,6 +70,7 @@ class TestInvestigationResult:
         assert result.fix_applied is False
         assert result.test_results == {}
         assert isinstance(result.token_usage, TokenMetrics)
+        assert result.files_read == 0
 
 
 class TestPipelineResult:
@@ -82,3 +83,4 @@ class TestPipelineResult:
         assert isinstance(result.investigation, InvestigationResult)
         assert isinstance(result.comparison, ComparisonReport)
         assert result.engineering == ""
+        assert result.bug_report_md == ""

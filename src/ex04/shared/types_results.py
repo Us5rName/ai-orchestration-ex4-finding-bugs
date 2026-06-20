@@ -65,6 +65,7 @@ class InvestigationResult:
         token_usage: Token metrics for the investigation.
         original_problem: The original bug description provided by the user.
         fix_diff: Unified diff of the applied change, when available.
+        files_read: Number of source files read during code inspection.
     """
 
     root_cause: str = ""
@@ -75,6 +76,7 @@ class InvestigationResult:
     token_usage: TokenMetrics = field(default_factory=TokenMetrics)
     original_problem: str = ""
     fix_diff: str = ""
+    files_read: int = 0
 
 
 @dataclass
@@ -87,6 +89,7 @@ class PipelineResult:
         investigation: Bug investigation findings.
         comparison: Token comparison report.
         engineering: Reverse engineering results.
+        bug_report_md: Structured Markdown bug report from the investigation.
     """
 
     graph_result: str = ""
@@ -94,3 +97,4 @@ class PipelineResult:
     investigation: InvestigationResult = field(default_factory=InvestigationResult)
     comparison: ComparisonReport = field(default_factory=ComparisonReport)
     engineering: str = ""
+    bug_report_md: str = ""
