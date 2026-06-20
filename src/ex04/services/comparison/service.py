@@ -60,6 +60,27 @@ class ComparisonService(ComparisonServiceInterface):
             return self._legacy_report(outcome)
         return self._run_canonical(request, source_files, graph_data, vault_path)
 
+    def run_naive_investigation(
+        self, request: ComparisonRequest, source_files: Sequence[Path],
+    ) -> InvestigationResult:
+        """Public single-mode operation for SDK delegation."""
+        request.validate()
+        return self._naive.run(replace(request, mode="naive"), source_files)
+
+    def run_graph_investigation(
+        self, request: ComparisonRequest, graph_data: GraphData | None = None,
+        vault_path: Path | None = None,
+    ) -> InvestigationResult:
+        """Public graph-mode operation for SDK delegation."""
+        request.validate()
+        return self._guided.run(replace(request, mode="graph"), graph_data, vault_path)
+
+    def compute_metrics(
+        self, naive: InvestigationResult, guided: InvestigationResult,
+    ) -> SignedMetrics:
+        """Public signed-metrics operation for SDK delegation."""
+        return self._signed.compute(_to_run_metrics(naive), _to_run_metrics(guided))
+
     def _run_canonical(
         self,
         request: ComparisonRequest,

@@ -79,6 +79,7 @@ def _dispatch(args: argparse.Namespace, sdk: Ex04SDK) -> object:
             provider=args.provider,
             run_id=args.run_id or uuid.uuid4().hex[:12],
         )
+        req.validate()
         if args.command == "investigate-naive":
             return sdk.run_naive_investigation(req)
         return sdk.run_graph_investigation(req)

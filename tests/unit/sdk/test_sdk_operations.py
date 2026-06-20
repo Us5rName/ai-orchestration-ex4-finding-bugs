@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 from ex04.sdk._comparison_ops import _to_run_metrics
-from ex04.shared.types_experiment import RunManifest, SignedMetrics
+from ex04.shared.types_experiment import ComparisonOutcome, RunManifest, SignedMetrics
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
@@ -23,7 +23,13 @@ def _fake_sdk(tmp_path: Path) -> object:
 
     gk = MagicMock(spec=GatekeeperInterface)
     gk.send.return_value = MagicMock(
-        text='{"root_cause": "x", "suspected_files": [], "suspected_symbols": []}',
+        text=json.dumps({
+            "root_cause": "x",
+            "suspected_files": [],
+            "suspected_symbols": [],
+            "confidence": "low",
+            "evidence": [],
+        }),
         input_tokens=10, output_tokens=20,
     )
     cmp = ComparisonService(gk, "openai")
@@ -35,11 +41,11 @@ def _fake_sdk(tmp_path: Path) -> object:
 
 
 def test_to_run_metrics_found_root_cause() -> None:
-    """_to_run_metrics maps parsed_ok + pass_without_gate to found_root_cause=True."""
+    """_to_run_metrics requires verified status for correctness."""
     r = InvestigationResult(
-        parser_status="parsed_ok", gate_status="pass_without_gate",
+        parser_status="parsed_ok", gate_status="passed",
         input_tokens=100, output_tokens=200, files_read=3, iterations=1,
-        duration_seconds=0.5,
+        duration_seconds=0.5, verification_status="verified",
     )
     rm = _to_run_metrics(r)
     assert rm.found_root_cause is True
@@ -49,7 +55,7 @@ def test_to_run_metrics_found_root_cause() -> None:
 
 def test_to_run_metrics_failed_parse() -> None:
     """_to_run_metrics maps parse_failed to found_root_cause=False."""
-    r = InvestigationResult(parser_status="parse_failed", gate_status="pass_without_gate")
+    r = InvestigationResult(parser_status="parse_failed", gate_status="not_requested")
     assert _to_run_metrics(r).found_root_cause is False
 
 
@@ -73,21 +79,21 @@ def test_run_graph_investigation_returns_result(tmp_path: Path) -> None:
 
 
 def test_run_experiment_returns_triple(tmp_path: Path) -> None:
-    """run_experiment returns (naive, guided, SignedMetrics)."""
+    """run_experiment returns the canonical ComparisonOutcome."""
     sdk = _fake_sdk(tmp_path)
     req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r003")
-    naive, guided, metrics = sdk.run_experiment(req)
-    assert isinstance(naive, InvestigationResult)
-    assert isinstance(guided, InvestigationResult)
-    assert isinstance(metrics, SignedMetrics)
+    outcome = sdk.run_experiment(req)
+    assert isinstance(outcome, ComparisonOutcome)
+    assert isinstance(outcome.naive_result, InvestigationResult)
+    assert isinstance(outcome.guided_result, InvestigationResult)
 
 
 def test_compute_metrics_returns_signed_metrics(tmp_path: Path) -> None:
     """compute_metrics delegates to SignedMetricsCalculator."""
     sdk = _fake_sdk(tmp_path)
-    naive = InvestigationResult(parser_status="parsed_ok", gate_status="pass_without_gate",
+    naive = InvestigationResult(parser_status="parsed_ok", gate_status="passed",
                                 input_tokens=300, output_tokens=100, files_read=5)
-    guided = InvestigationResult(parser_status="parsed_ok", gate_status="pass_without_gate",
+    guided = InvestigationResult(parser_status="parsed_ok", gate_status="passed",
                                  input_tokens=100, output_tokens=50, files_read=2)
     metrics = sdk.compute_metrics(naive, guided)
     assert isinstance(metrics, SignedMetrics)
@@ -115,3 +121,10 @@ def test_load_provenance_reads_json(tmp_path: Path) -> None:
     sdk = _fake_sdk(tmp_path)
     data = sdk.load_provenance(str(prov_file))
     assert data["target_repo"] == "andela/buggy-python"
+
+
+def test_sdk_ops_do_not_access_private_comparison_collaborators() -> None:
+    text = Path("src/ex04/sdk/_comparison_ops.py").read_text(encoding="utf-8")
+    assert "._naive" not in text
+    assert "._guided" not in text
+    assert "._signed" not in text
