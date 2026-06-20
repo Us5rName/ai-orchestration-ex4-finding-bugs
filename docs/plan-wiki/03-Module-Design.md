@@ -65,6 +65,74 @@ graph TD
 
 ### 3.1.1 Service Interfaces (Contract Layer)
 
+All interfaces are implemented as ABCs in their respective `interface.py` files. Signatures below match the actual code.
+
+**GraphServiceInterface** (`services/graph/interface.py`, Phase 4 T4.01–T4.03):
+```python
+@abstractmethod
+def extract(self, target_path: str) -> Path: ...
+@abstractmethod
+def parse(self, graph_path: Path) -> GraphData: ...
+@abstractmethod
+def analyze(self, graph_data: GraphData) -> dict[str, list]: ...
+```
+
+**VaultServiceInterface** (`services/vault/interface.py`, Phase 4 T4.04–T4.06):
+```python
+@abstractmethod
+def build(self, graph_data: GraphData) -> dict[str, Path]: ...
+@abstractmethod
+def navigate(self, query: str) -> list[dict[str, str]]: ...
+@abstractmethod
+def update(self, note_type: str, content: str) -> Path: ...
+```
+
+**ProviderInterface** (`providers/interface.py`, Phase 3):
+```python
+@abstractmethod
+def chat(
+    self,
+    messages: list[Message],
+    model: str,
+    base_url: str | None = None,
+) -> ProviderResponse: ...
+@abstractmethod
+def count_tokens(self, text: str) -> int: ...
+```
+
+**AnalysisServiceInterface** (`services/analysis/interface.py`, Phase 4 T4.16–T4.18):
+```python
+@abstractmethod
+def reverse_engineer(self, graph_data: GraphData) -> str: ...
+@abstractmethod
+def report(self, investigation: InvestigationResult) -> str: ...
+```
+
+**AgentServiceInterface** (`services/agent/interface.py`, Phase 4 T4.07–T4.15):
+```python
+@abstractmethod
+def investigate(
+    self,
+    bug_report: str,
+    graph_path: Path | None = None,
+    vault_path: Path | None = None,
+) -> InvestigationResult: ...
+@abstractmethod
+def get_state(self) -> dict: ...
+```
+
+**ComparisonServiceInterface** (`services/comparison/interface.py`, Phase 6 T6.01–T6.04):
+```python
+@abstractmethod
+def run_comparison(
+    self,
+    bug_report: str,
+    source_files: list[Path],
+    graph_data: GraphData | None = None,
+    vault_path: Path | None = None,
+) -> ComparisonReport: ...
+```
+
 | Interface | Path | Defines | Enables Parallel Work For |
 |---|---|---|---|
 | `GraphServiceInterface` | `services/graph/interface.py` | `extract()`, `parse()`, `analyze()` | Agent, Analysis, Comparison |
@@ -123,29 +191,39 @@ class Ex04SDK:
     All service dependencies are injected through constructor —
     never hard-imported. Enables parallel development via mock injection.
 
-    Input:  config (Config), graph_svc (GraphServiceInterface),
-            vault_svc (VaultServiceInterface), agent_svc (AgentServiceInterface),
-            analysis_svc (AnalysisServiceInterface),
-            comparison_svc (ComparisonServiceInterface)
-    Output: OperationResult (dict)
+    Input:  graph (GraphServiceInterface), vault (VaultServiceInterface),
+            agent (AgentServiceInterface), comparison (ComparisonServiceInterface),
+            analysis (AnalysisServiceInterface), config (dict)
+    Output: Operation results (GraphData, InvestigationResult, etc.)
     """
 
     def __init__(
         self,
-        config: Config,
-        graph_svc: "GraphServiceInterface",
-        vault_svc: "VaultServiceInterface",
-        agent_svc: "AgentServiceInterface",
-        analysis_svc: "AnalysisServiceInterface",
-        comparison_svc: "ComparisonServiceInterface",
+        graph: GraphServiceInterface,
+        vault: VaultServiceInterface,
+        agent: AgentServiceInterface,
+        comparison: ComparisonServiceInterface,
+        analysis: AnalysisServiceInterface,
+        config: dict[str, Any] | None = None,
     ):
         ...
 
-    def run_graphify(self, target_path: str) -> GraphResult: ...
-    def build_vault(self, graph: GraphData) -> VaultResult: ...
-    def investigate_bug(self, bug_report: str) -> InvestigationResult: ...
-    def run_comparison(self, bug_report: str) -> ComparisonReport: ...
-    def reverse_engineer(self, target_path: str) -> EngineeringResult: ...
+    def run_graphify(self, target_path: str) -> GraphData: ...
+    def build_vault(self, graph_data: GraphData) -> dict[str, Path]: ...
+    def investigate_bug(
+        self,
+        bug_report: str,
+        graph_path: Path | None = None,
+        vault_path: Path | None = None,
+    ) -> InvestigationResult: ...
+    def run_comparison(
+        self,
+        bug_report: str,
+        source_files: list[Path],
+        graph_data: GraphData | None = None,
+        vault_path: Path | None = None,
+    ) -> ComparisonReport: ...
+    def reverse_engineer(self, target_path: str) -> str: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
@@ -168,7 +246,7 @@ class Ex04SDK:
 
 **Input**: Target codebase path (`str`), Grphify configuration (`dict`).
 
-**Output**: `GraphResult` — structured graph with entities, relationships, communities.
+**Output**: `GraphData` — structured graph with entities, relationships, communities.
 
 **Dependencies**: Shared layer (config, file I/O). Other modules depend only on `interface.py`.
 
@@ -186,8 +264,8 @@ class GraphParser:
 # analyzer.py
 class GraphAnalyzer:
     """Analyze graph for centrality, communities, God Nodes."""
-    def find_god_nodes(self, graph: GraphData) -> list[Node]: ...
-    def rank_by_centrality(self, graph: GraphData, ref_node: str) -> list[tuple]: ...
+    def find_god_nodes(self, graph: GraphData, min_degree: int = 2) -> list[str]: ...
+    def rank_by_centrality(self, graph: GraphData, ref_node: str) -> list[tuple[str, float]]: ...
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
 ```
 
@@ -210,7 +288,7 @@ class GraphAnalyzer:
 
 **Input**: Graph data, investigation context, bug description.
 
-**Output**: `VaultResult` — paths to generated/updated notes, vault statistics.
+**Output**: `dict[str, Path]` — mapping note types to file paths.
 
 **Dependencies**: Shared layer (file I/O, config). Other modules depend only on `interface.py`.
 
@@ -218,21 +296,22 @@ class GraphAnalyzer:
 # builder.py
 class VaultBuilder:
     """Build Obsidian vault from graph data."""
-    def build(self, graph: GraphData) -> VaultResult: ...
-    def create_index(self, graph: GraphData) -> Path: ...
-    def create_hot(self, focus_area: str) -> Path: ...
+    def __init__(self, vault_path: Path) -> None: ...
+    def build(self, graph_data: GraphData) -> dict[str, Path]: ...
 
 # navigator.py
 class VaultNavigator:
     """Navigate vault to find relevant context."""
-    def find_relevant_notes(self, query: str) -> list[Note]: ...
-    def navigate_from_index(self, target: str) -> Note: ...
+    def __init__(self, vault_path: Path) -> None: ...
+    def navigate(self, query: str) -> list[dict[str, str]]: ...
 
 # note_manager.py
 class NoteManager:
     """Manage individual vault notes."""
+    def __init__(self, vault_path: Path) -> None: ...
     def create_note(self, title: str, content: str, links: list[str]) -> Path: ...
     def update_note(self, path: Path, content: str) -> None: ...
+    def update(self, note_type: str, content: str) -> Path: ...
 ```
 
 ## 3.5 Agent Service — LangGraph Workflow
@@ -280,14 +359,45 @@ class AgentState(TypedDict):
 
 # workflow.py
 class WorkflowBuilder:
-    """Build LangGraph debugging workflow."""
-    def build(self) -> StateGraph: ...
-    def add_nodes(self, graph: StateGraph) -> StateGraph: ...
-    def add_edges(self, graph: StateGraph) -> StateGraph: ...
+    """Assemble LangGraph debugging workflow with retry loop."""
+    def __init__(self, max_iterations: int = 5) -> None: ...
+    def build(self) -> CompiledStateGraph: ...
+    def _verify_route(self, state: AgentState) -> str: ...
 
 # nodes/knowledge.py
 class KnowledgeLoadNode:
     """Load graph + vault context into agent state."""
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/analysis.py
+class BugAnalysisNode:
+    """Analyze bug report against graph context, produce initial suspects."""
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/suspect.py
+class SuspectRankingNode:
+    """Rank suspects by graph centrality and proximity to failure."""
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/inspect.py
+class CodeInspectionNode:
+    """Fetch code snippets for top-ranked suspects."""
+    def __init__(self, target_path: Path) -> None: ...
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/rootcause.py
+class RootCauseNode:
+    """Determine exact bug origin from inspected code."""
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/fix.py
+class FixGenerationNode:
+    """Propose and apply code fix based on root cause."""
+    def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/verify.py
+class VerificationNode:
+    """Run tests to confirm fix, increment iteration counter."""
     def __call__(self, state: AgentState) -> AgentState: ...
 ```
 
@@ -310,7 +420,7 @@ class KnowledgeLoadNode:
 
 **Input**: Graph data, code snippets, investigation results.
 
-**Output**: `EngineeringResult` — diagrams, reports, architectural insights.
+**Output**: `str` — Markdown with Mermaid block diagram, OOP schema, and architectural summary.
 
 **Dependencies**: Graph Service (graph data), Shared (file I/O).
 
@@ -319,7 +429,7 @@ class ReverseEngineer:
     """Extract architectural understanding from code/graph."""
     def extract_block_schema(self, graph: GraphData) -> str: ...  # Mermaid
     def extract_oop_schema(self, graph: GraphData) -> str: ...  # Mermaid
-    def identify_patterns(self, graph: GraphData) -> list[Pattern]: ...
+    def reverse_engineer(self, graph_data: GraphData) -> str: ...
 
 class DiagramGenerator:
     """Generate and save diagrams."""
@@ -436,46 +546,139 @@ class ProviderFactory:
 
 | File | Responsibility |
 |---|---|
-| `gatekeeper.py` | Rate limiting, FIFO queue, API call monitoring |
-| `config.py` | Load and validate configuration from JSON/env |
+| `gatekeeper.py` | Rate limiting, FIFO queue, API call monitoring (implements GatekeeperInterface) |
+| `config.py` | Load and validate configuration from JSON/env (implements ConfigManagerInterface) |
 | `version.py` | Global version tracking (1.00) |
-| `token_tracker.py` | Track token consumption across all providers |
-| `types.py` | Shared data classes and TypedDicts |
+| `token_tracker.py` | Track token consumption across all providers (TokenTrackerInterface, Phase 6) |
+| `types.py` | Re-exports all shared types from sub-modules |
+| `types_metrics.py` | TokenMetrics, RunMetrics, ComparisonMetrics, ComparisonReport |
+| `types_results.py` | ProviderResponse, Suspect, InvestigationResult, PipelineResult |
 
 ```python
-# types.py
+# gatekeeper.py
+class ApiGatekeeper(GatekeeperInterface):
+    """Centralized API call manager with rate limiting and FIFO queue."""
+    def __init__(
+        self,
+        rate_limits_path: str = "",
+        provider_configs: dict[str, dict[str, Any]] | None = None,
+    ) -> None: ...
+    def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse: ...
+    def get_call_log(self) -> list[dict[str, Any]]: ...
+    def get_queue_status(self) -> dict[str, Any]: ...
+
+# config.py
+class ConfigManager(ConfigManagerInterface):
+    """JSON configuration manager with dot-notation access."""
+    def __init__(self) -> None: ...
+    def load(self, path: str) -> dict[str, Any]: ...
+    def get(self, key_path: str) -> Any: ...
+    def validate(self, config: dict[str, Any]) -> bool: ...
+
+# token_tracker.py (Phase 6 — interface only, implementation deferred)
+class TokenTrackerInterface(ABC):
+    """Abstract token tracker for cross-session token usage tracking."""
+    @abstractmethod
+    def record(self, metrics: TokenMetrics) -> None: ...
+    @abstractmethod
+    def total(self, provider: str) -> int: ...
+    @abstractmethod
+    def by_session(self, session_id: str) -> dict[str, Any]: ...
+    @abstractmethod
+    def export(self) -> dict[str, Any]: ...
+
+# types.py — re-exports from sub-modules
+types_metrics.py:
+@dataclass
 class TokenMetrics:
-    input_tokens: int
-    output_tokens: int
-    total_tokens: int
-    provider: str
-    model: str
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+    provider: str = ""
+    model: str = ""
 
-class GraphData:
-    entities: list[Entity]
-    relationships: list[Relationship]
-    communities: list[Community]
-
+@dataclass
 class RunMetrics:
-    tokens_used: int
-    files_read: int
-    iterations: int
-    time_seconds: float
-    found_root_cause: bool
+    tokens_used: int = 0
+    files_read: int = 0
+    iterations: int = 0
+    time_seconds: float = 0.0
+    found_root_cause: bool = False
 
+@dataclass
 class ComparisonMetrics:
-    naive: RunMetrics
-    guided: RunMetrics
-    token_savings_pct: float
-    file_read_savings_pct: float
-    iteration_savings_pct: float
+    naive: RunMetrics = field(default_factory=RunMetrics)
+    guided: RunMetrics = field(default_factory=RunMetrics)
+    token_savings_pct: float = 0.0
+    file_read_savings_pct: float = 0.0
+    iteration_savings_pct: float = 0.0
 
+@dataclass
+class ComparisonReport:
+    metrics: ComparisonMetrics = field(default_factory=ComparisonMetrics)
+    narrative: str = ""
+    token_savings: int = 0
+
+types_results.py:
+@dataclass
+class ProviderResponse:
+    text: str = ""
+    input_tokens: int = 0
+    output_tokens: int = 0
+    model: str = ""
+    provider: str = ""
+    timestamp: datetime = field(default_factory=datetime.now)
+
+@dataclass
+class Suspect:
+    file_path: str
+    line_start: int
+    line_end: int
+    score: float = 0.0
+    reason: str = ""
+
+@dataclass
+class InvestigationResult:
+    root_cause: str = ""
+    suspects: list[Suspect] = field(default_factory=list)
+    proposed_fix: str = ""
+    fix_applied: bool = False
+    test_results: dict[str, Any] = field(default_factory=dict)
+    token_usage: TokenMetrics = field(default_factory=TokenMetrics)
+
+@dataclass
 class PipelineResult:
-    graph_result: GraphResult
-    vault_result: VaultResult
-    investigation: InvestigationResult
-    comparison: ComparisonReport
-    engineering: EngineeringResult
+    graph_result: str = ""
+    vault_result: str = ""
+    investigation: InvestigationResult = field(default_factory=InvestigationResult)
+    comparison: ComparisonReport = field(default_factory=ComparisonReport)
+    engineering: str = ""
+
+types.py (core graph types):
+@dataclass
+class Entity:
+    name: str
+    kind: str
+    file_path: str = ""
+    line_range: tuple[int, int] = field(default_factory=lambda: (0, 0))
+
+@dataclass
+class Relationship:
+    source: str
+    target: str
+    type: str = ""
+
+@dataclass
+class Community:
+    name: str
+    entities: list[str] = field(default_factory=list)
+    size: int = 0
+
+@dataclass
+class GraphData:
+    entities: list[Entity] = field(default_factory=list)
+    relationships: list[Relationship] = field(default_factory=list)
+    communities: list[Community] = field(default_factory=list)
 ```
 
 ---
