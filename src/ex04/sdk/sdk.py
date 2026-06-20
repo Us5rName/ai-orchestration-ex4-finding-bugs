@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from ex04.sdk._comparison_inputs import discover_source_files
 from ex04.sdk._wiring import build_services
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.analysis.interface import AnalysisServiceInterface
@@ -24,6 +25,19 @@ from ex04.services.vault.interface import VaultServiceInterface
 from ex04.shared.types import GraphData
 from ex04.shared.types_metrics import ComparisonReport
 from ex04.shared.types_results import InvestigationResult, PipelineResult
+
+
+def _resolve_vault_dir(vault: dict[str, Path]) -> Path | None:
+    """Resolve the vault directory from the built vault artifact map.
+
+    Prefers the parent of the 'index' note (canonical artifact), then the
+    parent of the first available note. Returns None when vault is empty.
+    """
+    if not vault:
+        return None
+    if "index" in vault:
+        return vault["index"].parent
+    return next(iter(vault.values())).parent
 
 
 class Ex04SDK:
@@ -106,9 +120,12 @@ class Ex04SDK:
         graph_path = self._graph.extract(target_path)
         graph_data = self._graph.parse(graph_path)
         vault = self._vault.build(graph_data)
-        vault_dir = next(iter(vault.values())).parent if vault else None
+        vault_dir = _resolve_vault_dir(vault)
+        source_files = discover_source_files(target_path, self._config)
         investigation = self._agent.investigate(bug_report, graph_path, vault_dir)
-        comparison = self._comparison.run_comparison(bug_report, [], graph_data)
+        comparison = self._comparison.run_comparison(
+            bug_report, source_files, graph_data, vault_dir
+        )
         engineering = self._analysis.reverse_engineer(graph_data)
         bug_report_md = self._analysis.report(investigation)
         return PipelineResult(
