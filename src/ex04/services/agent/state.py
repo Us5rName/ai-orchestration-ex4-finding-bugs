@@ -39,6 +39,7 @@ class AgentState(TypedDict, total=False):
         fix_applied: Whether the proposed fix was successfully applied.
         test_results: Dictionary of test execution results.
         token_usage: Token metrics accumulated during the investigation.
+        iterations: Number of verify→fix cycles completed (bounds the retry loop).
     """
 
     bug_report: str
@@ -51,3 +52,4 @@ class AgentState(TypedDict, total=False):
     fix_applied: bool
     test_results: dict[str, Any]
     token_usage: TokenMetrics
+    iterations: int
