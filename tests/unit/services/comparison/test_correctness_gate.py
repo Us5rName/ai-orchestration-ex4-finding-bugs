@@ -30,6 +30,7 @@ def test_gate_output_defaults() -> None:
     assert gate.failure_signature_found is False
     assert gate.path_violations == []
     assert gate.report_json_path == ""
+    assert gate.verification_results == []
 
 
 # ── Snapshot missing ──────────────────────────────────────────────────────────
@@ -54,30 +55,49 @@ def test_gate_skips_when_no_patch(tmp_path: Path) -> None:
 
 def test_gate_evidence_class_set_by_validate() -> None:
     result = CorrectnessGate().validate(Path("/nonexistent_snap"), patch_diff="")
-    assert result.evidence_class == "deterministic_keyless_evidence"
+    assert result.evidence_class == "deterministic"
 
 
 # ── Verdict logic ─────────────────────────────────────────────────────────────
 
 def test_verdict_pass() -> None:
-    gate = GateOutput(failure_signature_found=True)
+    gate = GateOutput(
+        failure_reproduced=True, failure_signature_found=True,
+        patch_applied=True, post_fix_rc=0,
+    )
     gate.targeted_test_passed = True
     gate.relevant_suite_passed = True
     assert CorrectnessGate._verdict(gate) == "pass"
 
 
 def test_verdict_fail_targeted() -> None:
-    gate = GateOutput(failure_signature_found=True)
+    gate = GateOutput(
+        failure_reproduced=True, failure_signature_found=True,
+        patch_applied=True, post_fix_rc=0,
+    )
     gate.targeted_test_passed = False
     gate.relevant_suite_passed = True
     assert CorrectnessGate._verdict(gate) == "fail"
 
 
-def test_verdict_partial() -> None:
-    gate = GateOutput(failure_signature_found=True)
-    gate.targeted_test_passed = None
-    gate.relevant_suite_passed = None
-    assert CorrectnessGate._verdict(gate) == "partial"
+def test_verdict_fails_when_original_not_reproduced() -> None:
+    gate = GateOutput(
+        failure_reproduced=False, failure_signature_found=False,
+        patch_applied=True, post_fix_rc=0,
+    )
+    gate.targeted_test_passed = True
+    gate.relevant_suite_passed = True
+    assert CorrectnessGate._verdict(gate) == "fail"
+
+
+def test_verdict_fails_when_post_fix_reproducer_fails() -> None:
+    gate = GateOutput(
+        failure_reproduced=True, failure_signature_found=True,
+        patch_applied=True, post_fix_rc=1,
+    )
+    gate.targeted_test_passed = True
+    gate.relevant_suite_passed = True
+    assert CorrectnessGate._verdict(gate) == "fail"
 
 
 def test_verdict_inconclusive_when_no_signature() -> None:
@@ -87,7 +107,8 @@ def test_verdict_inconclusive_when_no_signature() -> None:
 
 def test_verdict_fail_on_path_violation() -> None:
     gate = GateOutput(
-        failure_signature_found=True, path_violations=["bad/path.py"],
+        failure_reproduced=True, failure_signature_found=True, patch_applied=True,
+        post_fix_rc=0, path_violations=["bad/path.py"],
         targeted_test_passed=True, relevant_suite_passed=True,
     )
     assert CorrectnessGate._verdict(gate) == "fail"
@@ -190,4 +211,4 @@ def test_gate_apply_patch_missing_binary(tmp_path: Path) -> None:
     result = CorrectnessGate(test_command="true").validate(
         snap, patch_diff="--- a/x.py\n+++ b/x.py\n@@ -1 +1 @@\n-a = 1\n+a = 2\n"
     )
-    assert result.final_verdict in {"pass", "fail", "partial", "skipped", "inconclusive"}
+    assert result.final_verdict in {"pass", "fail", "skipped", "inconclusive"}

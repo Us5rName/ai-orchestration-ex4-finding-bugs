@@ -107,7 +107,6 @@ def test_valid_json_missing_keys_sets_parser_failed() -> None:
 
 
 def test_invalid_anchor_records_limitation() -> None:
-    """Suspected file not in corpus creates a limitation."""
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / "real_module.py"
         src.write_text("pass\n")

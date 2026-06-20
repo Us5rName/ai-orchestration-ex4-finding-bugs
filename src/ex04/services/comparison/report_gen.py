@@ -49,6 +49,7 @@ def write_comparison_reports(
 
     data: dict[str, object] = {
         "evidence_class": naive.evidence_class or "fixture",
+        "config_hash": naive.config_hash,
         "naive_run_id": naive.run_id,
         "guided_run_id": guided.run_id,
         "naive_parser_status": naive.parser_status,
@@ -76,12 +77,18 @@ def _build_markdown(
 ) -> str:
     """Compose the Markdown comparison report."""
     ev_class = naive.evidence_class or "fixture"
-    sha = hashlib.sha256(json_text.encode()).hexdigest()[:16]
+    sha = hashlib.sha256(json_text.encode()).hexdigest()
+    banners = {
+        "fixture": "Fixture demonstration; not live provider evidence.",
+        "deterministic": "Deterministic keyless evidence.",
+        "live": "Live provider-backed evidence.",
+        "blocked": "Live comparison unavailable; see blockers.",
+        "not_applicable": "Evidence classification not applicable.",
+    }
     lines = [
         "# Comparison Report",
         "",
-        f"> **Evidence Class: {ev_class.upper()}** — "
-        "results are deterministic fixtures, not live LLM telemetry.",
+        f"> **Evidence Class: {ev_class.upper()}** — {banners.get(ev_class, ev_class)}",
         "",
         "## Signed Delta Table",
         "",
@@ -104,6 +111,6 @@ def _build_markdown(
         "",
         *(f"- {lim}" for lim in (naive.limitations + guided.limitations + m.limitations)),
         "",
-        f"*Report SHA-256 prefix: `{sha}`*",
+        f"*Report SHA-256: `{sha}`*",
     ]
     return "\n".join(lines) + "\n"

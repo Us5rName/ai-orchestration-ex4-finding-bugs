@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 from ex04.sdk._comparison_ops import _to_run_metrics
 from ex04.shared.types_experiment import ComparisonOutcome, RunManifest, SignedMetrics
 from ex04.shared.types_request import ComparisonRequest
@@ -86,9 +88,15 @@ def test_run_graph_investigation_returns_result(tmp_path: Path) -> None:
     assert result.mode == "graph"
 
 
-def test_run_experiment_returns_outcome(tmp_path: Path) -> None:
+def test_run_experiment_returns_outcome(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """run_experiment returns the canonical ComparisonOutcome."""
+    monkeypatch.chdir(tmp_path)
     sdk = _fake_sdk(tmp_path)
-    req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r003")
+    req = ComparisonRequest(
+        bug_report="test bug", provider="openai", run_id="r003", artifact_root="artifacts"
+    )
     outcome = sdk.run_experiment(req)
     assert isinstance(outcome, ComparisonOutcome)
     assert isinstance(outcome.naive_result, InvestigationResult)

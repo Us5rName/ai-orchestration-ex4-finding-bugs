@@ -1,12 +1,4 @@
-"""Graph Guided Runner — executes graph-guided investigation workflow.
-
-Uses bug-report-sensitive ranked graph entities, relationships, source
-anchors, and vault notes to provide focused context. The independent
-variable vs. NaiveRunner. Every entity sent to the model is recorded
-as a StructuredEvidence entry in the returned InvestigationResult.
-
-Traceability: [PRD-GGI §Contracts], [TODO P6-R04], [P6-R04-ext]
-"""
+"""Graph-guided bounded investigation workflow."""
 
 from __future__ import annotations
 
@@ -31,7 +23,7 @@ def _legacy_request(bug_report: str, provider: str) -> ComparisonRequest:
 
 
 class GraphGuidedRunner:
-    """Run a focused graph/vault-guided comparison pass."""
+    """Run the focused graph/vault-guided comparison mode."""
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
         self.gatekeeper = gatekeeper
@@ -53,7 +45,10 @@ class GraphGuidedRunner:
         recorder = trace or TraceRecorder(req.run_id or "graph")
         started = time.perf_counter()
         graph_text, evidence, limitations = graph_context(
-            graph_data, req.bug_report, ledger, recorder
+            graph_data,
+            req.bug_report,
+            ledger,
+            recorder,
         )
         vault_text, vault_ev, vault_lims = vault_context(vault_path, ledger, recorder)
         evidence.extend(vault_ev)

@@ -113,6 +113,7 @@ class ComparisonOpsMixin:
             allowed_paths=request.patch_allowed_paths,
             prohibited_paths=request.patch_prohibited_paths,
             artifact_path=artifact_path,
+            verification_commands=request.gate_verification_commands,
         )
 
     def save_manifest(self, manifest: RunManifest) -> Path:

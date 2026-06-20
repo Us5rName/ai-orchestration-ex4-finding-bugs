@@ -45,9 +45,13 @@ class GateOutput:
     reproduction_stderr: str = ""
     reproduction_rc: int = -1
     post_fix_rc: int = -1
+    post_fix_stdout: str = ""
+    post_fix_stderr: str = ""
     patch_applied: bool = False
+    patch_hash: str = ""
     targeted_test_passed: bool | None = None
     relevant_suite_passed: bool | None = None
+    verification_results: list[dict[str, object]] = field(default_factory=list)
     prohibited_files_clean: bool = True
     tests_not_deleted: bool = True
     assertions_not_weakened: bool = True
