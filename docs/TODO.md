@@ -2024,6 +2024,15 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | Task ID | Status | Description | Files Affected | Priority |
 |---|---|---|---|---|
 | P8-R03 | Complete | Add repair task IDs to TODO/PLAN; regenerate wikis | `docs/TODO.md`, `docs/PLAN.md`, `docs/todo-wiki/*`, `docs/plan-wiki/*` | P0 |
+| P6-R10 | Incomplete | Complete and validate the canonical comparison contract | `src/ex04/shared/types_request.py`, `src/ex04/shared/types_results.py` | P0 |
+| P6-R11 | Incomplete | Introduce shared cumulative budget and trace infrastructure | `src/ex04/services/comparison/budget.py`, `src/ex04/services/comparison/trace.py` | P0 |
+| P6-R12 | Incomplete | Migrate both runners to the canonical request/result path | `src/ex04/services/comparison/naive_runner.py`, `src/ex04/services/comparison/graph_guided_runner.py` | P0 |
+| P6-R13 | Incomplete | Rebuild production comparison orchestration and fairness | `src/ex04/services/comparison/service.py`, `src/ex04/services/comparison/fairness.py` | P0 |
+| P6-R14 | Incomplete | Repair SDK and CLI delegation boundaries | `src/ex04/sdk/`, `src/ex04/__main__.py` | P0 |
+| P7-R06 | Incomplete | Complete correctness-gate execution and verdict semantics | `src/ex04/services/comparison/correctness_gate.py`, `src/ex04/services/comparison/gate_*` | P0 |
+| P7-R07 | Incomplete | Integrate manifests, signed metrics, and reports | `src/ex04/services/comparison/report_gen.py`, `src/ex04/shared/artifact_store.py` | P0 |
+| P8-R10 | Incomplete | Add production-path regression tests and CI repairs | `tests/`, `.github/workflows/ci.yml`, `scripts/validate_repo.py` | P0 |
+| P8-R11 | Incomplete | Reconcile documentation, verify clean clone, and update PR | `docs/`, `README.md`, verification reports | P0 |
 | P6-R01 | Complete | Add `ComparisonRequest` with full controlled-experiment contract | `src/ex04/shared/types_request.py` (new) | P0 |
 | P6-R02 | Complete | Add `StructuredEvidence` + `InvestigationRunRecord` types | `src/ex04/shared/types_investigation.py` (new) | P0 |
 | P6-R06 | Complete | Remove `MetricsCalculator` clamp; wire `SignedMetricsCalculator` | `metrics.py`, `service.py` | P0 |
@@ -2062,4 +2071,5 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.17 | 2026-06-20 | Correct T8.12 to Pending until an isolated clean-clone report is generated and committed; add Phase 8 evidence matrix, self assessment, blocked-operation report, and assets documentation. Traceability: [PRD §8], [PRD §12]. |
 | 1.18 | 2026-06-20 | Mark T8.12 Done after clean worktree verification recorded in `reports/clean_clone_verification.md` for candidate `36a53a8`. Traceability: [PRD §12]. |
 | 1.19 | 2026-06-21 | Standardize commit references in Markdown documentation on 7-character short hashes. Traceability: [PLAN §5.1]. |
+| 1.21 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repair tasks for Phase 6-8 controlled-experiment finalization. |
 | 1.20 | 2026-06-21 | Add §12 Repair Inventory with stable P6-R/P7-R/P8-R task IDs covering 14 post-submission truthfulness repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |

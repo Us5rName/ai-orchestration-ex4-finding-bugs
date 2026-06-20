@@ -1691,6 +1691,15 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | P8-R01 | CI | Use `astral-sh/setup-uv@v5`; add mypy step; make docs-sync fatal | `.github/workflows/ci.yml` |
 | P8-R02 | Validation | Add manifest↔run linkage, provenance key check, direct-provider-import boundary, wiki-dir presence checks | `scripts/validate_repo.py` |
 | P8-R03 | Documentation | Add stable repair task IDs to TODO/PLAN before implementation | `docs/TODO.md`, `docs/PLAN.md` |
+| P6-R10 | Contract | Complete and validate the canonical comparison request/result contract | `src/ex04/shared/types_request.py`, `src/ex04/shared/types_results.py` |
+| P6-R11 | Budgets/Trace | Add shared cumulative budget ledger and immutable investigation trace recorder | `src/ex04/services/comparison/budget.py`, `src/ex04/services/comparison/trace.py` |
+| P6-R12 | Runners | Migrate naive and graph-guided runners to the canonical bounded request/result path | `src/ex04/services/comparison/naive_runner.py`, `src/ex04/services/comparison/graph_guided_runner.py` |
+| P6-R13 | Orchestration | Rebuild production comparison orchestration and pre-call fairness enforcement | `src/ex04/services/comparison/service.py`, `src/ex04/services/comparison/fairness.py` |
+| P6-R14 | SDK/CLI | Repair SDK and CLI delegation boundaries so public services own orchestration | `src/ex04/sdk/`, `src/ex04/__main__.py` |
+| P7-R06 | Correctness Gate | Complete deterministic gate execution, policies, reports, and verdict semantics | `src/ex04/services/comparison/correctness_gate.py`, `src/ex04/services/comparison/gate_*` |
+| P7-R07 | Artifacts/Reports | Integrate signed metrics, manifests, immutable artifacts, and production reports | `src/ex04/services/comparison/report_gen.py`, `src/ex04/shared/artifact_store.py` |
+| P8-R10 | Regression/CI | Add production-path regression tests, validators, and CI action repairs | `tests/`, `scripts/validate_repo.py`, `.github/workflows/ci.yml` |
+| P8-R11 | Documentation/Verification | Reconcile canonical documentation, run clean-clone verification, and update PR evidence | `docs/`, `README.md`, verification reports |
 | P8-R04 | Documentation | Update README test count, evidence matrix rows, PROMPTS.md disclosure | `README.md`, `docs/EVIDENCE_MATRIX.md`, `docs/PROMPTS.md` |
 | P8-R05 | Provenance | Pin real target commit, compute deterministic snapshot hash, run Graphify | `artifacts/pre_fix/provenance.json` |
 
@@ -1710,4 +1719,5 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | 1.05 | 2026-06-20 | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
 | 1.06 | 2026-06-20 | Phase 4/5 integration: document compare_target(), generate_report(), identify_patterns(); add _comparison_inputs.py helper; document cumulative files_read and fix_diff in AgentState; add architecture boundary rules table; update CLI command syntax in §8; update AnalysisServiceInterface.identify_patterns(). Traceability: [PRD FR-6.1], [PLAN §3.2 SDK Module], [PLAN §3.5 Agent Service]. |
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
+| 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
 | 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
