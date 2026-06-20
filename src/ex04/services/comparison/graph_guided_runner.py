@@ -1,12 +1,14 @@
 """Graph Guided Runner — executes graph-guided investigation workflow.
 
-Uses ranked graph entities (by degree centrality), relationships, source
-anchors, and vault notes (index.md → hot.md) to provide focused context.
+Uses bug-report-sensitive ranked graph entities, relationships, source
+anchors, and vault notes to provide focused context. Ranking uses four
+weighted signals: bug-report term match, file/path match, node type
+relevance, and degree centrality.
 
 Context acquisition strategy: graph → vault → targeted source anchors.
 This is the independent variable vs. NaiveRunner.
 
-Traceability: [PRD-GGI §Contracts], [TODO T6.02, T6.04], [PRD-CE §12.3]
+Traceability: [PRD-GGI §Contracts], [TODO P6-R04], [PRD-CE §12.3]
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from ex04.services.comparison.ranking import rank_entities
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types import GraphData, RunMetrics
 
@@ -25,7 +28,8 @@ class GraphGuidedRunner:
     """Run a focused graph/vault-guided comparison pass.
 
     Context is derived exclusively from graph_data and the vault — no
-    filesystem scan of source files is performed.
+    filesystem scan of source files is performed. Entities are ranked
+    using multiple signals from the bug report, not just graph degree.
     """
 
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
@@ -50,20 +54,18 @@ class GraphGuidedRunner:
             RunMetrics with token counts, files_read, and source_anchors.
         """
         started = time.perf_counter()
-        graph_context, source_anchors = self._graph_context(graph_data)
+        graph_context, source_anchors, limitations = self._graph_context(
+            graph_data, bug_report
+        )
         vault_context, files_read = self._vault_context(vault_path)
+
+        content = f"Bug:\n{bug_report}\n\n{graph_context}\n\n{vault_context}"
+        if limitations:
+            content += f"\n\nLimitations: {'; '.join(limitations)}"
+
         response = self.gatekeeper.send(
             self.provider,
-            [
-                {
-                    "role": "user",
-                    "content": (
-                        f"Bug:\n{bug_report}\n\n"
-                        f"{graph_context}\n\n"
-                        f"{vault_context}"
-                    ),
-                }
-            ],
+            [{"role": "user", "content": content}],
         )
         return RunMetrics(
             tokens_used=response.input_tokens + response.output_tokens,
@@ -74,52 +76,56 @@ class GraphGuidedRunner:
         )
 
     @staticmethod
-    def _graph_context(graph_data: GraphData | None) -> tuple[str, list[str]]:
-        """Build ranked entity context with source anchors from graph_data.
+    def _graph_context(
+        graph_data: GraphData | None, bug_report: str
+    ) -> tuple[str, list[str], list[str]]:
+        """Build multi-signal ranked entity context with source anchors.
 
         Returns:
-            Tuple of (context_text, source_anchors).
+            Tuple of (context_text, source_anchors, limitations).
         """
         if graph_data is None:
-            return "Graph: unavailable", []
+            return "Graph: unavailable", [], ["Graph data not provided."]
 
-        degree: dict[str, int] = {}
-        for rel in graph_data.relationships:
-            degree[rel.source] = degree.get(rel.source, 0) + 1
-            degree[rel.target] = degree.get(rel.target, 0) + 1
-
-        ranked = sorted(
+        ranked = rank_entities(
             graph_data.entities,
-            key=lambda e: degree.get(e.name, 0),
-            reverse=True,
-        )[:_MAX_ENTITIES]
+            graph_data.relationships,
+            bug_report,
+            _MAX_ENTITIES,
+        )
 
-        anchors = [
-            f"{e.file_path}:{e.line_range[0]}-{e.line_range[1]}"
-            for e in ranked
-            if e.file_path
-        ]
-        lines = ["Graph entities (ranked by degree centrality):"]
-        for e in ranked:
-            rel_count = degree.get(e.name, 0)
-            anchor = f"{e.file_path}:{e.line_range[0]}" if e.file_path else "unknown"
-            lines.append(f"  - {e.name} [{e.kind}] degree={rel_count} anchor={anchor}")
+        anchors: list[str] = []
+        lines = ["Graph entities (multi-signal ranked):"]
+        missing_anchor_count = 0
 
-        rels_sample = graph_data.relationships[:10]
-        if rels_sample:
-            lines.append("Relationships (sample):")
-            for r in rels_sample:
+        for entity, score in ranked:
+            if entity.file_path:
+                anchor = f"{entity.file_path}:{entity.line_range[0]}"
+                anchors.append(f"{entity.file_path}:{entity.line_range[0]}-{entity.line_range[1]}")
+            else:
+                anchor = "unknown"
+                missing_anchor_count += 1
+            lines.append(
+                f"  - {entity.name} [{entity.kind}] score={score:.2f} anchor={anchor}"
+            )
+
+        rels_relevant = graph_data.relationships[:15]
+        if rels_relevant:
+            lines.append("Relationships:")
+            for r in rels_relevant:
                 lines.append(f"  {r.source} --{r.type}--> {r.target}")
 
-        return "\n".join(lines), anchors
+        limitations: list[str] = []
+        if missing_anchor_count:
+            limitations.append(
+                f"{missing_anchor_count} entities lack a valid source anchor."
+            )
+
+        return "\n".join(lines), anchors, limitations
 
     @staticmethod
     def _vault_context(vault_path: Path | None) -> tuple[str, int]:
-        """Navigate vault: index.md → hot.md → component notes.
-
-        Returns:
-            Tuple of (vault_context_text, files_read_count).
-        """
+        """Navigate vault: index.md → hot.md → component notes."""
         if vault_path is None or not vault_path.is_dir():
             return "Vault: unavailable", 0
         candidates = [vault_path / "index.md", vault_path / "hot.md"]
