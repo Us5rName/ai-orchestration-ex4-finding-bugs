@@ -35,6 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p_investigate.add_argument("bug_report", help="Bug description (or @path to a file).")
 
     p_compare = sub.add_parser("compare", help="Compare naive vs. graph-guided runs.")
+    p_compare.add_argument("target_path", help="Path to the target codebase.")
     p_compare.add_argument("bug_report", help="Bug description (or @path to a file).")
 
     p_pipeline = sub.add_parser("pipeline", help="Run the full end-to-end pipeline.")
@@ -58,7 +59,7 @@ def _dispatch(args: argparse.Namespace, sdk: Ex04SDK) -> object:
     if args.command == "investigate":
         return sdk.investigate_bug(_read_report(args.bug_report))
     if args.command == "compare":
-        return sdk.run_comparison(_read_report(args.bug_report), [])
+        return sdk.compare_target(args.target_path, _read_report(args.bug_report))
     if args.command == "pipeline":
         return sdk.full_pipeline(args.target_path, _read_report(args.bug_report))
     raise ValueError(f"Unknown command: {args.command}")  # pragma: no cover

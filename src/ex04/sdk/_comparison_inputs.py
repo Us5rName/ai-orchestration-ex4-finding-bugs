@@ -10,6 +10,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+def resolve_vault_dir(vault: dict[str, "Path"]) -> "Path | None":
+    """Resolve the vault directory from a built vault artifact map.
+
+    Prefers the parent of the 'index' note (canonical artifact), then the
+    parent of the first available note. Returns None when vault is empty.
+    """
+    if not vault:
+        return None
+    if "index" in vault:
+        return vault["index"].parent
+    return next(iter(vault.values())).parent
+
+
 _EXCLUDED_DIRS = frozenset(
     {
         ".git",
