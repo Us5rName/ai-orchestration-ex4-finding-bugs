@@ -59,6 +59,7 @@ class AgentService(AgentServiceInterface):
             test_results=self._state.get("test_results", {}),
             original_problem=self._state.get("bug_report", ""),
             fix_diff=self._state.get("fix_diff", ""),
+            files_read=self._state.get("files_read", 0),
         )
         if "token_usage" in self._state:
             result.token_usage = self._state["token_usage"]

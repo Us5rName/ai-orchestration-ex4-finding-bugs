@@ -15,6 +15,7 @@ class _Workflow:
             "proposed_fix": "change condition",
             "fix_applied": False,
             "test_results": {"failed": 1},
+            "files_read": 3,
         }
 
 
@@ -26,4 +27,5 @@ def test_agent_service_maps_workflow_state_to_result(tmp_path: Path) -> None:
 
     assert result.root_cause == "bad branch"
     assert result.suspects[0].file_path == "app.py"
+    assert result.files_read == 3
     assert service.get_state()["graph_context"] == "graph.json"
