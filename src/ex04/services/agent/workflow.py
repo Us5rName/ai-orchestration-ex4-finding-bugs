@@ -93,7 +93,9 @@ class WorkflowBuilder:
         )
 
         compiled = graph.compile()
-        logger.info("Compiled debugging workflow with 7 nodes (max_iterations=%d)", self.max_iterations)
+        logger.info(
+            "Compiled debugging workflow with 7 nodes (max_iterations=%d)", self.max_iterations
+        )
         return compiled
 
     def _verify_route(self, state: AgentState) -> str:
