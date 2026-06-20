@@ -423,6 +423,38 @@ tests/unit/services/analysis/
 
 **Traceability**: [PLAN §3.5 Agent Service], [PLAN §3.6 Analysis Service], [PRD FR-3.3, FR-4.1 to FR-4.6, FR-5.2]
 
+---
+
+### Prompt 37 — Prompt 35 Files: Commit T4.04-T4.06 + T4.16 to Repository
+
+**Prompt**: "now add it to the prompt log as well and commit the log"
+
+**Context**: The 4 source files and 7 test files from Prompt 35 (T4.04-T4.06 Vault Service + T4.16 ReverseEngineer) were implemented and verified by the previous agent, but never committed to this branch. They were sitting as modified/untracked files. User requested they be committed in small batches (≤300 lines each) with dry-run verification.
+
+**Implementation** (8 commits, all ≤300 lines, dry-run verified):
+
+| # | Commit | Files | Lines | Description |
+|---|---|---|---|---|
+| 1 | `9f81003` | builder.py + builder_helpers.py | 253 | T4.04 VaultBuilder implementation |
+| 2 | `fabeffa` | test_builder_core.py + test_builder_content.py | 183 | VaultBuilder tests (10 tests) |
+| 3 | `3ef6541` | navigator.py + test_navigator.py | 244 | T4.05 VaultNavigator |
+| 4 | `6494559` | note_manager.py | 150 | T4.06 NoteManager implementation |
+| 5 | `3d34c3c` | test_note_manager_create.py + test_note_manager_update.py | 181 | NoteManager tests (12 tests) |
+| 6 | `e9c58da` | reverse_engineer.py | 136 | T4.16 ReverseEngineer implementation |
+| 7 | `873d482` | reverse_engineer_helpers.py + reverse_engineer_text.py | 169 | ReverseEngineer helpers |
+| 8 | `9d43531` | test_reverse_engineer_core.py + test_reverse_engineer_diagrams.py | 195 | ReverseEngineer tests (12 tests) |
+
+**Total new code**: ~1,411 lines across 13 files
+**Total new tests**: 34 (10 + 12 + 12)
+**Ruff**: 0 violations on all modified files
+**All files**: ≤150 lines
+
+**Remaining untracked files** (not project code):
+- `.agents/skills/graphify/` — global agent skill
+- `docs/langgraph-llms.txt` — documentation file
+
+**Traceability**: [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PRD FR-2.2 to FR-2.5, FR-3.1 to FR-3.2]
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -437,4 +469,5 @@ tests/unit/services/analysis/
 | 1.09 | 2026-06-20 | Added Prompt 33 — Reinspection triage: fixed Graphify CLI command + node-link schema parsing (P0), resolved merge-conflict markers in TODO + todo-wiki (P1), added real graph.json fixture + contract tests. 135/135 tests pass. |
 | 1.10 | 2026-06-20 | Added Prompt 34 — Remaining issues: resolved `.gitignore` conflict, added `[build-system]` + pytest `pythonpath` (standard `uv run pytest` works), honest analyzer docstrings, real README. Documentation synced. |
 | 1.11 | 2026-06-20 | Added Prompt 35 — Phase 4 services implementation: Vault Service (T4.04-T4.06) with VaultBuilder, VaultNavigator, NoteManager; Analysis Service ReverseEngineer (T4.16) with Mermaid diagram generation. 46/46 new tests pass, 0 ruff violations, all files ≤150 lines.
-| 1.12 | 2026-06-20 | Added Prompt 36 — Phase 4 completion: T4.17 DiagramGenerator, T4.18 BugReporter, T4.07 AgentState, T4.08 WorkflowBuilder + 7 node stubs. 60/60 new tests pass, 0 ruff violations, all files ≤150 lines. 5 small commits (≤300 lines each).
+| 1.12 | 2026-06-20 | Added Prompt 36 — Phase 4 completion: T4.17 DiagramGenerator, T4.18 BugReporter, T4.07 AgentState, T4.08 WorkflowBuilder + 7 node stubs. 60/60 new tests pass, 0 ruff violations, all files ≤150 lines. 5 small commits (≤300 lines each). |
+| 1.13 | 2026-06-20 | Added Prompt 37 — committed all Prompt 35 files (T4.04-T4.06 Vault + T4.16 ReverseEngineer): 8 small commits, ~1,411 lines across 13 files, 34 new tests, 0 ruff violations.
