@@ -8,7 +8,6 @@ notes with proper frontmatter, wikilinks, and slugified filenames.
 | Method | Input | Output | Phase |
 |---|---|---|---|
 | `update(note_type, content)` | str, str | Path | P4 |
-
 Implementation: **Phase 4** (T4.06)
 """
 
@@ -23,7 +22,7 @@ from ex04.services.vault.sanitize import yaml_double_quote
 
 logger = logging.getLogger(__name__)
 
-# Special note types that go in the vault root
+# Special note types that go in the vault root (rest go in notes/).
 _ROOT_NOTES = {"index", "hot"}
 
 
@@ -87,7 +86,6 @@ class NoteManager:
         slug = self._slugify(title)
         path = self.vault_path / "notes" / f"{slug}.md"
         path.parent.mkdir(parents=True, exist_ok=True)
-
         frontmatter = self._build_frontmatter(slug, title=title)
         wikilinks = "\n".join(f"- [[{link}]]" for link in links) if links else ""
 
