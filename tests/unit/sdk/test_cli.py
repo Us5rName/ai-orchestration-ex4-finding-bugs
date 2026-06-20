@@ -101,3 +101,60 @@ def test_generic_error_returns_code_1() -> None:
     with _patch_sdk(MagicMock()) as p:
         p.side_effect = RuntimeError("kaboom")
         assert cli.main(["graphify", "/path"]) == 1
+
+
+def test_help_lists_new_subcommands(capsys: pytest.CaptureFixture[str]) -> None:
+    """investigate-naive and investigate-graph must appear in help output."""
+    with pytest.raises(SystemExit):
+        cli.main(["--help"])
+    out = capsys.readouterr().out
+    assert "investigate-naive" in out
+    assert "investigate-graph" in out
+
+
+def test_investigate_naive_calls_sdk_method() -> None:
+    """investigate-naive must delegate to sdk.run_naive_investigation, not re-implement."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        rc = cli.main(["investigate-naive", "the bug"])
+    assert rc == 0
+    sdk.run_naive_investigation.assert_called_once()
+    sdk.run_comparison.assert_not_called()
+    sdk.investigate_bug.assert_not_called()
+
+
+def test_investigate_graph_calls_sdk_method() -> None:
+    """investigate-graph must delegate to sdk.run_graph_investigation, not re-implement."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        rc = cli.main(["investigate-graph", "the bug"])
+    assert rc == 0
+    sdk.run_graph_investigation.assert_called_once()
+    sdk.run_comparison.assert_not_called()
+    sdk.investigate_bug.assert_not_called()
+
+
+def test_investigate_naive_passes_bug_report() -> None:
+    """ComparisonRequest.bug_report must match the CLI argument."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        cli.main(["investigate-naive", "null ptr crash"])
+    req = sdk.run_naive_investigation.call_args[0][0]
+    assert req.bug_report == "null ptr crash"
+
+
+def test_investigate_naive_custom_run_id() -> None:
+    """--run-id flag must be forwarded to ComparisonRequest."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        cli.main(["investigate-naive", "bug", "--run-id", "myrun42"])
+    req = sdk.run_naive_investigation.call_args[0][0]
+    assert req.run_id == "myrun42"
+
+
+def test_investigate_naive_no_logic_duplication() -> None:
+    """SDK method must be called exactly once; CLI adds no investigation logic."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        cli.main(["investigate-naive", "some bug"])
+    assert sdk.run_naive_investigation.call_count == 1
