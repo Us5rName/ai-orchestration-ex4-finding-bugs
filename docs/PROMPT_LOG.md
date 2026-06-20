@@ -624,6 +624,21 @@ tests/unit/services/analysis/
 **Validation**: `uv run pytest --no-cov tests/unit/services/agent/test_state.py tests/unit/sdk/test_cli.py -q`; `uv run python -m ex04 --help`.
 ---
 
+### Prompt 48 — Revert Mistaken Phase 8 Documentation Changes
+
+**Prompt**: "You mistakenly changed the Phase 8 documentation. Undo those changes in the wiki and TODO files, and commit the correction."
+
+**Context**: The implementation branch had checked a Phase 8 final-checklist item even though Phase 8 is reserved for final submission verification, not Phase 4 service work.
+
+**Implementation**:
+
+| Task | Change | Files |
+|---|---|---|
+| Phase 8 documentation correction | Reverted the final-checklist `No file > 150 lines` checkbox to pending and removed the mistaken T8.03 completion-history entry | `docs/TODO.md`, `docs/todo-wiki/09-Phase-8-Final-Check.md`, `docs/todo-wiki/12-Revision-History.md` |
+
+**Validation**: Confirmed that the Phase 8 final-checklist NFR-3 item is unchecked in both mirrored documents.
+---
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -650,3 +665,4 @@ tests/unit/services/analysis/
 | 1.21 | 2026-06-20 | Added Prompt 45 — T4.09-T4.15 active agent nodes: context loading, Gatekeeper-backed analysis/root-cause/fix generation, suspect ranking, subprocess verification, and SDK Gatekeeper wiring. |
 | 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
 | 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |
+| 1.24 | 2026-06-20 | Added Prompt 48 — reverted mistaken Phase 8 checklist updates in TODO and todo-wiki, leaving Phase 8 pending for final verification. |
