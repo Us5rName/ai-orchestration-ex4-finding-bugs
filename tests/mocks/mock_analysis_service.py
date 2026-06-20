@@ -56,3 +56,14 @@ class MockAnalysisService(AnalysisServiceInterface):
             f"**Proposed Fix**: {investigation.proposed_fix}\n\n"
             f"**Fix Applied**: {investigation.fix_applied}"
         )
+
+    def identify_patterns(self, graph_data: GraphData) -> list[str]:
+        """Return a canned pattern list.
+
+        Args:
+            graph_data: Graph data (ignored in mock).
+
+        Returns:
+            Synthetic list of pattern description lines.
+        """
+        return ["- **Singleton** detected in 1 class."]

@@ -67,14 +67,55 @@ def test_reverse_engineer_returns_text(sdk: Ex04SDK) -> None:
     assert text
 
 
-def test_full_pipeline_aggregates_all_stages(sdk: Ex04SDK) -> None:
-    result = sdk.full_pipeline("/some/path", "bug report")
+def test_full_pipeline_aggregates_all_stages(sdk: Ex04SDK, tmp_path: Path) -> None:
+    # full_pipeline discovers real source files; seed the target with one
+    (tmp_path / "sample.py").write_text("x = 1", encoding="utf-8")
+    result = sdk.full_pipeline(str(tmp_path), "bug report")
     assert isinstance(result, PipelineResult)
     assert result.graph_result
-    assert result.vault_result
     assert isinstance(result.investigation, InvestigationResult)
     assert isinstance(result.comparison, ComparisonReport)
     assert isinstance(result.engineering, str)
+    assert isinstance(result.bug_report_md, str)
+
+
+def test_full_pipeline_passes_nonempty_sources(sdk: Ex04SDK, tmp_path: Path) -> None:
+    """full_pipeline must supply actual source files, not an empty list."""
+    from unittest.mock import MagicMock
+
+    (tmp_path / "a.py").write_text("a = 1", encoding="utf-8")
+    (tmp_path / "b.py").write_text("b = 2", encoding="utf-8")
+    spy = MagicMock(wraps=sdk._comparison.run_comparison)
+    sdk._comparison.run_comparison = spy
+    sdk.full_pipeline(str(tmp_path), "crash")
+    args, kwargs = spy.call_args
+    source_files = args[1] if len(args) > 1 else kwargs.get("source_files", [])
+    assert len(source_files) > 0, "full_pipeline must pass nonempty source files"
+
+
+def test_full_pipeline_passes_vault_path(sdk: Ex04SDK, tmp_path: Path) -> None:
+    """full_pipeline must supply the built vault directory to comparison."""
+    from unittest.mock import MagicMock
+
+    (tmp_path / "c.py").write_text("c = 3", encoding="utf-8")
+    spy = MagicMock(wraps=sdk._comparison.run_comparison)
+    sdk._comparison.run_comparison = spy
+    sdk.full_pipeline(str(tmp_path), "crash")
+    args, kwargs = spy.call_args
+    vault_arg = args[3] if len(args) > 3 else kwargs.get("vault_path")
+    assert vault_arg is not None, "full_pipeline must pass a vault_path"
+
+
+def test_generate_report_returns_string(sdk: Ex04SDK) -> None:
+    investigation = InvestigationResult(root_cause="null deref")
+    report = sdk.generate_report(investigation)
+    assert isinstance(report, str)
+    assert report
+
+
+def test_identify_patterns_returns_list(sdk: Ex04SDK) -> None:
+    patterns = sdk.identify_patterns("/some/path")
+    assert isinstance(patterns, list)
 
 
 def test_from_config_loads_json_and_wires_services(tmp_path: Path) -> None:

@@ -4,7 +4,7 @@
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
 | **Version** | 1.00 |
-| **Author** | Lahav |
+| **Author** | evya1 |
 | **Date** | 2026-06-19 |
 | **Status** | Draft |
 | **PRD Reference** | `docs/PRD.md` v1.00 |
@@ -650,12 +650,14 @@ class AgentState(TypedDict, total=False):
     vault_context: str
     suspects: list[Suspect]
     inspected_code: str
+    files_read: int        # cumulative across all retry passes (CodeInspectionNode)
     root_cause: str
     proposed_fix: str
+    fix_diff: str          # unified diff of the applied change, when available
     fix_applied: bool
     test_results: dict[str, Any]
     token_usage: TokenMetrics
-    iterations: int
+    iterations: int        # verify→fix cycles completed (bounds retry loop)
 
 # workflow.py
 class WorkflowBuilder:
@@ -1372,23 +1374,59 @@ class Ex04SDK:
     def run_comparison(
         self,
         bug_report: str,
-        source_files: list[Path],
+        source_files: list[Path],    # caller-supplied; must be nonempty for meaningful results
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
     ) -> ComparisonReport: ...
-    """Compare naive vs graph-guided token usage. [PRD FR-6.1-6.3]"""
+    # Low-level: compare naive vs. graph-guided. [PRD FR-6.1-6.3]
+
+    def compare_target(
+        self,
+        target_path: str | Path,    # root of the target codebase
+        bug_report: str,
+    ) -> ComparisonReport: ...
+    # High-level: extracts graph, builds vault, discovers sources, runs comparison.
+    # Validates target_path exists and is a directory. Used by CLI 'compare'.
 
     def reverse_engineer(self, target_path: str) -> str: ...
-    """Extract architectural and OOP schemas. [PRD FR-3.1-3.3]"""
+    # Extract architectural and OOP schemas. [PRD FR-3.1-3.3]
+
+    def generate_report(self, investigation: InvestigationResult) -> str: ...
+    # Structured Markdown bug report.
+
+    def identify_patterns(self, target_path: str) -> list[str]: ...
+    # Design pattern identification from graph.
 
     def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     """Find graph entities with no incoming edges and generate doc stubs. [PRD FR-7.5]"""
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
-    """Execute complete pipeline: graphify → vault → investigate → compare → report."""
+    # Complete pipeline: graphify → vault → investigate → compare (real sources) → report.
 ```
 
-### 8.2 Provider Interface Contract
+### 8.2 CLI Command Syntax
+
+```bash
+python -m ex04 [--config CONFIG] <command> [args]
+
+# Extract code graph
+python -m ex04 graphify <target_path>
+
+# Investigate a bug
+python -m ex04 investigate "<bug_report>"
+python -m ex04 investigate @path/to/bug_report.txt
+
+# Compare naive vs. graph-guided (requires target_path)
+python -m ex04 compare <target_path> "<bug_report>"
+python -m ex04 compare <target_path> @path/to/bug_report.txt
+
+# Full end-to-end pipeline
+python -m ex04 pipeline <target_path> "<bug_report>"
+```
+
+Exit codes: 0 = success, 1 = unexpected error, 2 = file not found, 3 = not implemented.
+
+### 8.3 Provider Interface Contract
 
 ```python
 # src/ex04/providers/interface.py
@@ -1639,10 +1677,11 @@ Maps every PRD requirement to its architectural location:
 
 | Version | Date | Author | Change |
 |---|---|---|---|
-| 1.00 | 2026-06-19 | Lahav | Initial architecture plan |
-| 1.01 | 2026-06-19 | Lahav | Add FR-7.4/7.5/7.6 and NFR-10/C8/C9 to traceability matrix; update NFR range to NFR-10 ([PRD §5.7], [PRD §6], [PRD §10.1]) |
-| 1.02 | 2026-06-20 | Lahav | Sync fix: add full_pipeline to Ex04SDK OOP Schema class diagram (§6) to match plan-wiki/06-OOP-Schema.md |
-| 1.03 | 2026-06-20 | Lahav | Fill missing signatures in §3: added all 6 service interface ABCs (§3.1.1), all 7 agent node classes (§3.5), shared layer Gatekeeper/ConfigManager/TokenTracker signatures, and complete dataclass types (§3.9) — sourced from actual implementation code (Traceability: [CLAUDE.md §3 SDK-First], [CLAUDE.md §4 Golden Rules]) |
-| 1.04 | 2026-06-20 | Lahav | Align §3.2/3.3/3.4/3.6/4.1/6/8.1 with actual implementation: removed undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry); replaced with actual types (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures to match code (Traceability: [PLAN §3.2 SDK Module], [PLAN §3.3 Graph Service], [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PLAN §4.1 Data Flow], [PLAN §6 OOP Schema], [PLAN §8.1 API Contract], [PRD §5.1 FR-1.1], [PRD §5.2 FR-2.1-2.4], [PRD §5.3 FR-3.1-3.2], [PRD §6 NFR-5]) |
-| 1.05 | 2026-06-20 | Lahav | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
-| 1.06 | 2026-06-20 | Lahav | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
+| 1.00 | 2026-06-19 | evya1 | Initial architecture plan |
+| 1.01 | 2026-06-19 | evya1 | Add FR-7.4/7.5/7.6 and NFR-10/C8/C9 to traceability matrix; update NFR range to NFR-10 ([PRD §5.7], [PRD §6], [PRD §10.1]) |
+| 1.02 | 2026-06-20 | evya1 | Sync fix: add full_pipeline to Ex04SDK OOP Schema class diagram (§6) to match plan-wiki/06-OOP-Schema.md |
+| 1.03 | 2026-06-20 | evya1 | Fill missing signatures in §3: added all 6 service interface ABCs (§3.1.1), all 7 agent node classes (§3.5), shared layer Gatekeeper/ConfigManager/TokenTracker signatures, and complete dataclass types (§3.9) — sourced from actual implementation code (Traceability: [CLAUDE.md §3 SDK-First], [CLAUDE.md §4 Golden Rules]) |
+| 1.04 | 2026-06-20 | evya1 | Align §3.2/3.3/3.4/3.6/4.1/6/8.1 with actual implementation: removed undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry); replaced with actual types (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures to match code (Traceability: [PLAN §3.2 SDK Module], [PLAN §3.3 Graph Service], [PLAN §3.4 Vault Service], [PLAN §3.6 Analysis Service], [PLAN §4.1 Data Flow], [PLAN §6 OOP Schema], [PLAN §8.1 API Contract], [PRD §5.1 FR-1.1], [PRD §5.2 FR-2.1-2.4], [PRD §5.3 FR-3.1-3.2], [PRD §6 NFR-5]) |
+| 1.05 | 2026-06-20 | evya1 | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
+| 1.06 | 2026-06-20 | evya1 | Phase 4/5 integration: document compare_target(), generate_report(), identify_patterns(); add _comparison_inputs.py helper; document cumulative files_read and fix_diff in AgentState; add architecture boundary rules table; update CLI command syntax in §8; update AnalysisServiceInterface.identify_patterns(). Traceability: [PRD FR-6.1], [PLAN §3.2 SDK Module], [PLAN §3.5 Agent Service]. |
+| 1.07 | 2026-06-20 | evya1 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |

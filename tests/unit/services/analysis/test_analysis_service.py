@@ -14,3 +14,10 @@ def test_analysis_service_reverse_engineer_and_report() -> None:
 
     assert "Architecture Analysis" in architecture
     assert "missing validation" in report
+
+
+def test_analysis_service_identify_patterns_returns_list() -> None:
+    service = AnalysisService()
+    graph = GraphData(entities=[Entity("OrderService", "class", "order.py")])
+    patterns = service.identify_patterns(graph)
+    assert isinstance(patterns, list)

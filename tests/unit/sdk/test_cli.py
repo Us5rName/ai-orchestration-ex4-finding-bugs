@@ -40,8 +40,33 @@ def test_investigate_delegates_to_sdk() -> None:
 def test_compare_delegates_to_sdk() -> None:
     sdk = MagicMock()
     with _patch_sdk(sdk):
-        assert cli.main(["compare", "boom"]) == 0
-    sdk.run_comparison.assert_called_once_with("boom", [])
+        assert cli.main(["compare", "/path", "boom"]) == 0
+    sdk.compare_target.assert_called_once_with("/path", "boom")
+
+
+def test_compare_does_not_call_run_comparison_directly() -> None:
+    """CLI compare must delegate through compare_target, not run_comparison."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        cli.main(["compare", "/path", "boom"])
+    sdk.run_comparison.assert_not_called()
+
+
+def test_compare_at_file_bug_report(tmp_path: Path) -> None:
+    report = tmp_path / "bug.txt"
+    report.write_text("file bug", encoding="utf-8")
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        assert cli.main(["compare", "/path", f"@{report}"]) == 0
+    sdk.compare_target.assert_called_once_with("/path", "file bug")
+
+
+def test_compare_passes_target_path(tmp_path: Path) -> None:
+    """CLI must forward target_path to compare_target unchanged."""
+    sdk = MagicMock()
+    with _patch_sdk(sdk):
+        cli.main(["compare", str(tmp_path), "crash"])
+    sdk.compare_target.assert_called_once_with(str(tmp_path), "crash")
 
 
 def test_pipeline_delegates_to_sdk() -> None:

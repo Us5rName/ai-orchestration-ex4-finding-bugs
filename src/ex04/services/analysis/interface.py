@@ -48,3 +48,14 @@ class AnalysisServiceInterface(ABC):
         Returns:
             Formatted bug report string.
         """
+
+    @abstractmethod
+    def identify_patterns(self, graph_data: GraphData) -> list[str]:
+        """Identify common design patterns in graph data.
+
+        Args:
+            graph_data: Parsed graph data to analyze.
+
+        Returns:
+            List of markdown-formatted pattern description lines.
+        """

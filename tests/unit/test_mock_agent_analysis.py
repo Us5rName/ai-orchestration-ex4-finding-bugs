@@ -43,3 +43,9 @@ class TestMockAnalysisService:
         result = mock.report(InvestigationResult(root_cause="test"))
         assert isinstance(result, str)
         assert "test" in result
+
+    def test_identify_patterns_returns_list(self) -> None:
+        mock = MockAnalysisService()
+        result = mock.identify_patterns(GraphData())
+        assert isinstance(result, list)
+        assert len(result) > 0
