@@ -479,7 +479,8 @@ tests/unit/services/analysis/
 
 ---
 
-### Prompt 39 — Code-Review Fixes: Phase 4 Services (Vault / Agent / Analysis)
+### Prompt 39 — Code-Review Fixes: Phase 4 Services (Vault / Agent / Analysis) [L482-523]
+### Prompt 40 — Implement T4.12 CodeInspectionNode [L523-600]
 
 **Prompt**: "Fix all items from the code review of master's new Phase 4 implementations. Commit each fix in a separate commit, and update the PR."
 
@@ -520,3 +521,4 @@ tests/unit/services/analysis/
 | 1.13 | 2026-06-20 | Added Prompt 37 — committed all Prompt 35 files (T4.04-T4.06 Vault + T4.16 ReverseEngineer): 8 small commits, ~1,411 lines across 13 files, 34 new tests, 0 ruff violations.
 | 1.14 | 2026-06-20 | Added Prompt 38 — Code-review fixes for the provider & gatekeeper layer: Anthropic `max_tokens`/`count_tokens`, non-mutating rate-limit status check, gatekeeper FIFO queue (no None return), per-provider config via `ProviderPool`/`CallExecutor`, tiktoken fallback. 167/167 tests, 98.65% coverage. |
 | 1.15 | 2026-06-20 | Added Prompt 39 — Code-review fixes for Phase 4 services (vault/agent/analysis): filename/path sanitization, bounded retry loop via max_iterations, navigator empty-query + whole-vault search + title fallback, YAML frontmatter escaping, CompiledStateGraph annotation, deterministic pattern ordering. 8 fixes, one commit each. 274/274 tests, 98.15% coverage. |
+| 1.16 | 2026-06-20 | Added Prompt 40 — T4.12 CodeInspectionNode implementation with TDD: constructor injection of target_path, snippet extraction with file path headers and line numbers, graceful handling of missing files/invalid ranges/zero-based lines. 12 tests across 3 files (all <150 lines), 100% module coverage, 0 ruff violations. |
