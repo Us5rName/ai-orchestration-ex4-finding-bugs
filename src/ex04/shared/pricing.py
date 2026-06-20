@@ -27,7 +27,8 @@ def lookup_model_pricing(
     """Return {'input_price': float, 'output_price': float} for a model, or None."""
     if config is None:
         config = load_pricing()
-    for entry in config.get("models", []):  # type: ignore[union-attr]
+    models: list[dict[str, object]] = config.get("models", [])  # type: ignore[assignment]
+    for entry in models:
         if entry.get("provider") == provider and entry.get("model") == model:
             return {
                 "input_price": float(entry["input_price"]),  # type: ignore[arg-type]

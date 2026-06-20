@@ -101,13 +101,16 @@ class NaiveRunner:
         parser_status, parsed = parse_json_response(response.text)
         known = {p.name for p in source_files} | {str(p) for p in source_files}
         limitations: list[str] = []
-        if parsed and isinstance(parsed.get("suspected_files"), list):
-            for suspected in parsed["suspected_files"]:
-                if suspected not in known and not any(
-                    suspected in str(p) for p in source_files
+        suspected: list[str] = (
+            parsed.get("suspected_files", []) if parsed else []  # type: ignore[assignment]
+        )
+        if parsed and isinstance(suspected, list):
+            for suspected_file in suspected:
+                if suspected_file not in known and not any(
+                    suspected_file in str(p) for p in source_files
                 ):
                     limitations.append(
-                        f"Suspected file '{suspected}' not in source corpus."
+                        f"Suspected file '{suspected_file}' not in source corpus."
                     )
 
         return InvestigationResult(
