@@ -34,6 +34,7 @@ class AgentState(TypedDict, total=False):
         vault_context: Relevant vault notes and navigation results.
         suspects: Ranked list of suspect code locations.
         inspected_code: Code snippets fetched during inspection.
+        files_read: Number of source files read during inspection (for comparison metrics).
         root_cause: Identified root cause of the bug.
         proposed_fix: Suggested code fix to resolve the bug.
         fix_diff: Unified diff of the applied change, when available.
@@ -48,6 +49,7 @@ class AgentState(TypedDict, total=False):
     vault_context: str
     suspects: list[Suspect]
     inspected_code: str
+    files_read: int
     root_cause: str
     proposed_fix: str
     fix_diff: str

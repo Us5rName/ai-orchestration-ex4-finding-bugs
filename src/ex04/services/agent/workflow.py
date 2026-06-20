@@ -86,7 +86,7 @@ class WorkflowBuilder:
         graph.add_node("knowledge", KnowledgeLoadNode(context_limit=self.context_limit))
         graph.add_node("analysis", BugAnalysisNode(self.gatekeeper, self.provider))
         graph.add_node("suspect", SuspectRankingNode(max_suspects=self.max_suspects))
-        graph.add_node("inspect", CodeInspectionNode(self.target_path))
+        graph.add_node("inspect", CodeInspectionNode(self.target_path, self.gatekeeper, self.provider))
         graph.add_node("rootcause", RootCauseNode(self.gatekeeper, self.provider))
         graph.add_node("fix", FixGenerationNode(self.target_path, self.gatekeeper, self.provider))
         graph.add_node("verify", VerificationNode(cwd=self.target_path))
