@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from ex04.sdk._comparison_inputs import discover_source_files, resolve_vault_dir
+from ex04.sdk._comparison_ops import ComparisonOpsMixin
 from ex04.sdk._extensions import ImpactReport, OrphanReport, analyze_patch_impact, detect_orphans
 from ex04.sdk._wiring import build_services
 from ex04.services.agent.interface import AgentServiceInterface
@@ -24,7 +25,7 @@ from ex04.shared.types_metrics import ComparisonReport
 from ex04.shared.types_results import InvestigationResult, PipelineResult
 
 
-class Ex04SDK:
+class Ex04SDK(ComparisonOpsMixin):
     """Single entry point for all EX04 operations. Delegates to services."""
 
     def __init__(
