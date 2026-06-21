@@ -90,7 +90,7 @@ cat reports/bug_analysis.md
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §4.2 Comparison Workflow] |
 | **PRD Reference** | [PRD G6] |
@@ -98,10 +98,10 @@ cat reports/bug_analysis.md
 
 **Definition of Done**:
 
-- [ ] Both naive and graph-guided runs complete
-- [ ] `ComparisonMetrics` shows token savings ≥ 30%
-- [ ] `artifacts/runs/<run-id>/reports/comparison.md` generated
-- [ ] Report includes side-by-side metrics table
+- [x] Both naive and graph-guided runs complete
+- [x] Signed metrics show token savings ≥ 30% (66.5%)
+- [x] `artifacts/runs/phase7-comparison/reports/comparison.md` generated
+- [x] Report includes side-by-side metrics table
 
 **Independent Verification**:
 

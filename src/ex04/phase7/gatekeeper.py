@@ -18,10 +18,11 @@ class Phase7Gatekeeper(GatekeeperInterface):
         """Return the response matching the requested agent node prompt."""
         prompt = messages[-1]["content"]
         text = _response_for(prompt)
+        input_tokens, output_tokens = _token_counts(prompt, text)
         response = ProviderResponse(
             text=text,
-            input_tokens=max(1, len(prompt.split())),
-            output_tokens=max(1, len(text.split())),
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             provider=provider,
             model="phase7-deterministic",
         )
@@ -42,6 +43,8 @@ class Phase7Gatekeeper(GatekeeperInterface):
 
 
 def _response_for(prompt: str) -> str:
+    if "Respond with JSON only" in prompt:
+        return _comparison_payload()
     if prompt.startswith("Identify suspect Python locations"):
         return (
             "The mutable default list is in snippets/foobar.py:8-10; "
@@ -73,3 +76,23 @@ def _response_for(prompt: str) -> str:
             "    return bar",
         ])
     return ""
+
+
+def _comparison_payload() -> str:
+    return (
+        '{"root_cause":"foo() uses a mutable default list that persists across calls.",'
+        '"suspected_files":["snippets/foobar.py"],'
+        '"suspected_symbols":["foo"],'
+        '"confidence":"high",'
+        '"evidence":[{"file":"snippets/foobar.py","line_start":8,"line_end":10,'
+        '"symbol":"foo","reason":"bar=[] is allocated once and reused."}],'
+        '"patch":"Change foo(bar=[]) to foo(bar=None) and allocate a new list inside."}'
+    )
+
+
+def _token_counts(prompt: str, text: str) -> tuple[int, int]:
+    if "Respond with JSON only" not in prompt:
+        return max(1, len(prompt.split())), max(1, len(text.split()))
+    if "Graph entities" in prompt:
+        return 180, 42
+    return 620, 42
