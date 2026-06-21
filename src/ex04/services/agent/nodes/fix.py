@@ -12,7 +12,8 @@ import difflib
 import logging
 from pathlib import Path
 
-from ex04.services.agent.nodes.common import call_gatekeeper, merge_tokens
+from ex04.services.agent.deps import NodeDeps
+from ex04.services.agent.nodes import common
 from ex04.services.agent.state import AgentState
 from ex04.shared.gatekeeper import GatekeeperInterface
 
@@ -37,8 +38,11 @@ class FixGenerationNode:
     ) -> None:
         """Initialize with target root and optional Gatekeeper dependency."""
         self.target_path = Path(target_path)
-        self.gatekeeper = gatekeeper
-        self.provider = provider
+        self.deps = NodeDeps(
+            gatekeeper=gatekeeper,
+            provider=provider,
+            target_path=self.target_path,
+        )
 
     def __call__(self, state: AgentState) -> AgentState:
         """Generate and apply fix.
@@ -54,15 +58,14 @@ class FixGenerationNode:
             "Propose a fix. Optional apply format: FILE:, FIND:, REPLACE:.\n"
             f"Root cause:\n{state.get('root_cause', '')}\n\nCode:\n{state.get('inspected_code', '')}"
         )
-        response = call_gatekeeper(self.gatekeeper, self.provider, prompt)
+        response = common.call_llm(self.deps, state, "fix", prompt)
         proposed = response.text.strip()
         applied, diff = self._apply_replacement(proposed)
         return {
-            **state,
+            **common.state_with_tokens(state, response),
             "proposed_fix": proposed,
             "fix_diff": diff,
             "fix_applied": applied,
-            "token_usage": merge_tokens(state, response),
         }
 
     def _apply_replacement(self, proposed: str) -> tuple[bool, str]:
@@ -104,3 +107,8 @@ class FixGenerationNode:
             elif current:
                 result[current] = f"{result[current]}{line}\n"
         return {key: value.rstrip("\n") for key, value in result.items()}
+
+
+def build_fix_node(deps: NodeDeps) -> FixGenerationNode:
+    """Build the fix-generation node from workflow dependencies."""
+    return FixGenerationNode(deps.target_path, deps.gatekeeper, deps.provider)

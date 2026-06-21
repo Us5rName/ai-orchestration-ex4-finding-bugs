@@ -45,10 +45,13 @@ class AgentService(AgentServiceInterface):
         """Run a bug investigation and return a structured result."""
         state: AgentState = {"bug_report": bug_report, "iterations": 0}
         state["target_path"] = str(self._target_path)
+        state["mode"] = "graph" if graph_path or vault_path else "naive"
         if graph_path:
             state["graph_context"] = str(graph_path)
         if vault_path:
             state["vault_context"] = str(vault_path)
+        if state["mode"] == "naive":
+            state["source_context"] = str(self._target_path)
 
         self._state = self._invoke_workflow(state)
         result = InvestigationResult(

@@ -32,6 +32,8 @@ class AgentState(TypedDict, total=False):
         bug_report: The original bug description provided by the user.
         graph_context: Summary of the code graph structure.
         vault_context: Relevant vault notes and navigation results.
+        source_context: Raw/source context used by naive mode.
+        mode: Investigation route, either "graph" or "naive".
         suspects: Ranked list of suspect code locations.
         inspected_code: Code snippets fetched during inspection.
         files_read: Number of source files read during inspection (for comparison metrics).
@@ -47,6 +49,8 @@ class AgentState(TypedDict, total=False):
     bug_report: str
     graph_context: str
     vault_context: str
+    source_context: str
+    mode: str
     suspects: list[Suspect]
     inspected_code: str
     files_read: int

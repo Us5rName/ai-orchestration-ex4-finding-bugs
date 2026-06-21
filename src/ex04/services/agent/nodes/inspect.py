@@ -12,7 +12,8 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ex04.services.agent.nodes.common import call_gatekeeper, merge_tokens
+from ex04.services.agent.deps import NodeDeps
+from ex04.services.agent.nodes import common
 from ex04.services.agent.state import AgentState
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types_results import Suspect
@@ -55,8 +56,11 @@ class CodeInspectionNode:
             provider: LLM provider name passed to the gatekeeper.
         """
         self.target_path = target_path
-        self.gatekeeper = gatekeeper
-        self.provider = provider
+        self.deps = NodeDeps(
+            gatekeeper=gatekeeper,
+            provider=provider,
+            target_path=Path(target_path),
+        )
 
     def __call__(self, state: AgentState) -> AgentState:
         """Inspect code for all ranked suspects.
@@ -87,7 +91,7 @@ class CodeInspectionNode:
 
         raw_code = "\n".join(snippets)
         prompt = _INSPECTION_PROMPT.format(snippets=raw_code)
-        response = call_gatekeeper(self.gatekeeper, self.provider, prompt)
+        response = common.call_llm(self.deps, state, "inspect", prompt)
         analysis = response.text.strip()
 
         inspected = raw_code
@@ -96,10 +100,9 @@ class CodeInspectionNode:
 
         previous_reads = state.get("files_read", 0)
         return {
-            **state,
+            **common.state_with_tokens(state, response),
             "inspected_code": inspected,
             "files_read": previous_reads + len(snippets),
-            "token_usage": merge_tokens(state, response),
         }
 
     def _read_snippet(self, suspect: Suspect) -> str | None:
@@ -147,3 +150,8 @@ class CodeInspectionNode:
             suspect.file_path,
         )
         return f"{header}\n{body}"
+
+
+def build_inspect_node(deps: NodeDeps) -> CodeInspectionNode:
+    """Build the inspection node from workflow dependencies."""
+    return CodeInspectionNode(deps.target_path, deps.gatekeeper, deps.provider)
