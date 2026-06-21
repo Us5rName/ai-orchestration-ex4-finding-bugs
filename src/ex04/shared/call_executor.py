@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 from typing import Any
 
+from ex04.providers.interface import Message
 from ex04.shared.provider_pool import ProviderPool
 from ex04.shared.rate_limiter import RateLimiter
 from ex04.shared.types_results import ProviderResponse
@@ -38,7 +39,7 @@ class CallExecutor:
         """Return a copy of the call log."""
         return list(self._log)
 
-    def run(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
+    def run(self, provider: str, messages: list[Message]) -> ProviderResponse:
         """Wait for a slot, then dispatch with retry.
 
         Args:
@@ -70,7 +71,7 @@ class CallExecutor:
         raise RuntimeError(f"Rate limit exceeded for '{provider}'; no slot available")
 
     def _dispatch(
-        self, provider: str, messages: list[dict[str, str]], max_attempts: int, retry_delay: int
+        self, provider: str, messages: list[Message], max_attempts: int, retry_delay: int
     ) -> ProviderResponse:
         """Send the request to the provider, retrying transient failures.
 

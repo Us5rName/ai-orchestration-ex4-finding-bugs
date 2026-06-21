@@ -1,9 +1,4 @@
-"""Single SDK entry point with dependency injection (ADR-005).
-
-All business logic flows through this module. CLI and REST layers delegate
-here — they never import internal domain services directly. Extensions are
-in sdk/_extensions.py. Wiring is in sdk/_wiring.py.
-"""
+"""Single SDK entry point with dependency injection."""
 
 from __future__ import annotations
 
@@ -53,18 +48,14 @@ class Ex04SDK(ComparisonOpsMixin):
 
     def run_graphify(self, target_path: str) -> GraphData:
         """Extract and parse a code graph from the target codebase."""
-        graph_path = self._graph.extract(target_path)
-        return self._graph.parse(graph_path)
+        return self._graph_data(target_path)
 
     def build_vault(self, graph_data: GraphData) -> dict[str, Path]:
         """Build an Obsidian vault from parsed graph data."""
         return self._vault.build(graph_data)
 
     def investigate_bug(
-        self,
-        bug_report: str,
-        graph_path: Path | None = None,
-        vault_path: Path | None = None,
+        self, bug_report: str, graph_path: Path | None = None, vault_path: Path | None = None
     ) -> InvestigationResult:
         """Investigate a bug via the agent workflow (graph/vault optional)."""
         return self._agent.investigate(bug_report, graph_path, vault_path)
@@ -77,14 +68,11 @@ class Ex04SDK(ComparisonOpsMixin):
         vault_path: Path | None = None,
     ) -> ComparisonReport:
         """Compare naive vs. graph-guided investigation approaches."""
-        return self._comparison.run_comparison(
-            bug_report, source_files, graph_data, vault_path
-        )
+        return self._legacy_comparison_report(bug_report, source_files, graph_data, vault_path)
 
     def reverse_engineer(self, target_path: str) -> str:
         """Reverse-engineer architecture docs from the target codebase."""
-        graph_data = self.run_graphify(target_path)
-        return self._analysis.reverse_engineer(graph_data)
+        return self._analysis.reverse_engineer(self._graph_data(target_path))
 
     def generate_report(self, investigation: InvestigationResult) -> str:
         """Generate a structured Markdown bug report from an investigation."""
@@ -92,20 +80,14 @@ class Ex04SDK(ComparisonOpsMixin):
 
     def identify_patterns(self, target_path: str) -> list[str]:
         """Identify design patterns in the target codebase."""
-        graph_data = self.run_graphify(target_path)
-        return self._analysis.identify_patterns(graph_data)
+        return self._analysis.identify_patterns(self._graph_data(target_path))
 
     def compare_target(self, target_path: str | Path, bug_report: str) -> ComparisonReport:
         """Extract graph, build vault, discover files, and run both comparison modes."""
-        graph_path = self._graph.extract(str(target_path))
-        graph_data = self._graph.parse(graph_path)
-        vault_dir = resolve_vault_dir(self._vault.build(graph_data))
-        source_files = discover_source_files(target_path, self._config)
-        return self._comparison.run_comparison(bug_report, source_files, graph_data, vault_dir)
+        graph_data, vault_dir, source_files = self._comparison_inputs(target_path)
+        return self._legacy_comparison_report(bug_report, source_files, graph_data, vault_dir)
 
-    def detect_orphans(
-        self, graph_data: GraphData, min_connections: int = 0
-    ) -> OrphanReport:
+    def detect_orphans(self, graph_data: GraphData, min_connections: int = 0) -> OrphanReport:
         """Detect orphan nodes and weakly connected components (EXT-1 / FR-7.5)."""
         return detect_orphans(graph_data, min_connections)
 
@@ -120,15 +102,12 @@ class Ex04SDK(ComparisonOpsMixin):
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult:
         """Run the complete end-to-end pipeline into one aggregated result."""
-        graph_path = self._graph.extract(target_path)
-        graph_data = self._graph.parse(graph_path)
+        graph_path, graph_data = self._extract_graph(target_path)
         vault = self._vault.build(graph_data)
         vault_dir = resolve_vault_dir(vault)
         source_files = discover_source_files(target_path, self._config)
         investigation = self._agent.investigate(bug_report, graph_path, vault_dir)
-        comparison = self._comparison.run_comparison(
-            bug_report, source_files, graph_data, vault_dir
-        )
+        comparison = self._legacy_comparison_report(bug_report, source_files, graph_data, vault_dir)
         engineering = self._analysis.reverse_engineer(graph_data)
         bug_report_md = self._analysis.report(investigation)
         return PipelineResult(
@@ -139,3 +118,28 @@ class Ex04SDK(ComparisonOpsMixin):
             engineering=engineering,
             bug_report_md=bug_report_md,
         )
+
+    def _extract_graph(self, target_path: str | Path) -> tuple[Path, GraphData]:
+        graph_path = self._graph.extract(str(target_path))
+        return graph_path, self._graph.parse(graph_path)
+
+    def _graph_data(self, target_path: str | Path) -> GraphData:
+        return self._extract_graph(target_path)[1]
+
+    def _comparison_inputs(self, target_path: str | Path) -> tuple[GraphData, Path | None, list[Path]]:
+        graph_data = self._graph_data(target_path)
+        vault_dir = resolve_vault_dir(self._vault.build(graph_data))
+        source_files = discover_source_files(target_path, self._config)
+        return graph_data, vault_dir, source_files
+
+    def _legacy_comparison_report(
+        self,
+        bug_report: str,
+        source_files: list[Path],
+        graph_data: GraphData | None = None,
+        vault_path: Path | None = None,
+    ) -> ComparisonReport:
+        result = self._comparison.run_comparison(bug_report, source_files, graph_data, vault_path)
+        if isinstance(result, ComparisonReport):
+            return result
+        raise TypeError("legacy comparison call returned canonical outcome")

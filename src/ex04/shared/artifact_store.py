@@ -15,7 +15,9 @@ from pathlib import Path
 from ex04.shared.types_experiment import RunManifest
 
 _SENSITIVE_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|secret|password|token)"),
+    re.compile(
+        r"(?i)(api[_-]?key|secret|password|auth[_-]?token|access[_-]?token|refresh[_-]?token)"
+    ),
     re.compile(r"/home/[^/]+"),
     re.compile(r"/Users/[^/]+"),
 ]
@@ -47,12 +49,12 @@ class ArtifactStore:
         """Persist a run manifest. Raises ArtifactOverwriteError if run_id exists."""
         self._ensure_dirs()
         run_dir = self._runs_dir / manifest.run_id
-        if run_dir.exists():
-            raise ArtifactOverwriteError(
-                f"Run '{manifest.run_id}' already exists at {run_dir}"
-            )
-        run_dir.mkdir(parents=True)
         path = self._manifests_dir / f"{manifest.run_id}_manifest.json"
+        if path.exists():
+            raise ArtifactOverwriteError(
+                f"Manifest '{manifest.run_id}' already exists at {path}"
+            )
+        run_dir.mkdir(parents=True, exist_ok=True)
         data = sanitize_artifact(asdict(manifest))
         path.write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
         return path
@@ -74,7 +76,7 @@ class ArtifactStore:
     def config_hash(config: dict[str, object]) -> str:
         """Compute a stable SHA-256 hash of a config dict."""
         serialized = json.dumps(config, sort_keys=True, default=str)
-        return hashlib.sha256(serialized.encode()).hexdigest()[:16]
+        return hashlib.sha256(serialized.encode()).hexdigest()
 
 
 def sanitize_artifact(data: dict[str, object]) -> dict[str, object]:

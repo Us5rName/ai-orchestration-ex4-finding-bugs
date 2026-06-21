@@ -12,7 +12,7 @@ being silently dropped; ``send`` always returns a ProviderResponse or raises.
 
 | Method | Input | Output | Phase |
 |---|---|---|---|
-| `send(provider, messages)` | str, list[dict] | ProviderResponse | P4 |
+| `send(provider, messages)` | str, list[Message] | ProviderResponse | P4 |
 | `get_call_log()` | — | list[dict] | P4 |
 | `get_queue_status()` | — | dict | P4 |
 
@@ -25,6 +25,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from typing import Any
 
+from ex04.providers.interface import Message
 from ex04.shared.call_executor import CallExecutor
 from ex04.shared.provider_pool import ProviderPool
 from ex04.shared.rate_limiter import RateLimiter
@@ -35,7 +36,7 @@ class GatekeeperInterface(ABC):
     """Abstract API gatekeeper interface."""
 
     @abstractmethod
-    def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
+    def send(self, provider: str, messages: list[Message]) -> ProviderResponse:
         """Execute an API call through the gatekeeper."""
 
     @abstractmethod
@@ -73,7 +74,7 @@ class ApiGatekeeper(GatekeeperInterface):
             self._limiter.load(rate_limits_path)
         self._executor = CallExecutor(self._limiter, self._pool)
 
-    def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
+    def send(self, provider: str, messages: list[Message]) -> ProviderResponse:
         """Execute an API call through the gatekeeper.
 
         The request is enqueued (FIFO) for the duration of the call and removed
