@@ -1,14 +1,14 @@
 ---
 title: "snippets_io"
 tags: [entity, code]
-date: 2026-06-21
+date: 2026-06-22
 ---
 
 # snippets_io
 
 ## Properties
 - **Kind**: code
-- **File**: .graphify/repos/andela/buggy-python/snippets/io.py
+- **File**: snippets/io.py
 - **Lines**: 1–1
 
 ## Related

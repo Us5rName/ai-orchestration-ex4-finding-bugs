@@ -1,12 +1,12 @@
 ---
 title: "snippets_foobar_foo"
 tags: [entity, code]
-date: 2026-06-21
+date: 2026-06-22
 ---
 
 # snippets_foobar_foo
 
 ## Properties
 - **Kind**: code
-- **File**: .graphify/repos/andela/buggy-python/snippets/foobar.py
+- **File**: snippets/foobar.py
 - **Lines**: 8–8

@@ -28,3 +28,4 @@ ASSIGNMENT.md
 # Stray Graphify output written into the repo root during local probing.
 # Nested evidence dirs (e.g. graph-home/.../graphify-out/) stay trackable.
 /graphify-out/
+.env

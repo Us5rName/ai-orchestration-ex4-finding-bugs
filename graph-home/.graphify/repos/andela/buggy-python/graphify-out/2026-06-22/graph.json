@@ -1,0 +1,287 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "main.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "main.py",
+      "id": "main"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "snippets/__init__.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "__init__.py",
+      "id": "snippets_init"
+    },
+    {
+      "label": "foobar.py",
+      "file_type": "code",
+      "source_file": "snippets/foobar.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "foobar.py",
+      "id": "snippets_foobar"
+    },
+    {
+      "label": "foo()",
+      "file_type": "code",
+      "source_file": "snippets/foobar.py",
+      "source_location": "L8",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "foo()",
+      "id": "snippets_foobar_foo"
+    },
+    {
+      "label": "The purpose of this snippet is to test your knowledge of default arguments for f",
+      "file_type": "rationale",
+      "source_file": "snippets/foobar.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 1,
+      "norm_label": "the purpose of this snippet is to test your knowledge of default arguments for f",
+      "id": "snippets_foobar_rationale_1"
+    },
+    {
+      "label": "io.py",
+      "file_type": "code",
+      "source_file": "snippets/io.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "io.py",
+      "id": "snippets_io"
+    },
+    {
+      "label": "read_file()",
+      "file_type": "code",
+      "source_file": "snippets/io.py",
+      "source_location": "L8",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "read_file()",
+      "id": "snippets_io_read_file"
+    },
+    {
+      "label": "calculate_unpaid_loans()",
+      "file_type": "code",
+      "source_file": "snippets/io.py",
+      "source_location": "L14",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "calculate_unpaid_loans()",
+      "id": "snippets_io_calculate_unpaid_loans"
+    },
+    {
+      "label": "calculate_paid_loans()",
+      "file_type": "code",
+      "source_file": "snippets/io.py",
+      "source_location": "L23",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "calculate_paid_loans()",
+      "id": "snippets_io_calculate_paid_loans"
+    },
+    {
+      "label": "average_paid_loans()",
+      "file_type": "code",
+      "source_file": "snippets/io.py",
+      "source_location": "L32",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "average_paid_loans()",
+      "id": "snippets_io_average_paid_loans"
+    },
+    {
+      "label": "Simple python script to read a json file of loan then add perform some calculati",
+      "file_type": "rationale",
+      "source_file": "snippets/io.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "simple python script to read a json file of loan then add perform some calculati",
+      "id": "snippets_io_rationale_1"
+    },
+    {
+      "label": "loop.py",
+      "file_type": "code",
+      "source_file": "snippets/loop.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "loop.py",
+      "id": "snippets_loop"
+    },
+    {
+      "label": "lambda_array()",
+      "file_type": "code",
+      "source_file": "snippets/loop.py",
+      "source_location": "L7",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "lambda_array()",
+      "id": "snippets_loop_lambda_array"
+    },
+    {
+      "label": "Simple array of lambda functions that is used to calculate the addition of a num",
+      "file_type": "rationale",
+      "source_file": "snippets/loop.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 2,
+      "norm_label": "simple array of lambda functions that is used to calculate the addition of a num",
+      "id": "snippets_loop_rationale_1"
+    },
+    {
+      "label": "Buggy Python README",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 3,
+      "norm_label": "buggy python readme",
+      "id": "readme_buggy_python"
+    }
+  ],
+  "links": [
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "main.py",
+      "source_location": "L3",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "main",
+      "target": "snippets_foobar_foo"
+    },
+    {
+      "relation": "re_exports",
+      "context": "export",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/__init__.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_init",
+      "target": "snippets_foobar"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/__init__.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_init",
+      "target": "snippets_foobar_foo"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/foobar.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_foobar",
+      "target": "snippets_foobar_foo"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/foobar.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_foobar_rationale_1",
+      "target": "snippets_foobar"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/io.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_io",
+      "target": "snippets_io_average_paid_loans"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/io.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_io",
+      "target": "snippets_io_calculate_paid_loans"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/io.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_io",
+      "target": "snippets_io_calculate_unpaid_loans"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/io.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_io",
+      "target": "snippets_io_read_file"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/io.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_io_rationale_1",
+      "target": "snippets_io"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/loop.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_loop",
+      "target": "snippets_loop_lambda_array"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "snippets/loop.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "snippets_loop_rationale_1",
+      "target": "snippets_loop"
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "36bcf609dcf8d0b5422146cc7495deeaca3a9d1c"
+}

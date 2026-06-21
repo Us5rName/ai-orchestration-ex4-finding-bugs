@@ -5,10 +5,10 @@
     },
     "provider": {
         "name": "openai",
-        "model": "gpt-4o-mini",
+        "model": "deepseek/deepseek-v3.2",
         "api_key_env": "OPENAI_API_KEY",
-        "base_url": null,
-        "max_tokens": 4096
+        "base_url": "https://openrouter.ai/api/v1",
+        "max_tokens": 100000
     },
     "graphify": {
         "graph_home": "./graph-home",
@@ -20,11 +20,11 @@
     "agent": {
         "max_iterations": 5,
         "max_suspects": 5,
-        "context_window_tokens": 8000
+        "context_window_tokens": 100000
     },
     "comparison": {
         "naive_file_limit": 20,
-        "guided_context_limit": 4000
+        "guided_context_limit": 100000
     },
     "paths": {
         "target_codebase": "./graph-home/.graphify/repos/andela/buggy-python",
