@@ -8,7 +8,7 @@ from typing import Any
 
 from ex04.sdk._comparison_inputs import discover_source_files, resolve_vault_dir
 from ex04.sdk._comparison_ops import ComparisonOpsMixin
-from ex04.sdk._extensions import ImpactReport, OrphanReport, analyze_patch_impact, detect_orphans
+from ex04.sdk._extension_ops import ExtensionOpsMixin
 from ex04.sdk._wiring import build_services
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.analysis.interface import AnalysisServiceInterface
@@ -20,7 +20,7 @@ from ex04.shared.types_metrics import ComparisonReport
 from ex04.shared.types_results import InvestigationResult, PipelineResult
 
 
-class Ex04SDK(ComparisonOpsMixin):
+class Ex04SDK(ComparisonOpsMixin, ExtensionOpsMixin):
     """Single entry point for all EX04 operations. Delegates to services."""
 
     def __init__(
@@ -86,19 +86,6 @@ class Ex04SDK(ComparisonOpsMixin):
         """Extract graph, build vault, discover files, and run both comparison modes."""
         graph_data, vault_dir, source_files = self._comparison_inputs(target_path)
         return self._legacy_comparison_report(bug_report, source_files, graph_data, vault_dir)
-
-    def detect_orphans(self, graph_data: GraphData, min_connections: int = 0) -> OrphanReport:
-        """Detect orphan nodes and weakly connected components (EXT-1 / FR-7.5)."""
-        return detect_orphans(graph_data, min_connections)
-
-    def analyze_patch_impact(
-        self,
-        graph_data: GraphData,
-        changed_symbols: list[str],
-        max_depth: int = 3,
-    ) -> ImpactReport:
-        """Analyze transitive impact of a patch via BFS (EXT-2 / FR-7.6)."""
-        return analyze_patch_impact(graph_data, changed_symbols, max_depth)
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult:
         """Run the complete end-to-end pipeline into one aggregated result."""
