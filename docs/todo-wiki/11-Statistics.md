@@ -7,9 +7,9 @@
 | Metric | Value |
 |---|---|
 | Total tasks | 74 |
-| Done | 71 |
-| Open tasks | 4 (T4.20, T6.05, T6.09, T8.13) |
-| Genuinely unimplemented | 3 (T4.20, T6.09, T8.13) |
+| Done | 72 |
+| Open tasks | 3 (T4.20, T6.05, T8.13) |
+| Genuinely unimplemented | 2 (T4.20, T8.13) |
 | Implementation complete, closure/evidence pending | 1 (T6.05 — core OrphanDetector exists via T7.07; report persistence and closure work remain) |
 | P0 (critical) | 56 |
 | P1 (important) | 18 |

@@ -90,6 +90,34 @@ def test_canonical_comparison_uses_distinct_fair_requests(
     assert outcome.guided_result.config_hash == req.controlled_config_hash()
 
 
+def test_canonical_comparison_persists_missing_graph_diff_without_losing_metrics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    source = tmp_path / "app.py"
+    source.write_text("def bug(): pass\n", encoding="utf-8")
+    graph = GraphData(entities=[Entity("bug", "function", "app.py", (1, 1))])
+    req = ComparisonRequest(
+        bug_report="bug",
+        provider="fake",
+        run_id="cmp",
+        target_snapshot_path=str(tmp_path),
+        artifact_root="artifacts",
+    )
+    service = ComparisonService(FakeGatekeeper(), "fake")
+
+    service.run_comparison(req, [source], graph, None)
+
+    graph_diff = tmp_path / "artifacts" / "runs" / "cmp" / "reports" / "graph_diff.json"
+    comparison = tmp_path / "artifacts" / "runs" / "cmp" / "reports" / "comparison.json"
+    manifest = tmp_path / "artifacts" / "manifests" / "cmp-naive_manifest.json"
+    assert graph_diff.exists()
+    assert comparison.exists()
+    assert json.loads(graph_diff.read_text(encoding="utf-8"))["status"] == "missing"
+    assert json.loads(comparison.read_text(encoding="utf-8"))["signed_metrics"]["naive_tokens"] == 110
+    assert json.loads(manifest.read_text(encoding="utf-8"))["graph_diff_hash"]
+
+
 def test_fairness_failure_occurs_before_provider_calls(tmp_path: Path) -> None:
     class RejectingEnforcer:
         def check(self, naive: ComparisonRequest, guided: ComparisonRequest) -> None:

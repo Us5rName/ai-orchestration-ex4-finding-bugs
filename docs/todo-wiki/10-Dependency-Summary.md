@@ -110,7 +110,7 @@ graph TD
     T402 --> T419a[T4.19a Graph Model Enrichment - Done]
     T419a --> T419[T4.19 GraphReader - Done]
     T419 --> T420[T4.20 WeaknessDetector - Not Started]
-    T419 --> T609[T6.09 GraphDiff - Not Started]
+    T419 --> T609[T6.09 GraphDiff - Done]
     T707[T7.07 OrphanDetector - Done]
     T707 --> T605[T6.05 Orphan Closure - In Progress]
     T419 -.->|optional reuse| T605
@@ -122,6 +122,6 @@ graph TD
     T609 --> T813
 ```
 
-**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13. T6.09 is complete; T8.13 remains dependent on the final architecture state.
 
 ---

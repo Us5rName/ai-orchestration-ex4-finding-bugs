@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.27 |
+| **Version** | 1.29 |
 | **Date** | 2026-06-21 |
 | **Status** | Draft |
 | **PRD Reference** | `docs/PRD.md` v1.03 |
-| **PLAN Reference** | `docs/PLAN.md` v1.13 |
+| **PLAN Reference** | `docs/PLAN.md` v1.15 |
 
 ---
 
@@ -1779,17 +1779,17 @@ uv run pytest tests/unit/services/comparison/test_fairness.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 5th of 6 remaining tasks (after T4.19 GraphReader) |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD §5.7 FR-7.4], [PRD-CE §Graph-Diff Report Integration], [PRD-AP §Artifact Layout] |
-| **Depends On** | T4.19 GraphReader (operates on GraphReader/GraphData, not raw JSON) |
+| **Depends On** | T4.19 graph identity/parser enrichment (operates on shared `GraphData`, not raw JSON) |
 | **Estimate** | 90 min |
 
-**Purpose**: Produce a full typed pre/post structural comparison of graph entities, relationships, and communities. The diff operates on `GraphReader`/`GraphData` — it must not load raw JSON independently.
+**Purpose**: Produce a full typed pre/post structural comparison of graph entities, relationships, and communities. The diff operates on shared `GraphData` snapshots — it must not load raw JSON independently.
 
-**Planned package**: `src/ex04/services/comparison/graph_diff/`
+**Implemented package**: `src/ex04/services/comparison/graph_diff/`
 
 ```
 __init__.py
@@ -1840,7 +1840,7 @@ The comparison token metrics remain available regardless of graph-diff availabil
 **Implementation subtasks**:
 1. Create `models.py` with all typed change models and `PostGraphStatus`.
 2. Create `canonicalize.py` for stable entity and relationship identity normalization.
-3. Create `differ.py` — `GraphDiffer` consuming two `GraphData` objects via `GraphReader`.
+3. Create `differ.py` — `GraphDiffer` consuming two `GraphData` objects without raw JSON parsing.
 4. Create `community_matcher.py` — Jaccard-based community matching with tie-breaking.
 5. Create `renderer.py` — JSON and Markdown rendering with provenance fields.
 6. Wire into comparison service to optionally include diff when graph snapshots available.
@@ -1859,19 +1859,19 @@ The comparison token metrics remain available regardless of graph-diff availabil
 - Do not load raw JSON graphs independently (always go through GraphReader/GraphData).
 - Do not block comparison report on graph-diff failure.
 
-**Definition of Done** (T6.09 is Done only when):
-- [ ] Entities, relationships, and communities receive complete classifications.
-- [ ] Stable identity and change semantics are implemented.
-- [ ] Community matching does not depend on raw IDs.
-- [ ] Missing/blocked/invalid post-graph states are typed and rendered honestly.
-- [ ] JSON and Markdown artifacts are persisted and hashed.
-- [ ] Comparison results remain available when graph diff is unavailable.
-- [ ] Unit, rendering, artifact, and integration tests pass.
+**Definition of Done**:
+- [x] Entities, relationships, and communities receive complete classifications.
+- [x] Stable identity and change semantics are implemented.
+- [x] Community matching does not depend on raw IDs.
+- [x] Missing/blocked/invalid post-graph states are typed and rendered honestly.
+- [x] JSON and Markdown artifacts are persisted and hashed.
+- [x] Comparison results remain available when graph diff is unavailable.
+- [x] Unit, rendering, artifact, and integration tests pass.
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py -v
+uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py tests/unit/services/comparison/test_comparison_service.py -v
 ```
 
 ---
@@ -2586,7 +2586,7 @@ graph TD
     T402 --> T419a[T4.19a Graph Model Enrichment - Done]
     T419a --> T419[T4.19 GraphReader - Done]
     T419 --> T420[T4.20 WeaknessDetector - Not Started]
-    T419 --> T609[T6.09 GraphDiff - Not Started]
+    T419 --> T609[T6.09 GraphDiff - Done]
     T707[T7.07 OrphanDetector - Done]
     T707 --> T605[T6.05 Orphan Closure - In Progress]
     T419 -.->|optional reuse| T605
@@ -2598,7 +2598,7 @@ graph TD
     T609 --> T813
 ```
 
-**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13. T6.09 is complete; T8.13 remains dependent on the final architecture state.
 
 ---
 
@@ -2607,9 +2607,9 @@ graph TD
 | Metric | Value |
 |---|---|
 | Total tasks | 74 |
-| Done | 71 |
-| Open tasks | 4 (T4.20, T6.05, T6.09, T8.13) |
-| Genuinely unimplemented | 3 (T4.20, T6.09, T8.13) |
+| Done | 72 |
+| Open tasks | 3 (T4.20, T6.05, T8.13) |
+| Genuinely unimplemented | 2 (T4.20, T8.13) |
 | Implementation complete, closure/evidence pending | 1 (T6.05 — core OrphanDetector exists via T7.07; report persistence and closure work remain) |
 | P0 (critical) | 56 |
 | P1 (important) | 18 |
@@ -2683,3 +2683,4 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.26 | 2026-06-21 | Reconcile graph-model and remaining-task contracts: add T4.19a enrichment prerequisite block; replace GraphReader/WeaknessFinding mutable types with immutable tuple/Mapping forms; add EvidenceAnchor and RelationshipKey typed models; fix T6.05 GraphReader delegation wording (mandatory internal, public compatible); fix T6.05 README wording; update TOC links for T6.05/T6.09; add T4.19a to Mermaid diagram; sync header to v1.26. Traceability: [PRD §5.7 FR-7.7], [PLAN §3.3 GraphReader], [PLAN ADR-007].
 | 1.27 | 2026-06-21 | Finalize remaining-task documentation consistency: update parent PRD reference to v1.03; update PLAN reference to v1.13; fix revision-history ordering (1.25/1.26 were out of order). Traceability: [PRD v1.03], [PLAN v1.13].
 | 1.28 | 2026-06-21 | Wave 1 implementation: mark T4.19a, T4.19, T5.03 Done; update statistics to 71 Done / 4 open (T4.20, T6.05, T6.09, T8.13); update Mermaid diagram. Traceability: [PLAN ADR-007, ADR-008], [PRD §5.7 FR-7.7], [PRD §5.6 FR-6.4]. Evidence: commits b078da9, 5011543, 25b1c2d, d63d13f on feat/remaining-task-completion. |
+| 1.29 | 2026-06-21 | Wave 2 implementation: mark T6.09 Done after adding typed graph-diff models, deterministic differ/community matcher, JSON/Markdown rendering, comparison report integration, manifest graph-diff paths/hashes, and regression tests. Update statistics to 72 Done / 3 open (T4.20, T6.05, T8.13). Traceability: [PRD §5.7 FR-7.4], [PRD-CE §Graph-Diff Report Integration], [PRD-AP §Artifact Layout], [PLAN §3.7]. |

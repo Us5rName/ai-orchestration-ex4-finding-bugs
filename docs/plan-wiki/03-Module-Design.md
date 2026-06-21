@@ -585,7 +585,7 @@ class WeaknessDetector:
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
-| `graph_diff/` | **Planned (T6.09)** — pre/post graph snapshot diff package; operates on `GraphReader`/`GraphData` |
+| `graph_diff/` | **Implemented (T6.09)** — pre/post graph snapshot diff package; operates on shared `GraphData` without raw JSON parsing |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -610,12 +610,12 @@ class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
 
-# graph_diff/ package (planned — T6.09)
-# Planned import boundary: src/ex04/services/comparison/graph_diff/
+# graph_diff/ package (implemented — T6.09)
+# Import boundary: src/ex04/services/comparison/graph_diff/
 # Modules: __init__.py, models.py, canonicalize.py, differ.py, community_matcher.py, renderer.py
-# Operates on GraphReader/GraphData — does not load raw JSON independently
-def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
-def render_graph_diff(diff: GraphDiff, output_dir: Path) -> tuple[Path, Path]: ...  # (json, md)
+# Operates on shared GraphData — does not load raw JSON independently
+def diff_graphs(pre: GraphData | None, post: GraphData | None) -> GraphDiffResult: ...
+def render_graph_diff(diff: GraphDiffResult, output_dir: Path) -> GraphDiffArtifacts: ...
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction

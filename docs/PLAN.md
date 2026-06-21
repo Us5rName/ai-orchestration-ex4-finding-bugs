@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.13 |
+| **Version** | 1.15 |
 | **Date** | 2026-06-21 |
 | **Status** | Draft |
 | **PRD Reference** | `docs/PRD.md` v1.03 |
@@ -876,7 +876,7 @@ class WeaknessDetector:
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
-| `graph_diff/` | **Planned (T6.09)** — pre/post graph snapshot diff package; operates on `GraphReader`/`GraphData` |
+| `graph_diff/` | **Implemented (T6.09)** — pre/post graph snapshot diff package; operates on shared `GraphData` without raw JSON parsing |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -901,12 +901,12 @@ class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
 
-# graph_diff/ package (planned — T6.09)
-# Planned import boundary: src/ex04/services/comparison/graph_diff/
+# graph_diff/ package (implemented — T6.09)
+# Import boundary: src/ex04/services/comparison/graph_diff/
 # Modules: __init__.py, models.py, canonicalize.py, differ.py, community_matcher.py, renderer.py
-# Operates on GraphReader/GraphData — does not load raw JSON independently
-def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
-def render_graph_diff(diff: GraphDiff, output_dir: Path) -> tuple[Path, Path]: ...  # (json, md)
+# Operates on shared GraphData — does not load raw JSON independently
+def diff_graphs(pre: GraphData | None, post: GraphData | None) -> GraphDiffResult: ...
+def render_graph_diff(diff: GraphDiffResult, output_dir: Path) -> GraphDiffArtifacts: ...
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
@@ -1856,7 +1856,7 @@ Maps every PRD requirement to its architectural location:
 | FR-6.2 Graph-guided mode | Comparison Service | `services/comparison/graph_guided_runner.py` |
 | FR-6.3 Token comparison | Comparison Service | `services/comparison/metrics.py` |
 | FR-7.1 Original extension | Agent Service | `services/agent/nodes/suspect.py` |
-| FR-7.4 Graph diff [PRD §5.7] | Comparison Service | Planned: `services/comparison/graph_diff/` package (T6.09) |
+| FR-7.4 Graph diff [PRD §5.7] | Comparison Service | `services/comparison/graph_diff/` package, `services/comparison/artifacts.py`, `services/comparison/report_gen.py` (T6.09 Done) |
 | FR-7.5 Orphan detection [PRD §5.7] | Analysis Service | `services/analysis/orphan_detector.py` (T7.07 Done; T6.05 closure pending) |
 | FR-7.6 Impact report [PRD §5.7] | Analysis Service | `services/analysis/patch_impact.py`, `patch_impact_bfs.py` (T7.08 Done) |
 | FR-7.7 Weakness detection [PRD §5.7] | Analysis Service | Planned: `services/analysis/weakness_detector/` package (T4.20) |
@@ -1930,3 +1930,4 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | 1.12 | 2026-06-21 | Reconcile graph-model and remaining-task contracts: add T4.19a enrichment prerequisite; replace GraphReader mutable signatures with immutable tuple/Mapping forms; add EdgeDirection enum and from_path; WeaknessDetector consumes GraphReader not raw GraphData; naïve-runner bounded-navigation wording; self-grade ERROR/BLOCKED cap semantics cross-reference; full prompt-log entry for prior session; sync header versions and dates. Traceability: [PRD §5.7 FR-7.7], [PLAN ADR-007], [TODO T4.19, T4.20].
 | 1.13 | 2026-06-21 | Finalize remaining-task documentation consistency: update parent PRD reference to v1.03; fix revision-history ordering (1.11/1.12 were out of order). Traceability: [PRD v1.03].
 | 1.14 | 2026-06-21 | Wave 1 implementation complete: ADR-007 (GraphReader) and ADR-008 (parity) now implemented. Update ADR-007 status. Evidence: src/ex04/shared/types_graph_enums.py, src/ex04/services/graph/reader.py, src/ex04/services/comparison/call_service.py, prompt_builder.py, parity.py, context_bundle.py. Commits b078da9, 5011543, 25b1c2d, d63d13f. |
+| 1.15 | 2026-06-21 | Wave 2 implementation complete: T6.09 graph-diff package now implemented under the comparison service boundary with typed result/status models, deterministic GraphData diffing, community membership matching, report rendering, manifest hash/path integration, and comparison-report fallback semantics. Traceability: [PRD §5.7 FR-7.4], [PRD-CE §Graph-Diff Report Integration], [PRD-AP §Artifact Layout], [TODO T6.09]. |

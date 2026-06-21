@@ -34,7 +34,7 @@ Maps every PRD requirement to its architectural location:
 | FR-6.2 Graph-guided mode | Comparison Service | `services/comparison/graph_guided_runner.py` |
 | FR-6.3 Token comparison | Comparison Service | `services/comparison/metrics.py` |
 | FR-7.1 Original extension | Agent Service | `services/agent/nodes/suspect.py` |
-| FR-7.4 Graph diff [PRD §5.7] | Comparison Service | Planned: `services/comparison/graph_diff/` package (T6.09) |
+| FR-7.4 Graph diff [PRD §5.7] | Comparison Service | `services/comparison/graph_diff/` package, `services/comparison/artifacts.py`, `services/comparison/report_gen.py` (T6.09 Done) |
 | FR-7.5 Orphan detection [PRD §5.7] | Analysis Service | `services/analysis/orphan_detector.py` (T7.07 Done; T6.05 closure pending) |
 | FR-7.6 Impact report [PRD §5.7] | Analysis Service | `services/analysis/patch_impact.py`, `patch_impact_bfs.py` (T7.08 Done) |
 | FR-7.7 Weakness detection [PRD §5.7] | Analysis Service | Planned: `services/analysis/weakness_detector/` package (T4.20) |

@@ -251,17 +251,17 @@ uv run pytest tests/unit/services/comparison/test_fairness.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 5th of 6 remaining tasks (after T4.19 GraphReader) |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD §5.7 FR-7.4], [PRD-CE §Graph-Diff Report Integration], [PRD-AP §Artifact Layout] |
-| **Depends On** | T4.19 GraphReader (operates on GraphReader/GraphData, not raw JSON) |
+| **Depends On** | T4.19 graph identity/parser enrichment (operates on shared `GraphData`, not raw JSON) |
 | **Estimate** | 90 min |
 
-**Purpose**: Produce a full typed pre/post structural comparison of graph entities, relationships, and communities. The diff operates on `GraphReader`/`GraphData` — it must not load raw JSON independently.
+**Purpose**: Produce a full typed pre/post structural comparison of graph entities, relationships, and communities. The diff operates on shared `GraphData` snapshots — it must not load raw JSON independently.
 
-**Planned package**: `src/ex04/services/comparison/graph_diff/`
+**Implemented package**: `src/ex04/services/comparison/graph_diff/`
 
 ```
 __init__.py
@@ -312,7 +312,7 @@ The comparison token metrics remain available regardless of graph-diff availabil
 **Implementation subtasks**:
 1. Create `models.py` with all typed change models and `PostGraphStatus`.
 2. Create `canonicalize.py` for stable entity and relationship identity normalization.
-3. Create `differ.py` — `GraphDiffer` consuming two `GraphData` objects via `GraphReader`.
+3. Create `differ.py` — `GraphDiffer` consuming two `GraphData` objects without raw JSON parsing.
 4. Create `community_matcher.py` — Jaccard-based community matching with tie-breaking.
 5. Create `renderer.py` — JSON and Markdown rendering with provenance fields.
 6. Wire into comparison service to optionally include diff when graph snapshots available.
@@ -331,19 +331,19 @@ The comparison token metrics remain available regardless of graph-diff availabil
 - Do not load raw JSON graphs independently (always go through GraphReader/GraphData).
 - Do not block comparison report on graph-diff failure.
 
-**Definition of Done** (T6.09 is Done only when):
-- [ ] Entities, relationships, and communities receive complete classifications.
-- [ ] Stable identity and change semantics are implemented.
-- [ ] Community matching does not depend on raw IDs.
-- [ ] Missing/blocked/invalid post-graph states are typed and rendered honestly.
-- [ ] JSON and Markdown artifacts are persisted and hashed.
-- [ ] Comparison results remain available when graph diff is unavailable.
-- [ ] Unit, rendering, artifact, and integration tests pass.
+**Definition of Done**:
+- [x] Entities, relationships, and communities receive complete classifications.
+- [x] Stable identity and change semantics are implemented.
+- [x] Community matching does not depend on raw IDs.
+- [x] Missing/blocked/invalid post-graph states are typed and rendered honestly.
+- [x] JSON and Markdown artifacts are persisted and hashed.
+- [x] Comparison results remain available when graph diff is unavailable.
+- [x] Unit, rendering, artifact, and integration tests pass.
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py -v
+uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py tests/unit/services/comparison/test_comparison_service.py -v
 ```
 
 ---

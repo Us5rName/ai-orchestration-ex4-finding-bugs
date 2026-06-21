@@ -125,7 +125,7 @@ class ComparisonService(ComparisonServiceInterface):
             limitations=naive.limitations + guided.limitations,
         )
         if persist:
-            return persist_outcome(outcome, request, naive_trace, guided_trace)
+            return persist_outcome(outcome, request, naive_trace, guided_trace, graph_data, None)
         return outcome
 
     def _legacy_report(self, outcome: ComparisonOutcome) -> ComparisonReport:
