@@ -1,6 +1,11 @@
 """Typed graph-diff reporting for comparison runs."""
 
-from ex04.services.comparison.graph_diff.differ import GraphDiffer, diff_graphs
+from ex04.services.comparison.graph_diff.differ import (
+    GraphDiffer,
+    diff_graph_data,
+    diff_graphs,
+    diff_readers,
+)
 from ex04.services.comparison.graph_diff.models import (
     CommunityChange,
     CommunityChangeType,
@@ -8,6 +13,7 @@ from ex04.services.comparison.graph_diff.models import (
     EntityChangeType,
     GraphDiffArtifacts,
     GraphDiffResult,
+    GraphSnapshotRef,
     PostGraphStatus,
     RelationshipChange,
     RelationshipChangeType,
@@ -23,10 +29,13 @@ __all__ = [
     "GraphDiffer",
     "GraphDiffArtifacts",
     "GraphDiffResult",
+    "GraphSnapshotRef",
     "PostGraphStatus",
     "RelationshipChange",
     "RelationshipChangeType",
     "RelationshipIdentity",
+    "diff_graph_data",
     "diff_graphs",
+    "diff_readers",
     "render_graph_diff",
 ]

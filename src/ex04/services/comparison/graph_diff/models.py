@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import cast
+
+type JsonValue = str | int | float | bool | None | tuple[JsonValue, ...] | tuple[tuple[str, JsonValue], ...]
+type FrozenObject = tuple[tuple[str, JsonValue], ...]
 
 
 class PostGraphStatus(Enum):
-    """Availability state for the post-fix graph snapshot."""
-
     AVAILABLE = "available"
     UNCHANGED = "unchanged"
     BLOCKED = "blocked"
@@ -19,8 +20,6 @@ class PostGraphStatus(Enum):
 
 
 class EntityChangeType(Enum):
-    """Entity-level diff classification."""
-
     ADDED = "added"
     REMOVED = "removed"
     CHANGED = "changed"
@@ -28,8 +27,6 @@ class EntityChangeType(Enum):
 
 
 class RelationshipChangeType(Enum):
-    """Relationship-level diff classification."""
-
     ADDED = "added"
     REMOVED = "removed"
     CHANGED = "changed"
@@ -37,25 +34,46 @@ class RelationshipChangeType(Enum):
 
 
 class CommunityChangeType(Enum):
-    """Community-level diff classification."""
-
     PRESERVED = "preserved"
     EXPANDED = "expanded"
     CONTRACTED = "contracted"
     SPLIT = "split"
     MERGED = "merged"
+    REORGANIZED = "reorganized"
     ADDED = "added"
     REMOVED = "removed"
 
 
 @dataclass(frozen=True, slots=True)
+class FieldChange:
+    """One semantic field-level change."""
+
+    field_name: str
+    before: JsonValue
+    after: JsonValue
+
+
+@dataclass(frozen=True, slots=True)
 class RelationshipIdentity:
-    """Stable relationship identity independent of non-identity attributes."""
+    """Stable relationship identity with optional parallel discriminator."""
 
     source_id: str
     target_id: str
     rel_type: str
     direction: str = "directed"
+    parallel_key: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class GraphSnapshotRef:
+    """Portable graph snapshot provenance."""
+
+    portable_path: str = ""
+    sha256: str = ""
+    schema_version: str = ""
+    entity_count: int = 0
+    relationship_count: int = 0
+    community_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,8 +82,9 @@ class EntityChange:
 
     entity_id: str
     change: EntityChangeType
-    before: dict[str, Any] = field(default_factory=dict)
-    after: dict[str, Any] = field(default_factory=dict)
+    before: FrozenObject = ()
+    after: FrozenObject = ()
+    field_changes: tuple[FieldChange, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,8 +93,9 @@ class RelationshipChange:
 
     identity: RelationshipIdentity
     change: RelationshipChangeType
-    before: dict[str, Any] = field(default_factory=dict)
-    after: dict[str, Any] = field(default_factory=dict)
+    before: FrozenObject = ()
+    after: FrozenObject = ()
+    field_changes: tuple[FieldChange, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,14 +115,17 @@ class GraphDiffResult:
     """Complete immutable graph-diff result."""
 
     status: PostGraphStatus
+    pre_snapshot: GraphSnapshotRef = GraphSnapshotRef()
+    post_snapshot: GraphSnapshotRef = GraphSnapshotRef()
     entity_changes: tuple[EntityChange, ...] = ()
     relationship_changes: tuple[RelationshipChange, ...] = ()
     community_changes: tuple[CommunityChange, ...] = ()
+    limitations: tuple[str, ...] = ("Structural graph change is not proof of correctness.",)
     error_detail: str = ""
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, object]:
         """Return canonical JSON-serializable data."""
-        return _normalize(asdict(self))
+        return cast(dict[str, object], _normalize(asdict(self)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,7 +138,7 @@ class GraphDiffArtifacts:
     markdown_hash: str
 
 
-def _normalize(value: Any) -> Any:
+def _normalize(value: object) -> object:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, Path):
