@@ -253,7 +253,7 @@ report = sdk.analyze_patch_impact(graph_data, ["process_data"], max_depth=3)
 | FR-7.6 | Patch-impact | `analysis/patch_impact.py` | `test_patch_impact.py` | 10 tests | Complete |
 | PRD-CE | Correctness gate | `comparison/correctness_gate.py` | `test_correctness_gate.py` | 8 tests | Complete |
 | PRD-AP | Artifact provenance | `shared/artifact_store.py` | `test_artifact_store.py` | 12 tests | Complete |
-| NFR-1 | Coverage >= 85% | Full suite | `pytest --cov-fail-under=85` | 95.46% | Complete |
+| NFR-1 | Coverage >= 85% | Full suite | `pytest --cov-fail-under=85` | 95.35% | Complete |
 | NFR-2 | Ruff = 0 | All sources | `ruff check .` | 0 violations | Complete |
 | NFR-3 | Max 150 lines | All sources | `validate_repo.py` | Passes | Complete |
 | G1 | Graphify extraction | `services/graph/runner.py` | T7.01 | **Complete** (code-only, keyless) | See artifacts/pre_fix/ |
@@ -342,6 +342,31 @@ find src -name "*.py" | xargs wc -l | awk '$1 > 150 {print}'  # file size check
 **Submission readiness**: **Not fully submission-ready**; live evidence (T7.01-T7.04) is
 blocked. All keyless P0 requirements are complete. Blocked live operations are
 explicitly documented rather than fabricated.
+
+---
+
+## Controlled Comparison Semantics
+
+The Phase 6-8 production path uses `ComparisonRequest` as the canonical
+experiment contract. Every controlled field is classified for fairness and is
+included in a full 64-character SHA-256 controlled configuration hash. The
+comparison service derives distinct naive and graph-guided requests and checks
+them before either mode can invoke a provider.
+
+Both runners share the same cumulative `BudgetLedger`, deterministic context
+token estimator, and JSONL trace recorder. Parsed structured output with valid
+source anchors is only a `grounded_candidate`; it is not counted as verified
+correctness unless the deterministic correctness gate passes.
+
+Production comparison artifacts are written under immutable run directories:
+`artifacts/runs/<run-id>/traces/investigation.jsonl`,
+`artifacts/manifests/<run-id>_manifest.json`, and
+`artifacts/runs/<base-run-id>/reports/comparison.{json,md}`. Manifests and
+reports preserve full SHA-256 hashes and keep token telemetry numeric.
+
+Live provider-backed investigation, real token telemetry, and billed cost remain
+blocked until bounded credentials are available. Fixture and deterministic
+evidence are not presented as live evidence.
 
 ---
 

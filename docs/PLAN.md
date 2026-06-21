@@ -1688,7 +1688,7 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | P7-R01 | Correctness Gate | Implement real `_check_prohibited_files`, `_check_tests_not_deleted`, `_check_assertions_not_weakened` (remove defaulted-True policy fields) | `comparison/correctness_gate.py` |
 | P7-R02 | Configuration | Add versioned `config/pricing.json`; wire cost lookup into `ComparisonService` | `config/pricing.json` (new) |
 | P7-R03 | Manifests | Add `shared_config_hash`, `strategy_hash`, schema/pricing/repo_commit version fields to `RunManifest` | `shared/types_experiment.py` |
-| P8-R01 | CI | Use `astral-sh/setup-uv@v5`; add mypy step; make docs-sync fatal | `.github/workflows/ci.yml` |
+| P8-R01 | CI | Use SHA-pinned Node 24-compatible actions (`actions/checkout` v5.0.0, `astral-sh/setup-uv` v8.2.0); add mypy step; make docs-sync fatal | `.github/workflows/ci.yml` |
 | P8-R02 | Validation | Add manifest↔run linkage, provenance key check, direct-provider-import boundary, wiki-dir presence checks | `scripts/validate_repo.py` |
 | P8-R03 | Documentation | Add stable repair task IDs to TODO/PLAN before implementation | `docs/TODO.md`, `docs/PLAN.md` |
 | P6-R10 | Contract | Complete and validate the canonical comparison request/result contract | `src/ex04/shared/types_request.py`, `src/ex04/shared/types_results.py` |
@@ -1721,3 +1721,4 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
 | 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
+| 1.10 | 2026-06-21 | Reconcile production comparison semantics: canonical request, shared budgets/traces, grounded-candidate vs verified status, full config hashes, strict correctness-gate verdicts, and immutable report/manifest layout. |

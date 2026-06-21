@@ -81,12 +81,14 @@ from ex04.shared.types_results import InvestigationResult
 # Build fixture results matching the manifests
 naive_r = InvestigationResult(
     files_read=naive_m["files_read"], iterations=naive_m["iterations"],
-    parser_status="parsed_ok", gate_status="pass_without_gate",
+    parser_status="parsed_ok", gate_status="not_requested",
+    verification_status="unverified",
     evidence_class="fixture",
 )
 guided_r = InvestigationResult(
     files_read=guided_m["files_read"], iterations=guided_m["iterations"],
-    parser_status="parsed_ok", gate_status="pass_without_gate",
+    parser_status="parsed_ok", gate_status="not_requested",
+    verification_status="unverified",
     evidence_class="fixture",
 )
 

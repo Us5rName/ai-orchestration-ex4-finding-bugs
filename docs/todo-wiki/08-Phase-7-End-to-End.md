@@ -100,14 +100,14 @@ cat reports/bug_analysis.md
 
 - [ ] Both naive and graph-guided runs complete
 - [ ] `ComparisonMetrics` shows token savings ≥ 30%
-- [ ] `reports/token_comparison.md` generated
+- [ ] `artifacts/runs/<run-id>/reports/comparison.md` generated
 - [ ] Report includes side-by-side metrics table
 
 **Independent Verification**:
 
 ```bash
 uv run python -c "from ex04.sdk import Ex04SDK; sdk = Ex04SDK.from_config('config/setup.json'); r = sdk.run_comparison('...'); print(r)"
-cat reports/token_comparison.md
+find artifacts/runs -path "*/reports/comparison.md" -print
 ```
 
 ---

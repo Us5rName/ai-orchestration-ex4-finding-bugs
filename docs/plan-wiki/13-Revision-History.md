@@ -16,3 +16,4 @@
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
 | 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
+| 1.10 | 2026-06-21 | Reconcile production comparison semantics: canonical request, shared budgets/traces, grounded-candidate vs verified status, full config hashes, strict correctness-gate verdicts, and immutable report/manifest layout. |
