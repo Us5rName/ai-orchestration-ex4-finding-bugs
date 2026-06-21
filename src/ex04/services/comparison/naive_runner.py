@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-import os
-import re
 import time
 from collections.abc import Sequence
 from pathlib import Path
 
 from ex04.providers.interface import Message
 from ex04.services.comparison._output_parser import JSON_SCHEMA, parse_json_response
-from ex04.services.comparison.anchors import validate_evidence_anchors
 from ex04.services.comparison.budget import (
     BudgetExceededError,
     BudgetLedger,
     estimate_context_tokens,
+)
+from ex04.services.comparison.naive_helpers import (
+    anchored_evidence,
+    extract_keywords,
+    legacy_request,
+    parsed_str,
 )
 from ex04.services.comparison.trace import TraceRecorder
 from ex04.shared.gatekeeper import GatekeeperInterface
@@ -22,34 +25,6 @@ from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
 _parse_json_response = parse_json_response
-
-
-def _extract_keywords(bug_report: str) -> set[str]:
-    words = re.findall(r"\b[a-zA-Z_]\w{2,}\b", bug_report.lower())
-    return {
-        word
-        for word in words
-        if word not in {"the", "and", "for", "with", "that", "this"}
-    }
-
-
-def _legacy_request(bug_report: str, runner: NaiveRunner) -> ComparisonRequest:
-    return ComparisonRequest(
-        bug_report=bug_report,
-        provider=runner.provider,
-        run_id="legacy-naive",
-        max_files=runner.max_files,
-        max_bytes=runner.max_bytes,
-        timeout_seconds=int(runner.timeout_seconds),
-    )
-
-
-def _snapshot_root(files: Sequence[Path], request: ComparisonRequest) -> Path:
-    if request.target_snapshot_path:
-        return Path(request.target_snapshot_path)
-    if not files:
-        return Path(".")
-    return Path(os.path.commonpath([str(p.parent.resolve()) for p in files]))
 
 
 class NaiveRunner:
@@ -78,7 +53,17 @@ class NaiveRunner:
         trace: TraceRecorder | None = None,
     ) -> InvestigationResult:
         """Navigate source files, call provider once, and parse grounded output."""
-        req = _legacy_request(request, self) if isinstance(request, str) else request
+        req = (
+            legacy_request(
+                request,
+                provider=self.provider,
+                max_files=self.max_files,
+                max_bytes=self.max_bytes,
+                timeout_seconds=self.timeout_seconds,
+            )
+            if isinstance(request, str)
+            else request
+        )
         req.validate()
         ledger = budget or BudgetLedger.from_request(req)
         recorder = trace or TraceRecorder(req.run_id or "naive")
@@ -86,16 +71,12 @@ class NaiveRunner:
         context, limitations = self._build_context(req, source_files, ledger, recorder)
         response = self._call_provider(req, context, ledger, recorder)
         status, parsed = parse_json_response(response.text)
-        evidence, anchor_lims = (
-            validate_evidence_anchors(parsed, _snapshot_root(source_files, req))
-            if parsed
-            else ([], [])
-        )
+        evidence, anchor_lims = anchored_evidence(parsed, source_files, req)
         limitations.extend(anchor_lims)
         diagnosis = "grounded_candidate" if status == "parsed_ok" and evidence else "unverified"
-        return InvestigationResult(
-            root_cause=str(parsed.get("root_cause", "")) if parsed else "",
-            proposed_fix=str(parsed.get("patch", "")) if parsed else "",
+        result = InvestigationResult(
+            root_cause=parsed_str(parsed, "root_cause"),
+            proposed_fix=parsed_str(parsed, "patch"),
             original_problem=req.bug_report,
             files_read=ledger.files_read,
             bytes_read=ledger.bytes_read,
@@ -120,6 +101,7 @@ class NaiveRunner:
             config_hash=req.controlled_config_hash(),
             target_commit=req.target_commit,
         )
+        return result
 
     def _build_context(
         self,
@@ -128,7 +110,7 @@ class NaiveRunner:
         ledger: BudgetLedger,
         trace: TraceRecorder,
     ) -> tuple[str, list[str]]:
-        keywords = _extract_keywords(req.bug_report)
+        keywords = extract_keywords(req.bug_report)
         parts: list[str] = []
         limitations: list[str] = []
         trace.record("tree_list", ledger, file_count=len(files))

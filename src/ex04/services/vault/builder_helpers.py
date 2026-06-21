@@ -1,11 +1,4 @@
-"""Vault Builder helpers — markdown content generation utilities.
-
-Extracted from builder.py to keep the main module under 150 lines.
-Provides functions for generating entity notes, index, and hot area
-markdown content for Obsidian vaults.
-
-Implementation: **Phase 4** (T4.04, extracted)
-"""
+"""Vault Builder markdown rendering helpers."""
 
 from __future__ import annotations
 
@@ -25,16 +18,7 @@ def build_entity_content(
     relations: dict[str, list[str]],
     entity_names: set[str],
 ) -> str:
-    """Build markdown content for a single entity note.
-
-    Args:
-        entity: The entity to write a note for.
-        relations: Map of entity names to related entity names.
-        entity_names: Set of all entity names for wikilink resolution.
-
-    Returns:
-        Markdown content string for the entity note.
-    """
+    """Build markdown content for a single entity note."""
     lines = [
         "---",
         f"title: {yaml_double_quote(entity.name)}",
@@ -66,14 +50,7 @@ def _related_links(related: list[str], entity_names: set[str]) -> list[str]:
 
 
 def build_index_content(graph_data: GraphData) -> str:
-    """Build markdown content for the vault index.md.
-
-    Args:
-        graph_data: Graph data for generating navigation.
-
-    Returns:
-        Markdown content string for the index.
-    """
+    """Build markdown content for the vault index.md."""
     lines = [
         "# Graph Index",
         "",
@@ -109,26 +86,12 @@ def build_index_content(graph_data: GraphData) -> str:
 
 
 def _build_community_section(comm: Community) -> list[str]:
-    """Build markdown lines for a single community section.
-
-    Args:
-        comm: The community to render.
-
-    Returns:
-        List of markdown lines for this community.
-    """
+    """Build markdown lines for a single community section."""
     return [f"### {comm.name}", *[f"- {_note_link(ent)}" for ent in comm.entities], ""]
 
 
 def build_hot_content(graph_data: GraphData) -> str:
-    """Build markdown content for the vault hot.md.
-
-    Args:
-        graph_data: Graph data for generating hot area content.
-
-    Returns:
-        Markdown content string for the hot area.
-    """
+    """Build markdown content for the vault hot.md."""
     lines = ["# Hot Area", "", "Auto-generated bug focus area.", ""]
 
     if graph_data.communities:
