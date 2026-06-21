@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import cast
+from typing import Any
 
 SECTION_MARKER = "<!-- phase7-investigation-summary -->"
 
@@ -24,7 +24,7 @@ def update_phase7_vault(vault_path: Path, investigation_result_path: Path) -> di
     return paths
 
 
-def _investigation_note(result: dict[str, object]) -> str:
+def _investigation_note(result: dict[str, Any]) -> str:
     return "\n".join([
         "# Phase 7 Investigation",
         "",
@@ -41,7 +41,7 @@ def _investigation_note(result: dict[str, object]) -> str:
     ])
 
 
-def _before_after_note(result: dict[str, object]) -> str:
+def _before_after_note(result: dict[str, Any]) -> str:
     return "\n".join([
         "# Phase 7 Before/After",
         "",
@@ -55,7 +55,7 @@ def _before_after_note(result: dict[str, object]) -> str:
         "",
         "## Verification",
         "",
-        f"- Passed: `{cast(dict[str, object], result.get('test_results') or {}).get('passed')}`",
+        f"- Passed: `{result.get('test_results', {}).get('passed')}`",
         "- Report: `reports/bug_analysis.md`",
         "",
     ])

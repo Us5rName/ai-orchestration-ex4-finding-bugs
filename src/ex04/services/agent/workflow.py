@@ -29,7 +29,7 @@ _DEFAULT_MAX_ITERATIONS = 5
 NODE_SEQUENCE = ("knowledge", "analysis", "suspect", "inspect", "rootcause", "fix", "verify")
 
 
-def build_nodes(deps: NodeDeps) -> dict[str, Any]:
+def build_nodes(deps: NodeDeps) -> dict[str, Any]:  # dict[str, Any]: LangGraph's add_node overloads require _Node[T], not plain Callable
     """Build workflow nodes from the shared dependency bundle."""
     return {
         "knowledge": KnowledgeLoadNode(

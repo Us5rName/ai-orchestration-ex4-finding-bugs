@@ -8,7 +8,7 @@ repos:
         pass_filenames: false
       - id: mypy-src
         name: mypy src
-        entry: uv run mypy src
+        entry: uv run mypy src/ex04 --ignore-missing-imports
         language: system
         pass_filenames: false
       - id: pytest

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
+from typing import overload  # noqa: I001
 
 from ex04.services.comparison.artifacts import persist_outcome
 from ex04.services.comparison.fairness import FairnessEnforcer
@@ -22,8 +23,6 @@ from ex04.shared.types_experiment import ComparisonOutcome, SignedMetrics
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
-_to_run_metrics = result_to_run_metrics
-
 
 class ComparisonService(ComparisonServiceInterface):
     """Run comparison approaches with pre-call fairness enforcement."""
@@ -38,6 +37,16 @@ class ComparisonService(ComparisonServiceInterface):
         self._reports = ReportGenerator()
         self.last_signed_metrics: SignedMetrics | None = None
 
+    @overload
+    def run_comparison(
+        self, request: str, source_files: Sequence[Path],
+        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
+    ) -> ComparisonReport: ...
+    @overload
+    def run_comparison(
+        self, request: ComparisonRequest, source_files: Sequence[Path],
+        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
+    ) -> ComparisonOutcome: ...
     def run_comparison(
         self,
         request: ComparisonRequest | str,
@@ -83,7 +92,7 @@ class ComparisonService(ComparisonServiceInterface):
         guided: InvestigationResult,
     ) -> SignedMetrics:
         """Public signed-metrics operation for SDK delegation."""
-        return self._signed.compute(_to_run_metrics(naive), _to_run_metrics(guided))
+        return self._signed.compute(result_to_run_metrics(naive), result_to_run_metrics(guided))
 
     def _run_canonical(
         self,
@@ -104,8 +113,8 @@ class ComparisonService(ComparisonServiceInterface):
         guided = self._guided.run(guided_req, graph_data, vault_path, trace=guided_trace)
         naive.config_hash = guided.config_hash = config_hash
         self.last_signed_metrics = self._signed.compute(
-            _to_run_metrics(naive),
-            _to_run_metrics(guided),
+            result_to_run_metrics(naive),
+            result_to_run_metrics(guided),
         )
         outcome = ComparisonOutcome(
             naive_result=naive,
@@ -120,8 +129,8 @@ class ComparisonService(ComparisonServiceInterface):
         return outcome
 
     def _legacy_report(self, outcome: ComparisonOutcome) -> ComparisonReport:
-        naive_rm = _to_run_metrics(outcome.naive_result)
-        guided_rm = _to_run_metrics(outcome.guided_result)
+        naive_rm = result_to_run_metrics(outcome.naive_result)
+        guided_rm = result_to_run_metrics(outcome.guided_result)
         return self._reports.generate(self._metrics.compare(naive_rm, guided_rm))
 
 

@@ -12,7 +12,7 @@ being silently dropped; ``send`` always returns a ProviderResponse or raises.
 
 | Method | Input | Output | Phase |
 |---|---|---|---|
-| `send(provider, messages)` | str, list[dict] | ProviderResponse | P4 |
+| `send(provider, messages)` | str, list[Message] | ProviderResponse | P4 |
 | `get_call_log()` | — | list[dict] | P4 |
 | `get_queue_status()` | — | dict | P4 |
 
