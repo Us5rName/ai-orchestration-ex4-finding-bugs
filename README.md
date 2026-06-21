@@ -15,7 +15,7 @@ versus naive full-corpus reading.
 | Field | Value |
 |---|---|
 | **Central question** | Does graph-guided context selection reduce token usage compared to naive full-corpus reading? |
-| **Target** | andela/buggy-python |
+| **Target** | [andela/buggy-python](https://github.com/andela/buggy-python) |
 | **Selected bug** | `ImportError: cannot import name 'lambda_array' from 'snippets'` — `__init__.py` has all imports commented out; additional type/name bugs in `loop.py` and `io.py` |
 | **Provenance** | `artifacts/pre_fix/provenance.json` |
 | **Independent variable** | Context acquisition strategy (naive vs. graph-guided) |
