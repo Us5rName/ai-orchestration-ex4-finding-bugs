@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 SECTION_MARKER = "<!-- phase7-investigation-summary -->"
 
@@ -54,7 +55,7 @@ def _before_after_note(result: dict[str, object]) -> str:
         "",
         "## Verification",
         "",
-        f"- Passed: `{result.get('test_results', {}).get('passed')}`",
+        f"- Passed: `{cast(dict[str, object], result.get('test_results') or {}).get('passed')}`",
         "- Report: `reports/bug_analysis.md`",
         "",
     ])

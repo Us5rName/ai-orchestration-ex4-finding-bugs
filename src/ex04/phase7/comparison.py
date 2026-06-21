@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from ex04.phase7.gatekeeper import Phase7Gatekeeper
 from ex04.phase7.investigation import BUG_REPORT
@@ -40,9 +41,12 @@ def run_phase7_comparison(
         max_tool_calls=30,
         token_budget=8000,
     )
-    return ComparisonService(Phase7Gatekeeper(), "phase7").run_comparison(
-        request,
-        source_files,
-        graph_data,
-        vault_path,
+    return cast(
+        ComparisonOutcome,
+        ComparisonService(Phase7Gatekeeper(), "phase7").run_comparison(
+            request,
+            source_files,
+            graph_data,
+            vault_path,
+        ),
     )

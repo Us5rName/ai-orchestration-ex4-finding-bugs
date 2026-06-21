@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ex04.providers.interface import Message
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types_results import ProviderResponse
 
@@ -14,7 +15,7 @@ class Phase7Gatekeeper(GatekeeperInterface):
     def __init__(self) -> None:
         self._calls: list[dict[str, Any]] = []
 
-    def send(self, provider: str, messages: list[dict[str, str]]) -> ProviderResponse:
+    def send(self, provider: str, messages: list[Message]) -> ProviderResponse:
         """Return the response matching the requested agent node prompt."""
         prompt = messages[-1]["content"]
         text = _response_for(prompt)

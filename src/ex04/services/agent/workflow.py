@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -28,7 +29,7 @@ _DEFAULT_MAX_ITERATIONS = 5
 NODE_SEQUENCE = ("knowledge", "analysis", "suspect", "inspect", "rootcause", "fix", "verify")
 
 
-def build_nodes(deps: NodeDeps) -> dict[str, Callable[[AgentState], AgentState]]:
+def build_nodes(deps: NodeDeps) -> dict[str, Any]:
     """Build workflow nodes from the shared dependency bundle."""
     return {
         "knowledge": KnowledgeLoadNode(
