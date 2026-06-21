@@ -4,7 +4,7 @@
 
 [Back to Home](./Home.md)
 
-Each phase consists of **independent, verifiable tasks**. Tasks within a phase may run in parallel. Tasks between phases follow dependency order only — no task blocks another within the same phase.
+Each phase consists of **independent, verifiable tasks**. Tasks are independently verifiable and parallel by default, except where explicit task-level dependencies are documented. Tasks within a phase may run in parallel unless a task-level dependency is listed in the task definition or in [PLAN §3 Task Dependency Policy].
 
 ```mermaid
 graph LR

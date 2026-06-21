@@ -100,4 +100,27 @@ graph TD
     classDef phase8 fill:#e0e0e0,stroke:#212121
 ```
 
+### Remaining Task Dependency Order
+
+The six remaining open tasks have explicit dependencies overriding the default parallel policy:
+
+```mermaid
+graph TD
+    T402[T4.02 GraphParser - Done]
+    T402 --> T419[T4.19 GraphReader - Not Started]
+    T419 --> T420[T4.20 WeaknessDetector - Not Started]
+    T419 --> T609[T6.09 GraphDiff - Not Started]
+    T707[T7.07 OrphanDetector - Done]
+    T707 --> T605[T6.05 Orphan Closure - In Progress]
+    T419 -.->|optional reuse| T605
+    T503[T5.03 Parity Helpers - Not Started]
+    T419 --> T813[T8.13 Self-Grade - Not Started]
+    T503 --> T813
+    T420 --> T813
+    T605 --> T813
+    T609 --> T813
+```
+
+**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+
 ---

@@ -8,7 +8,9 @@
 |---|---|
 | Total tasks | 74 |
 | Done | 68 |
-| Genuinely open (unimplemented) | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
+| Open tasks | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
+| Genuinely unimplemented | 5 (T4.19, T4.20, T5.03, T6.09, T8.13) |
+| Implementation complete, closure/evidence pending | 1 (T6.05 — core OrphanDetector exists via T7.07; report persistence and closure work remain) |
 | P0 (critical) | 56 |
 | P1 (important) | 18 |
 | Phases | 8 |

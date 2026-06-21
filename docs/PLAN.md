@@ -297,6 +297,47 @@ graph TD
 
 Each module is an **independent building block** with a well-defined interface. **No module imports another module's concrete implementation** — all inter-module dependencies flow through `*Interface` abstract classes. This enables **fully parallel development**: every team member works against a stable contract while the actual implementation is built in parallel.
 
+### Task Dependency Policy
+
+Tasks are **independently verifiable and parallel by default**, except where explicit task-level dependencies are documented below.
+
+**Explicit task-level dependencies for the six remaining open tasks:**
+
+```
+T4.02 GraphParser (Done)
+        ↓
+T4.19 GraphReader (builds read-only facade over GraphParser output)
+   ┌────┴─────────────┐
+   ↓                  ↓
+T4.20              T6.09
+WeaknessDetector   Graph Diff Report
+(consumes          (operates on
+GraphReader)       GraphReader/GraphData)
+
+T5.03 Parity Helpers (independent; implemented early so final
+        ↓             comparison evidence uses fair call paths)
+final controlled-comparison evidence
+
+T7.07 OrphanDetector (Done)
+        ↓
+T6.05 closure (report persistence, README, evidence mapping)
+       After T4.19: reuse GraphReader where appropriate
+
+T4.19 + T5.03 + T4.20 + T6.05 + T6.09
+        ↓
+T8.13 Self-Grade Service
+```
+
+**Execution order for remaining tasks:**
+1. T4.19 — GraphReader (enables T4.20, T6.09, and T6.05 GraphReader integration)
+2. T5.03 — Parity Helpers (early, so all comparison evidence is fair)
+3. T4.20 — WeaknessDetector
+4. T6.05 — Orphan Detection closure
+5. T6.09 — Full Graph-Diff Comparison Report
+6. T8.13 — Self-Grade Service (last: evaluates the finalized architecture)
+
+**T8.13 is implemented last** because its rubric and checks must evaluate the finalized architecture, reports, gates, and evidence — not an intermediate state.
+
 **Contract-First Rule**: For every service `XService`, an `XServiceInterface` ABC is defined **before** implementation begins. Other modules depend only on the interface. At runtime, the SDK injects the concrete implementation.
 
 ### 3.1 Module Dependency Graph (Runtime)
@@ -519,6 +560,9 @@ class Ex04SDK:
     def reverse_engineer(self, target_path: str) -> str: ...
     def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
+    # Planned operations (not yet implemented):
+    def detect_weaknesses(self, graph_data: GraphData) -> list[WeaknessFinding]: ...  # T4.20
+    def self_grade(self, rubric_config_path: Path, output_dir: Path) -> GradeReport: ...  # T8.13
 ```
 
 `from_config()` is the concrete wiring point: it builds the Phase 4 service facades
@@ -733,8 +777,11 @@ def token_record(...) -> TokenMetrics: ...
 | `reverse_engineer.py` | Extract architectural and OOP schemas from code/graph |
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
-| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
-| `weakness_detector.py` | Planned multi-signal weakness detector over graph and source evidence |
+| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5, T7.07 Done; T6.05 closure pending) |
+| `patch_impact.py` | Patch-impact BFS traversal (FR-7.6, T7.08 Done) |
+| `patch_impact_bfs.py` | BFS helper for patch-impact traversal |
+| `patch_impact_types.py` | Typed models for impact analysis |
+| `weakness_detector/` | **Planned (T4.20)** — multi-signal weakness detector package; consumes `GraphReader` (FR-7.7) |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -782,11 +829,11 @@ class WeaknessDetector:
 | File | Responsibility |
 |---|---|
 | `interface.py` | **Contract** — `ComparisonServiceInterface` ABC (defined FIRST) |
-| `naive_runner.py` | Execute naive approach (read all raw files, no focus) |
+| `naive_runner.py` | Execute naive approach (bounded navigation over source files, no graph guidance) |
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
-| `graph_diff.py` | Planned pre/post graph snapshot diff for comparison reports |
+| `graph_diff/` | **Planned (T6.09)** — pre/post graph snapshot diff package; operates on `GraphReader`/`GraphData` |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -796,7 +843,7 @@ class WeaknessDetector:
 
 ```python
 class NaiveRunner:
-    """Run naive baseline: dump all code, no graph guidance."""
+    """Run naive baseline: bounded navigation over source files, no graph guidance."""
     def run(self, bug_report: str, source_files: list[Path]) -> RunMetrics: ...
 
 class GraphGuidedRunner:
@@ -811,9 +858,12 @@ class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
 
-# graph_diff.py (planned)
+# graph_diff/ package (planned — T6.09)
+# Planned import boundary: src/ex04/services/comparison/graph_diff/
+# Modules: __init__.py, models.py, canonicalize.py, differ.py, community_matcher.py, renderer.py
+# Operates on GraphReader/GraphData — does not load raw JSON independently
 def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
-def render_graph_diff(diff: GraphDiff) -> str: ...
+def render_graph_diff(diff: GraphDiff, output_dir: Path) -> tuple[Path, Path]: ...  # (json, md)
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
@@ -1031,21 +1081,43 @@ class GraphData:
 | Attribute | Value |
 |---|---|
 | **Path** | `src/ex04/services/self_grade/` |
-| **Responsibility** | Assemble structural checks, configured gates, and rubric scoring |
-| **PRD Mapping** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Responsibility** | Assemble structural checks, configured gates, and evidence-derived rubric scoring |
+| **PRD Mapping** | [PRD §5.8 FR-8.1–FR-8.4], [PRD-SG] |
+| **Status** | Planned — T8.13 |
 
 **Planned sub-modules**:
 
 | File | Responsibility |
 |---|---|
-| `models.py` | Typed check result and grade report dataclasses |
-| `checks.py` | Deterministic structural checks |
-| `grader.py` | Gate orchestration and rubric score calculation |
+| `models.py` | Typed check result (`CheckResult`, `GradeReport`) and status enum (`PASS`, `FAIL`, `ERROR`, `SKIPPED`, `BLOCKED`) |
+| `config.py` | Load and validate rubric and gate configuration from JSON |
+| `runner.py` | `GateRunnerInterface` ABC and `SubprocessGateRunner` concrete implementation |
+| `grader.py` | Gate orchestration; evidence-derived score calculation; mandatory-gate cap application |
+| `renderer.py` | Render canonical JSON report to Markdown |
 
 ```python
 class SelfGradeService:
-    """Run configured self-assessment gates and return a typed grade report."""
-    def grade(self) -> GradeReport: ...
+    """Run configured self-assessment gates and return a typed grade report.
+
+    Configuration defines max_points and policies — never pre-awarded scores.
+    Score calculation: check results → earned points → raw score → mandatory cap → final score.
+    """
+    def __init__(self, config: RubricConfig, gate_runner: GateRunnerInterface) -> None: ...
+    def grade(self, working_dir: Path | None = None) -> GradeReport: ...
+
+class GateRunnerInterface(ABC):
+    """Injectable gate executor — subprocess in production, mock in tests."""
+    @abstractmethod
+    def run(self, command: list[str], timeout: int, working_dir: Path) -> GateRunResult: ...
+```
+
+**Planned SDK exposure:**
+```python
+Ex04SDK.self_grade(
+    rubric_config_path: Path,
+    output_dir: Path,
+    gate_runner: GateRunnerInterface | None = None,
+) -> GradeReport
 ```
 
 ---
@@ -1185,6 +1257,42 @@ sequenceDiagram
 | **Decision** | Treat the vault as a plain Markdown directory. Build notes programmatically as `.md` files with `[[wikilinks]]`. |
 | **Rationale** | No runtime dependency on Obsidian software. The vault is readable by Obsidian when opened, but our system only needs to create and read Markdown files. Simpler, more portable, and fully testable. |
 | **Consequences** | Cannot use Obsidian's graph view API or plugin ecosystem. Navigation is done by parsing Markdown links, not querying an Obsidian API. |
+
+### ADR-007: GraphReader as Canonical Graph Read/Query Boundary
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted — planned implementation T4.19 |
+| **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Context** | Multiple consumers (graph analysis, weakness detection, orphan analysis, patch-impact analysis, graph-guided context construction, graph diff) each independently query graph data. Without a shared facade, each consumer rebuilds degree maps, adjacency indexes, and community groupings — duplicating computation and creating divergent behavior. |
+| **Decision** | `GraphReader` is the canonical typed read-only boundary over parsed `GraphData`. All consumers must use `GraphReader` rather than rebuilding graph indexes independently. `GraphReader` accepts an existing `GraphData` directly, or a path-based constructor that delegates parsing to `GraphParser`. |
+| **Rationale** | Centralizes index construction; eliminates redundant computation; ensures deterministic ordering and tie-breaking across all consumers; prevents a second raw-JSON graph parsing path. |
+| **Consequences** | Every graph consumer must be updated to use `GraphReader` rather than accessing `GraphData` directly. `GraphReader` must preserve relationship direction, type, and parallel relationships. |
+| **Rejected alternatives** | (a) Each consumer builds its own indexes — rejected because of duplication and divergent behavior. (b) `GraphAnalyzer` as the query boundary — rejected because `GraphAnalyzer` performs higher-level analysis; a typed read boundary is a separate concern. |
+
+### ADR-008: Experimental Parity Isolates Context Acquisition as Controlled Treatment
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted |
+| **PRD Reference** | [PRD §5.6 FR-6.4], [PRD-CE §Controlled vs. Treatment] |
+| **Context** | The comparison experiment must be scientifically defensible. Both modes must be identical in every respect except the variable being measured. Without explicit parity enforcement, subtle differences in provider configuration, retry policy, or telemetry conversion can contaminate results. |
+| **Decision** | The context-acquisition strategy (and its resulting `ContextBundle`) is the sole intentional experimental treatment. All other execution parameters are controlled via a shared `InstrumentedCallService` and a deterministic `ParityFingerprint`. Comparison execution rejects mismatched fingerprints before provider calls. |
+| **Rationale** | Makes token savings attributable only to the context strategy — not to differences in prompts, retry behavior, or telemetry recording. Enables falsifiability of the token-efficiency claim. |
+| **Consequences** | Both modes must share the same `ApiGatekeeper` boundary, retry policy, budget ledger, trace event factory, correctness gate, and artifact schema. The parity fingerprint must be checked before provider calls. |
+| **Rejected alternatives** | Claim parity merely because both paths call the same provider — rejected because subtle differences in system instructions, generation parameters, or retry behavior invalidate the comparison. |
+
+### ADR-009: Self-Grade Scores Are Evidence-Derived and Subject to Mandatory Caps
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted |
+| **PRD Reference** | [PRD §5.8 FR-8.2, FR-8.3], [PRD-SG §Score Calculation] |
+| **Context** | A self-grade service could either (a) use pre-configured earned scores, or (b) derive scores from actual check results at run time. Option (a) allows a grade to remain high even when mandatory gates fail. |
+| **Decision** | Rubric configuration defines maximum points and policies only — never pre-awarded earned scores. Earned points are computed from PASS/FAIL check results at run time. Mandatory-gate failures apply a score cap that reduces the final score below the raw rubric score. |
+| **Rationale** | Makes the grade truthful and reproducible. A failing mandatory gate (e.g., correctness check) should visibly reduce the grade. Pre-configured scores are static; they cannot reflect the actual state of the repository. |
+| **Consequences** | Configuration must be validated to reject `earned_points` or `awarded_points` fields. The score calculation pipeline is: check results → earned points → raw score → mandatory cap → final score. |
+| **Rejected alternatives** | Pre-configured earned scores — explicitly rejected because the grade can remain high even when mandatory gates fail, making the self-assessment meaningless. |
 
 ---
 
@@ -1705,9 +1813,11 @@ Maps every PRD requirement to its architectural location:
 | FR-6.2 Graph-guided mode | Comparison Service | `services/comparison/graph_guided_runner.py` |
 | FR-6.3 Token comparison | Comparison Service | `services/comparison/metrics.py` |
 | FR-7.1 Original extension | Agent Service | `services/agent/nodes/suspect.py` |
-| FR-7.4 Dynamic diff [PRD §5.7] | Comparison Service | `services/comparison/diff_gen.py` |
-| FR-7.5 Orphan detection [PRD §5.7] | Analysis Service | `services/analysis/orphan_detector.py` |
-| FR-7.6 Impact report [PRD §5.7] | Analysis Service | `services/analysis/impact_reporter.py` |
+| FR-7.4 Graph diff [PRD §5.7] | Comparison Service | Planned: `services/comparison/graph_diff/` package (T6.09) |
+| FR-7.5 Orphan detection [PRD §5.7] | Analysis Service | `services/analysis/orphan_detector.py` (T7.07 Done; T6.05 closure pending) |
+| FR-7.6 Impact report [PRD §5.7] | Analysis Service | `services/analysis/patch_impact.py`, `patch_impact_bfs.py` (T7.08 Done) |
+| FR-7.7 Weakness detection [PRD §5.7] | Analysis Service | Planned: `services/analysis/weakness_detector/` package (T4.20) |
+| FR-8.1–FR-8.4 Self-grade [PRD §5.8] | Self-Grade Service | Planned: `services/self_grade/` (T8.13) |
 | NFR-1 85% coverage | All | `tests/` |
 | NFR-2 Zero Ruff | All | `pyproject.toml` |
 | NFR-3 150-line limit | All | All files ≤ 150 lines |
@@ -1770,7 +1880,7 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | 1.05 | 2026-06-20 | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
 | 1.06 | 2026-06-20 | Phase 4/5 integration: document compare_target(), generate_report(), identify_patterns(); add _comparison_inputs.py helper; document cumulative files_read and fix_diff in AgentState; add architecture boundary rules table; update CLI command syntax in §8; update AnalysisServiceInterface.identify_patterns(). Traceability: [PRD FR-6.1], [PLAN §3.2 SDK Module], [PLAN §3.5 Agent Service]. |
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
-| 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
 | 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
-| 1.10 | 2026-06-21 | Add planned architecture entries for typed graph reader, weakness detector, agent workflow parity helpers, graph-diff reporting, shared graph operations, and self-grade service. |
-| 1.10 | 2026-06-21 | Reconcile production comparison semantics: canonical request, shared budgets/traces, grounded-candidate vs verified status, full config hashes, strict correctness-gate verdicts, and immutable report/manifest layout. |
+| 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
+| 1.10 | 2026-06-21 | Add planned architecture entries for typed graph reader, weakness detector, agent workflow parity helpers, graph-diff reporting, shared graph operations, and self-grade service; reconcile production comparison semantics. |
+| 1.11 | 2026-06-21 | Define remaining-task contracts and dependency plan: add explicit task dependency graph (ADR-007/008/009); update task dependency policy; add GraphReader as canonical graph read boundary; expand self-grade planned modules; replace stale diff_gen.py/impact_reporter.py paths with actual implementation paths; update NaiveRunner description (bounded navigation, not full dump); add planned detect_weaknesses/self_grade SDK operations; add three ADRs. Traceability: [PRD §5.6 FR-6.4], [PRD §5.8 FR-8.1–FR-8.4], [PRD-GGI], [PRD-SG]. |

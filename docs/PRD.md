@@ -240,6 +240,7 @@ The system will:
 | FR-6.1 | Implement a naive baseline where the agent works on many raw files without sufficient focus (HW [§5.5]) | Must |
 | FR-6.2 | Implement a graph-guided mode where the agent works through Grphify, `index.md`, `hot.md`, and Obsidian pages (HW [§5.5]) | Must |
 | FR-6.3 | Compare and report: tokens consumed, files/units read, iterations/rounds, and quality/speed of reaching root cause and fix (HW [§5.5]) | Must |
+| FR-6.4 | **Experimental Parity** — Naive and graph-guided modes shall use the same provider-call path, provider and model configuration, generation parameters, system instructions, canonical prompt envelope, response schema, retry behavior, telemetry conversion, tracing, budget accounting, correctness gate, and artifact schema. The controlled experimental treatment shall be the context-acquisition strategy and its resulting context payload. A deterministic parity fingerprint shall represent the shared configuration, and comparison execution shall reject mismatched shared configuration before provider calls. (Project-level engineering requirement supporting scientific validity of [PRD §5.5 FR-6.3] comparison.) | Must |
 
 ### 5.7 Original Extensions
 
@@ -248,9 +249,21 @@ The system will:
 | FR-7.1 | Implement at least one original extension beyond minimum requirements (HW [§5.6]) | Must |
 | FR-7.2 | Candidate extension: Rank suspect nodes by centrality and proximity to failed tests (HW [§5.6]) | Should |
 | FR-7.3 | Candidate extension: Architecture comparison before/after fix using graphs or schemas (HW [§5.6]) | Could |
-| FR-7.4 | Candidate extension: Dynamic diff — generate a focused change summary from `hot.md` + `graph.json` state before and after the fix (ASSIGNMENT.md [§5.6]) | Could |
-| FR-7.5 | Candidate extension: Orphan detection — identify unreachable components and auto-generate documentation stubs for them (ASSIGNMENT.md [§5.6]) | Could |
-| FR-7.6 | Candidate extension: Impact report — given a node, list all entities that would break if it were changed or removed (ASSIGNMENT.md [§5.6]) | Could |
+| FR-7.4 | Candidate extension: Dynamic diff — generate a typed pre/post structural comparison of graph entities, relationships, and communities from `graph.json` snapshots before and after the fix (ASSIGNMENT.md [§5.6]) | Could |
+| FR-7.5 | **Implemented** — Orphan detection: identify unreachable/weakly-connected graph entities and generate deterministic JSON and Markdown reports with source anchors. Selected as the T6.05 additional extension. (ASSIGNMENT.md [§5.6]) | Must |
+| FR-7.6 | **Implemented** — Impact report: given changed symbols, traverse reverse-dependency edges and list all entities that would be affected by a change. (ASSIGNMENT.md [§5.6]) | Must |
+| FR-7.7 | **Multi-Signal Weakness Detection** — The system shall implement a configurable weakness detector over graph and source evidence, producing typed findings with stable IDs, severity, confidence, evidence anchors, and deterministic ranking. Required signals: (1) high-degree entity, (2) isolated or weakly-connected component, (3) ambiguous/unknown/low-confidence relationship, (4) broken dependency path, (5) semantic duplicate. Python semantic duplicate analysis shall use AST-aware methods, not regex. Findings shall not overstate evidence: missing source anchors are source-validation failures not broken dependency paths; high-degree nodes are not automatically cross-community bridges; isolated components are not automatically defects; graph reachability does not prove runtime impact. (Project-level engineering requirement supporting [PRD §5.7 FR-7.1] original extension.) | Should |
+
+### 5.8 Self-Grade Service
+
+These are project-level engineering requirements that enable reproducible, evidence-derived quality assessment. They support the assignment expectation that submissions demonstrate measurable quality and honest reporting.
+
+| ID | Requirement | Priority |
+|---|---|---|
+| FR-8.1 | **Keyless repository and quality checks** — The self-grade service shall execute all structural and linting checks (ruff, mypy, file-length, SDK boundary, gatekeeper boundary) without requiring provider API credentials. | Must |
+| FR-8.2 | **Evidence-derived rubric scoring** — Earned rubric points shall be computed from actual check results and evidence discovered at run time. Configuration defines maximum points and policies only; pre-awarded earned scores are prohibited. | Must |
+| FR-8.3 | **Mandatory-gate score caps** — When one or more mandatory gates fail, the final score shall be capped below the raw rubric score. Example: raw score 94, correctness gate FAIL → mandatory cap 59 → final score 59. This is illustrative policy documentation, not generated evidence. | Must |
+| FR-8.4 | **Typed JSON and Markdown reports with provenance** — The service shall produce a canonical JSON report and a Markdown rendering derived from it. Both shall include: commit SHA, dirty-worktree state, rubric version, configuration hash, relevant tool versions, commands executed, durations, timestamps, and evidence paths. The Markdown shall be derived from the JSON, not authored independently. | Must |
 
 ---
 
@@ -396,3 +409,4 @@ code/
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial PRD creation |
 | 1.01 | 2026-06-19 | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |
+| 1.02 | 2026-06-21 | Add FR-6.4 Experimental Parity; refine FR-7.4 for typed pre/post structural comparison; update FR-7.5 and FR-7.6 as implemented; add FR-7.7 Multi-Signal Weakness Detection; add §5.8 FR-8.1–FR-8.4 Self-Grade Service requirements. Traceability: [ASSIGNMENT.md §5.5–5.6], project engineering requirements supporting scientific validity. |

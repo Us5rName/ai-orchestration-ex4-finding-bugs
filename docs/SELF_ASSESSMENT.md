@@ -35,9 +35,24 @@
 | Real screenshots | Blocked | No live Graphify/Obsidian/provider workflow output was produced |
 | P7-I05 end-to-end evidence | Blocked | Must not be fabricated from fixtures |
 
+## Remaining Tasks
+
+6 tasks remain open on branch `feat/remaining-task-completion`:
+
+| Task | Status | Description |
+|---|---|---|
+| T4.19 | Not Started | Typed GraphReader facade (canonical graph boundary, ADR-007) |
+| T5.03 | Not Started | Agent workflow parity helpers (ParityFingerprint, InstrumentedCallResult, ADR-008) |
+| T4.20 | Not Started | Multi-signal weakness detector (5 signals, FR-7.7) |
+| T6.05 | In Progress | Orphan Detection closure — core exists (T7.07 Done); report persistence and artifact paths remain |
+| T6.09 | Not Started | Full graph-diff report with typed entity/relationship/community classification |
+| T8.13 | Not Started | Self-Grade Service (keyless, evidence-derived, mandatory-gate caps, ADR-009) |
+
+**This branch** (`feat/remaining-task-completion`) defines contracts and dependency plans for these tasks. No production code is added here.
+
 ## Readiness Conclusion
 
-The branch has local keyless verification, but final merge readiness still depends on clean-clone verification, push, remote CI, and PR evidence update. Graphify extraction (code-only corpus) is complete; live LLM runs remain blocked pending API credentials.
+Local keyless verification is complete. The 6 remaining tasks above have defined contracts, dependency order, and ADR rationale. Implementation proceeds in order: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13.
 
 ## Revision History
 
@@ -46,3 +61,4 @@ The branch has local keyless verification, but final merge readiness still depen
 | 1.00 | 2026-06-20 | Initial evidence-backed self assessment. |
 | 1.01 | 2026-06-21 | Update for completed keyless deliverables (P8-R02/05/06/07, P6-R07/08, P7-R04). Update test count (531), coverage (95.35%), Graphify status (real run complete). |
 | 1.02 | 2026-06-21 | Add production-path repair semantics and clarify that clean-clone/remote-CI/PR evidence remain pending. |
+| 1.03 | 2026-06-21 | Add Remaining Tasks section listing 6 open tasks with status; distinguish T6.05 closure-pending from 5 genuinely unimplemented; note this branch defines contracts only. Traceability: [TODO §11], [PLAN ADR-007/ADR-008/ADR-009]. |

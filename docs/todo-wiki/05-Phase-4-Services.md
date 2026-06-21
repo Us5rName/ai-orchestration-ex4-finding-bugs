@@ -152,19 +152,107 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §3.3 Graph Service] |
-| **PRD Reference** | [PRD FR-1.1], [PRD FR-7.2] |
+| **Execution Order** | 1st of 6 remaining tasks |
+| **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
+| **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Depends On** | T4.02 GraphParser (Done) |
+| **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |
 
-**Goal**: Add a read-only query facade over `GraphData` so graph consumers do not repeatedly rebuild degree maps, community groupings, or edge indexes.
+**Purpose**: Provide a typed, read-only query facade over parsed `GraphData` so all graph consumers access graph structure through a single canonical boundary rather than rebuilding indexes independently. This is the graph read boundary mandated by [PLAN ADR-007].
 
-**Definition of Done**:
+**Planned file**: `src/ex04/services/graph/reader.py`
 
-- [ ] `GraphReader` accepts `GraphData` or a parsed `graph.json` path
-- [ ] Exposes typed `node()`, `all_nodes()`, `edges_of()`, `top_n_by_degree()`, and `communities()` queries
-- [ ] Precomputes/caches degree and adjacency indexes at construction time
-- [ ] Used by graph analyzer, extension analysis, and graph-guided context builders where appropriate
-- [ ] Unit tests cover missing nodes, edge-only nodes, isolated nodes, and ranking stability
+**Exact Contract**:
+
+```python
+class GraphReader:
+    """Canonical typed read-only query facade over GraphData. [ADR-007]
+
+    Accepts existing GraphData or delegates parsing to GraphParser via path constructor.
+    Maintains constructor-time indexes for entity lookup, outgoing/incoming/incident
+    edges, degree, and community membership. All results are deterministically ordered.
+    Never creates a second raw-JSON parsing path.
+    """
+
+    def __init__(self, graph_data: GraphData) -> None: ...
+
+    @classmethod
+    def from_path(cls, graph_path: Path) -> "GraphReader": ...
+    # Delegates to GraphParser — does not create a second raw-JSON parsing path.
+
+    def node(self, node_id: str) -> Entity | None: ...
+    # Uses stable entity ID (not display name) as identity.
+
+    def all_nodes(self) -> list[Entity]: ...
+    # Deterministic ordering by stable entity ID.
+
+    def edges_of(
+        self,
+        node_id: str,
+        direction: Literal["outgoing", "incoming", "both"] = "both",
+    ) -> list[Relationship]: ...
+    # Preserves direction, type, and parallel relationships.
+
+    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
+
+    def communities(self) -> dict[str, list[Entity]]: ...
+    # Key: community name/ID. Entities within each community in stable order.
+```
+
+**Semantics to preserve**:
+- Stable entity IDs are identity — not display names.
+- Relationship direction and type are preserved.
+- Parallel relationships (multiple edges between same entities) are preserved.
+- Missing confidence is `unknown/unspecified`; never silently upgraded to extracted fact.
+- Inexpensive indexes (degree, adjacency) computed eagerly at construction.
+- Expensive metrics (exact betweenness centrality) computed lazily and cached.
+- Return types are immutable or read-only (no mutation through returned objects).
+
+**Edge cases to handle**:
+- Empty graph → valid reader with empty results.
+- Isolated nodes → included in `all_nodes()`, degree 0.
+- Unknown node ID in queries → return `None` or empty list, not raise.
+- Duplicate display names → resolved by stable entity ID.
+- Edge-only malformed graphs → log warning; return best-effort results.
+- Invalid graph artifacts → raise `InvalidGraphError` with context.
+- `n < 0` in `top_n_by_degree` → raise `ValueError`.
+
+**Implementation subtasks**:
+1. Create `src/ex04/services/graph/reader.py` with `GraphReader` class.
+2. Add constructor-time index building for outgoing/incoming/incident edges and degree.
+3. Implement `from_path()` delegating to existing `GraphParser`.
+4. Implement direction-aware `edges_of()`.
+5. Implement deterministic `top_n_by_degree()` with tie-breaking.
+6. Implement community grouping via `communities()`.
+7. Update `graph/__init__.py` to export `GraphReader`.
+
+**Tests required** (`tests/unit/services/graph/test_reader.py`):
+- Happy path: node lookup by ID, all_nodes, edges_of (each direction), top_n_by_degree, communities.
+- Missing node → None / empty list.
+- Isolated node → degree 0, included in all_nodes.
+- Empty graph → valid reader.
+- Invalid `n` → ValueError.
+- Parallel relationships → all preserved.
+- Relationship direction accuracy.
+- Deterministic ordering verification.
+
+**Non-goals**:
+- Do not reimplement graph parsing (delegate to `GraphParser`).
+- Do not compute betweenness centrality eagerly.
+- Do not add write operations.
+- Do not add provider calls or external I/O.
+
+**Definition of Done** (T4.19 is Done only when):
+- [ ] `GraphReader` accepts `GraphData` and path-based construction through `GraphParser`.
+- [ ] Directed, typed, parallel relationships are preserved.
+- [ ] Required indexes and typed operations exist.
+- [ ] Ordering and ties are deterministic.
+- [ ] Edge cases and invalid input are tested.
+- [ ] Relevant consumers reuse it without duplicating graph indexes.
+- [ ] SDK-facing behavior remains stable.
+- [ ] Documentation and evidence are synchronized.
 
 **Independent Verification**:
 
@@ -560,19 +648,95 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
+| **Execution Order** | 3rd of 6 remaining tasks (after T4.19, T5.03) |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service] |
-| **PRD Reference** | [PRD FR-7.5], [PRD-EXT] |
+| **PRD Reference** | [PRD §5.7 FR-7.7], [PRD-EXT §EXT-3] |
+| **Depends On** | T4.19 GraphReader (must exist for detector to consume it) |
 | **Estimate** | 90 min |
 
-**Goal**: Extend the current orphan/ranking analysis into a dedicated weakness detector with typed findings and pure signal functions.
+**Purpose**: Implement a configurable, multi-signal weakness detector over graph and source evidence. Produces typed findings with stable IDs, severity, confidence, evidence anchors, and deterministic ranking. Satisfies FR-7.7.
 
-**Definition of Done**:
+**Planned package**: `src/ex04/services/analysis/weakness_detector/`
 
-- [ ] Add `WeaknessFinding` type with tag, severity, evidence anchors, and source-validation fields
-- [ ] Add pure signal functions for high-degree nodes, isolated clusters, ambiguous/low-confidence edges, broken source paths, and semantic duplicates
-- [ ] Add `WeaknessDetector.detect(graph_data)` orchestration and deterministic ranking
-- [ ] Expose the detector through `Ex04SDK`
-- [ ] Unit tests cover each signal, ranking order, empty graph, and missing source anchors
+```
+__init__.py
+models.py        — WeaknessFinding, WeaknessReport, signal/severity/confidence enums
+config.py        — load and validate signal configuration
+detector.py      — WeaknessDetector orchestration (detect→normalize→deduplicate→rank→render)
+ranking.py       — deterministic finding ranking and coalescing
+signals_graph.py — high-degree, isolated-component signals (reuse OrphanDetector logic)
+signals_paths.py — broken-dependency-path signal
+signals_source.py — semantic-duplicate signal (AST-aware Python analysis)
+```
+
+**Required Signals**:
+
+| # | Signal | Key Constraint |
+|---|---|---|
+| 1 | High-degree entity | Not automatically a cross-community bridge; state this explicitly |
+| 2 | Isolated / weakly connected component | Not automatically a defect; reuse `OrphanDetector` logic |
+| 3 | Ambiguous / unknown / low-confidence relationship | Missing confidence → `unknown`, not extracted fact |
+| 4 | Broken dependency path | Missing source anchors are source-validation failures, not broken paths |
+| 5 | Semantic duplicate | Python analysis must use AST, not regex over source text |
+
+**Finding Contract**:
+
+```python
+@dataclass(frozen=True)
+class WeaknessFinding:
+    finding_id: str            # Stable, deterministic ID
+    signal: SignalType         # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
+    severity: Severity         # Enum: HIGH, MEDIUM, LOW, INFO
+    confidence: Confidence     # Enum: HIGH, MEDIUM, LOW, UNKNOWN
+    normalized_score: float    # In [0.0, 1.0]
+    affected_entities: list[str]  # Stable entity IDs
+    affected_relationships: list[str]  # Stable relationship IDs
+    evidence_anchors: list[str]  # "file:start-end" relative paths
+    limitations: list[str]     # What the finding does NOT prove
+    description: str           # Human-readable; no overclaiming
+```
+
+**Constraints**:
+- No production hard-coded repository-specific node IDs, file paths, or symbol names.
+- Every signal is independently testable and configurable (enable/disable per signal).
+- Finding prose must not claim more than the measured evidence supports.
+- Isolated-component detection must reuse or adapt `OrphanDetector` — do not reimplement connected-component analysis.
+- Detector must consume `GraphReader` rather than rebuilding indexes independently.
+- Semantic duplicate analysis must be AST-aware.
+
+**Implementation subtasks**:
+1. Create `weakness_detector/models.py` with `WeaknessFinding`, `WeaknessReport`, enums.
+2. Create `weakness_detector/config.py` with signal enable/disable and threshold configuration.
+3. Create `weakness_detector/signals_graph.py` — high-degree and isolated-component signals; reuse `OrphanDetector`.
+4. Create `weakness_detector/signals_paths.py` — broken dependency path signal.
+5. Create `weakness_detector/signals_source.py` — AST-aware semantic duplicate signal.
+6. Create `weakness_detector/ranking.py` — deterministic score normalization and ranking.
+7. Create `weakness_detector/detector.py` — orchestration (detect → normalize → deduplicate → rank).
+8. Add `Ex04SDK.detect_weaknesses(graph_data)` (planned method, not yet implemented).
+
+**Tests required** (`tests/unit/services/analysis/test_weakness_detector.py`):
+- Each signal independently: expected finding for known-topology graph.
+- Empty graph → empty WeaknessReport with no findings.
+- Missing source anchors → source-validation failure, not broken dependency path.
+- High-degree node → finding does not assert cross-community bridge.
+- Isolated component → finding includes limitations statement.
+- Semantic duplicate → verified against AST, not text match.
+- Combined ranking → deterministic order verified.
+- Signal disable → disabled signal produces no findings.
+
+**Non-goals**:
+- Do not hard-code any repository-specific node IDs.
+- Do not claim runtime impact from graph reachability alone.
+- Do not reimplement connected-component analysis (reuse `OrphanDetector`).
+
+**Definition of Done** (T4.20 is Done only when):
+- [ ] All five signals implemented generically.
+- [ ] Findings are typed, evidence-anchored, deterministic, and deduplicated.
+- [ ] No repository-specific production constants exist.
+- [ ] Orphan/component behavior reuses existing analysis logic.
+- [ ] Python semantic analysis is AST-aware.
+- [ ] Individual signal, combined ranking, edge-case, and SDK tests pass.
+- [ ] Reports do not overstate evidence.
 
 **Independent Verification**:
 

@@ -46,12 +46,31 @@ Out of scope: LangGraph node internals, Graphify CLI invocation, vault build log
 
 ---
 
+## GraphReader as Canonical Graph Access Boundary
+
+All graph-guided context construction shall access graph data exclusively through `GraphReader` — a typed, read-only query facade over parsed `GraphData`. Consumers must not rebuild degree maps, adjacency indexes, or community groupings independently.
+
+`GraphReader` exposes:
+- `node(node_id)` — look up a single entity by stable ID
+- `all_nodes()` — iterate all entities
+- `edges_of(node_id, direction=...)` — direction-aware edge queries (outgoing / incoming / both)
+- `top_n_by_degree(n)` — top-N entities by degree with deterministic tie-breaking
+- `communities()` — group entities by community membership
+
+**Degree vs. BFS**: Degree ranking and BFS/reachability solve different problems and neither globally replaces the other:
+- Degree centrality identifies entities with many direct connections (potentially high-impact nodes).
+- BFS/reachability discovers paths and transitive dependencies from a starting point.
+- The claim that "degree centrality is simply more stable than BFS" is overstated and is removed from this document.
+
+The context builder shall use degree ranking to prioritize candidate entities, and BFS where transitive dependency traversal is specifically needed.
+
 ## Contracts
 
 - Graph entities used must have `file_path` and `line_range` populated (source-anchored).
 - Vault notes read must be traceable to vault path (index.md → hot.md → component note).
-- The set of entities selected must come exclusively from `graph_data` — no filesystem scan.
+- The set of entities selected must come exclusively from `graph_data` via `GraphReader` — no filesystem scan and no independent graph-index reconstruction.
 - Source-anchor format: `<relative_path>:<start>-<end>` (relative to target root).
+- Direction-aware edge queries must preserve relationship direction and type.
 
 ---
 
@@ -95,8 +114,9 @@ Out of scope: LangGraph node internals, Graphify CLI invocation, vault build log
 
 | Alternative | Reason rejected |
 |---|---|
-| BFS traversal from bug-keyword match | Keyword matching is brittle; degree centrality is more stable |
+| BFS traversal as sole ranking strategy | BFS does not rank by importance; degree centrality is better for entity prioritization. However, BFS is retained for path-finding and transitive dependency queries — both are needed. |
 | Read all vault notes | Defeats the purpose of focused navigation |
+| Rebuild graph indexes in each consumer | Wastes computation; `GraphReader` centralizes index construction at construction time |
 
 ---
 
@@ -120,3 +140,4 @@ Out of scope: LangGraph node internals, Graphify CLI invocation, vault build log
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 7 finalization |
+| 1.1 | 2026-06-21 | Add `GraphReader` as canonical graph access boundary; clarify degree vs. BFS semantics; remove overstated claim that degree centrality is simply more stable than BFS; add direction-aware edge query contract; prohibit independent graph-index reconstruction in consumers. Traceability: [PRD §5.4 FR-4.2], planned [PLAN ADR-007 GraphReader]. |

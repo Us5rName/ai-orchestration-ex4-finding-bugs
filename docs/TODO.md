@@ -88,7 +88,7 @@
 
 ## 1. Phase Overview
 
-Each phase consists of **independent, verifiable tasks**. Tasks within a phase may run in parallel. Tasks between phases follow dependency order only — no task blocks another within the same phase.
+Each phase consists of **independent, verifiable tasks**. Tasks are independently verifiable and parallel by default, except where explicit task-level dependencies are documented. Tasks within a phase may run in parallel unless a task-level dependency is listed in the task definition or in [PLAN §3 Task Dependency Policy].
 
 ```mermaid
 graph LR
@@ -745,19 +745,107 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §3.3 Graph Service] |
-| **PRD Reference** | [PRD FR-1.1], [PRD FR-7.2] |
+| **Execution Order** | 1st of 6 remaining tasks |
+| **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
+| **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Depends On** | T4.02 GraphParser (Done) |
+| **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |
 
-**Goal**: Add a read-only query facade over `GraphData` so graph consumers do not repeatedly rebuild degree maps, community groupings, or edge indexes.
+**Purpose**: Provide a typed, read-only query facade over parsed `GraphData` so all graph consumers access graph structure through a single canonical boundary rather than rebuilding indexes independently. This is the graph read boundary mandated by [PLAN ADR-007].
 
-**Definition of Done**:
+**Planned file**: `src/ex04/services/graph/reader.py`
 
-- [ ] `GraphReader` accepts `GraphData` or a parsed `graph.json` path
-- [ ] Exposes typed `node()`, `all_nodes()`, `edges_of()`, `top_n_by_degree()`, and `communities()` queries
-- [ ] Precomputes/caches degree and adjacency indexes at construction time
-- [ ] Used by graph analyzer, extension analysis, and graph-guided context builders where appropriate
-- [ ] Unit tests cover missing nodes, edge-only nodes, isolated nodes, and ranking stability
+**Exact Contract**:
+
+```python
+class GraphReader:
+    """Canonical typed read-only query facade over GraphData. [ADR-007]
+
+    Accepts existing GraphData or delegates parsing to GraphParser via path constructor.
+    Maintains constructor-time indexes for entity lookup, outgoing/incoming/incident
+    edges, degree, and community membership. All results are deterministically ordered.
+    Never creates a second raw-JSON parsing path.
+    """
+
+    def __init__(self, graph_data: GraphData) -> None: ...
+
+    @classmethod
+    def from_path(cls, graph_path: Path) -> "GraphReader": ...
+    # Delegates to GraphParser — does not create a second raw-JSON parsing path.
+
+    def node(self, node_id: str) -> Entity | None: ...
+    # Uses stable entity ID (not display name) as identity.
+
+    def all_nodes(self) -> list[Entity]: ...
+    # Deterministic ordering by stable entity ID.
+
+    def edges_of(
+        self,
+        node_id: str,
+        direction: Literal["outgoing", "incoming", "both"] = "both",
+    ) -> list[Relationship]: ...
+    # Preserves direction, type, and parallel relationships.
+
+    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
+
+    def communities(self) -> dict[str, list[Entity]]: ...
+    # Key: community name/ID. Entities within each community in stable order.
+```
+
+**Semantics to preserve**:
+- Stable entity IDs are identity — not display names.
+- Relationship direction and type are preserved.
+- Parallel relationships (multiple edges between same entities) are preserved.
+- Missing confidence is `unknown/unspecified`; never silently upgraded to extracted fact.
+- Inexpensive indexes (degree, adjacency) computed eagerly at construction.
+- Expensive metrics (exact betweenness centrality) computed lazily and cached.
+- Return types are immutable or read-only (no mutation through returned objects).
+
+**Edge cases to handle**:
+- Empty graph → valid reader with empty results.
+- Isolated nodes → included in `all_nodes()`, degree 0.
+- Unknown node ID in queries → return `None` or empty list, not raise.
+- Duplicate display names → resolved by stable entity ID.
+- Edge-only malformed graphs → log warning; return best-effort results.
+- Invalid graph artifacts → raise `InvalidGraphError` with context.
+- `n < 0` in `top_n_by_degree` → raise `ValueError`.
+
+**Implementation subtasks**:
+1. Create `src/ex04/services/graph/reader.py` with `GraphReader` class.
+2. Add constructor-time index building for outgoing/incoming/incident edges and degree.
+3. Implement `from_path()` delegating to existing `GraphParser`.
+4. Implement direction-aware `edges_of()`.
+5. Implement deterministic `top_n_by_degree()` with tie-breaking.
+6. Implement community grouping via `communities()`.
+7. Update `graph/__init__.py` to export `GraphReader`.
+
+**Tests required** (`tests/unit/services/graph/test_reader.py`):
+- Happy path: node lookup by ID, all_nodes, edges_of (each direction), top_n_by_degree, communities.
+- Missing node → None / empty list.
+- Isolated node → degree 0, included in all_nodes.
+- Empty graph → valid reader.
+- Invalid `n` → ValueError.
+- Parallel relationships → all preserved.
+- Relationship direction accuracy.
+- Deterministic ordering verification.
+
+**Non-goals**:
+- Do not reimplement graph parsing (delegate to `GraphParser`).
+- Do not compute betweenness centrality eagerly.
+- Do not add write operations.
+- Do not add provider calls or external I/O.
+
+**Definition of Done** (T4.19 is Done only when):
+- [ ] `GraphReader` accepts `GraphData` and path-based construction through `GraphParser`.
+- [ ] Directed, typed, parallel relationships are preserved.
+- [ ] Required indexes and typed operations exist.
+- [ ] Ordering and ties are deterministic.
+- [ ] Edge cases and invalid input are tested.
+- [ ] Relevant consumers reuse it without duplicating graph indexes.
+- [ ] SDK-facing behavior remains stable.
+- [ ] Documentation and evidence are synchronized.
 
 **Independent Verification**:
 
@@ -1153,19 +1241,95 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
+| **Execution Order** | 3rd of 6 remaining tasks (after T4.19, T5.03) |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service] |
-| **PRD Reference** | [PRD FR-7.5], [PRD-EXT] |
+| **PRD Reference** | [PRD §5.7 FR-7.7], [PRD-EXT §EXT-3] |
+| **Depends On** | T4.19 GraphReader (must exist for detector to consume it) |
 | **Estimate** | 90 min |
 
-**Goal**: Extend the current orphan/ranking analysis into a dedicated weakness detector with typed findings and pure signal functions.
+**Purpose**: Implement a configurable, multi-signal weakness detector over graph and source evidence. Produces typed findings with stable IDs, severity, confidence, evidence anchors, and deterministic ranking. Satisfies FR-7.7.
 
-**Definition of Done**:
+**Planned package**: `src/ex04/services/analysis/weakness_detector/`
 
-- [ ] Add `WeaknessFinding` type with tag, severity, evidence anchors, and source-validation fields
-- [ ] Add pure signal functions for high-degree nodes, isolated clusters, ambiguous/low-confidence edges, broken source paths, and semantic duplicates
-- [ ] Add `WeaknessDetector.detect(graph_data)` orchestration and deterministic ranking
-- [ ] Expose the detector through `Ex04SDK`
-- [ ] Unit tests cover each signal, ranking order, empty graph, and missing source anchors
+```
+__init__.py
+models.py        — WeaknessFinding, WeaknessReport, signal/severity/confidence enums
+config.py        — load and validate signal configuration
+detector.py      — WeaknessDetector orchestration (detect→normalize→deduplicate→rank→render)
+ranking.py       — deterministic finding ranking and coalescing
+signals_graph.py — high-degree, isolated-component signals (reuse OrphanDetector logic)
+signals_paths.py — broken-dependency-path signal
+signals_source.py — semantic-duplicate signal (AST-aware Python analysis)
+```
+
+**Required Signals**:
+
+| # | Signal | Key Constraint |
+|---|---|---|
+| 1 | High-degree entity | Not automatically a cross-community bridge; state this explicitly |
+| 2 | Isolated / weakly connected component | Not automatically a defect; reuse `OrphanDetector` logic |
+| 3 | Ambiguous / unknown / low-confidence relationship | Missing confidence → `unknown`, not extracted fact |
+| 4 | Broken dependency path | Missing source anchors are source-validation failures, not broken paths |
+| 5 | Semantic duplicate | Python analysis must use AST, not regex over source text |
+
+**Finding Contract**:
+
+```python
+@dataclass(frozen=True)
+class WeaknessFinding:
+    finding_id: str            # Stable, deterministic ID
+    signal: SignalType         # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
+    severity: Severity         # Enum: HIGH, MEDIUM, LOW, INFO
+    confidence: Confidence     # Enum: HIGH, MEDIUM, LOW, UNKNOWN
+    normalized_score: float    # In [0.0, 1.0]
+    affected_entities: list[str]  # Stable entity IDs
+    affected_relationships: list[str]  # Stable relationship IDs
+    evidence_anchors: list[str]  # "file:start-end" relative paths
+    limitations: list[str]     # What the finding does NOT prove
+    description: str           # Human-readable; no overclaiming
+```
+
+**Constraints**:
+- No production hard-coded repository-specific node IDs, file paths, or symbol names.
+- Every signal is independently testable and configurable (enable/disable per signal).
+- Finding prose must not claim more than the measured evidence supports.
+- Isolated-component detection must reuse or adapt `OrphanDetector` — do not reimplement connected-component analysis.
+- Detector must consume `GraphReader` rather than rebuilding indexes independently.
+- Semantic duplicate analysis must be AST-aware.
+
+**Implementation subtasks**:
+1. Create `weakness_detector/models.py` with `WeaknessFinding`, `WeaknessReport`, enums.
+2. Create `weakness_detector/config.py` with signal enable/disable and threshold configuration.
+3. Create `weakness_detector/signals_graph.py` — high-degree and isolated-component signals; reuse `OrphanDetector`.
+4. Create `weakness_detector/signals_paths.py` — broken dependency path signal.
+5. Create `weakness_detector/signals_source.py` — AST-aware semantic duplicate signal.
+6. Create `weakness_detector/ranking.py` — deterministic score normalization and ranking.
+7. Create `weakness_detector/detector.py` — orchestration (detect → normalize → deduplicate → rank).
+8. Add `Ex04SDK.detect_weaknesses(graph_data)` (planned method, not yet implemented).
+
+**Tests required** (`tests/unit/services/analysis/test_weakness_detector.py`):
+- Each signal independently: expected finding for known-topology graph.
+- Empty graph → empty WeaknessReport with no findings.
+- Missing source anchors → source-validation failure, not broken dependency path.
+- High-degree node → finding does not assert cross-community bridge.
+- Isolated component → finding includes limitations statement.
+- Semantic duplicate → verified against AST, not text match.
+- Combined ranking → deterministic order verified.
+- Signal disable → disabled signal produces no findings.
+
+**Non-goals**:
+- Do not hard-code any repository-specific node IDs.
+- Do not claim runtime impact from graph reachability alone.
+- Do not reimplement connected-component analysis (reuse `OrphanDetector`).
+
+**Definition of Done** (T4.20 is Done only when):
+- [ ] All five signals implemented generically.
+- [ ] Findings are typed, evidence-anchored, deterministic, and deduplicated.
+- [ ] No repository-specific production constants exist.
+- [ ] Orphan/component behavior reuses existing analysis logic.
+- [ ] Python semantic analysis is AST-aware.
+- [ ] Individual signal, combined ranking, edge-case, and SDK tests pass.
+- [ ] Reports do not overstate evidence.
 
 **Independent Verification**:
 
@@ -1246,24 +1410,70 @@ uv run python -m ex04 --help
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service] |
-| **PRD Reference** | [PRD FR-4.1], [PRD FR-6.1] |
+| **Execution Order** | 2nd of 6 remaining tasks (independent of T4.19; implemented early for fair comparison evidence) |
+| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service], [PLAN ADR-008] |
+| **PRD Reference** | [PRD §5.6 FR-6.4], [PRD-CE §Controlled vs. Treatment] |
+| **Note** | T5.03 does NOT depend on T4.19, but is deliberately implemented early so final comparison evidence is not produced through duplicated or unfair call paths. |
 | **Estimate** | 60 min |
 
-**Goal**: Centralize shared node call and token-recording behavior so graph-guided and naive workflows differ by context strategy, not instrumentation.
+**Purpose**: Ensure both comparison modes use the same provider-call path, telemetry, budget, trace, gate, and artifact schema. Only the context-acquisition strategy may intentionally differ. Satisfies [PRD FR-6.4] Experimental Parity.
 
-**Definition of Done**:
+**Planned files**:
+- `src/ex04/services/comparison/call_service.py` — `InstrumentedCallService` (shared provider call)
+- `src/ex04/services/comparison/prompt_builder.py` — canonical prompt envelope
+- `src/ex04/services/comparison/parity.py` — `ParityFingerprint` and pre-call validation
 
-- [ ] Add shared helper for Gatekeeper-backed node calls
-- [ ] Add shared helper for converting provider responses into token records
-- [ ] Ensure graph-guided and naive paths use the same call/record helpers
-- [ ] Preserve existing workflow state fields and retry behavior
-- [ ] Unit tests verify parity of token accounting and node message shape across both paths
+**Key contract**:
+
+```python
+@dataclass(frozen=True, slots=True)
+class InstrumentedCallResult:
+    response: ProviderResponse
+    token_record: TokenRecord
+    trace_event: ProviderTraceEvent
+
+@dataclass(frozen=True, slots=True)
+class ParityFingerprint:
+    provider: str
+    model: str
+    generation_params_hash: str
+    system_prompt_version: str
+    prompt_envelope_version: str
+    response_schema_version: str
+    retry_policy_hash: str
+    budget_policy_hash: str
+    correctness_gate_version: str
+```
+
+**Shared (controlled)**: provider, model, generation params, system instructions, prompt envelope, response schema, gatekeeper, retry policy, token-record conversion, budget ledger, trace event, correctness gate, artifact schema, failure representation.
+
+**Different (treatment)**: context-acquisition strategy and resulting `ContextBundle`.
+
+**Implementation subtasks**:
+1. Create `call_service.py` with `InstrumentedCallService` returning atomic `InstrumentedCallResult`.
+2. Create `prompt_builder.py` with versioned canonical prompt envelope.
+3. Create `parity.py` with `ParityFingerprint` and mismatch rejection.
+4. Update `NaiveRunner` and `GraphGuidedRunner` to delegate to `InstrumentedCallService`.
+5. Preserve existing retry/state/observability semantics.
+
+**Tests required**:
+- Parity fingerprint matches for identical configuration.
+- Fingerprint mismatch raises `ParityMismatchError` before any provider call.
+- `InstrumentedCallResult` always contains all three fields.
+- Both runners produce structurally identical `RunMetrics` for identical provider responses.
+
+**Definition of Done** (T5.03 is Done only when):
+- [ ] Both modes use the same call, prompt-envelope, telemetry, tracing, budget, parser, correctness, and artifact paths.
+- [ ] Context acquisition is the only intentional treatment.
+- [ ] Parity fingerprint mismatches fail before provider calls.
+- [ ] Provider failures are represented identically.
+- [ ] Parity tests verify both structural and runtime delegation.
+- [ ] Existing retry/state/observability semantics remain intact.
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/services/agent tests/unit/services/comparison -v
+uv run pytest tests/unit/services/comparison/test_parity.py tests/unit/services/agent tests/unit/services/comparison -v
 ```
 
 ---
@@ -1374,41 +1584,65 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 
 ---
 
-### T6.05 — Implement an Additional Extension
+### T6.05 — Orphan Detection Closure (FR-7.5)
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | **In Progress** — core implementation and SDK exposure exist; report persistence, README documentation, explicit evidence mapping, and closure verification remain |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.4/7.5/7.6] |
-| **PRD Reference** | [PRD FR-7.4], [PRD FR-7.5], [PRD FR-7.6] |
-| **Estimate** | 60 min |
+| **Execution Order** | 4th of 6 remaining tasks |
+| **PLAN Reference** | [PLAN §3.6 Analysis Service], [PLAN §11 Traceability Matrix — FR-7.5] |
+| **PRD Reference** | [PRD §5.7 FR-7.5], [PRD-EXT §EXT-1] |
+| **Traceability** | T6.05 → FR-7.5 → T7.07 (OrphanDetector implementation, Done) |
+| **Depends On** | T7.07 OrphanDetector (Done); optionally T4.19 for GraphReader integration |
+| **Estimate** | 60 min (closure only; core implementation exists) |
 
-**Goal**: Implement at least one of the three extension candidates beyond the minimum (FR-7.1–7.3). Choose the one that best fits the investigation findings.
+**Selected Extension**: FR-7.5 Orphan Detection (formally selected for T6.05).
 
-**Options** (pick one):
+**What already exists (T7.07 Done)**:
+- `src/ex04/services/analysis/orphan_detector.py` — OrphanDetector with detect(), generate_stub(), detect_and_report()
+- `Ex04SDK.detect_orphans(graph_data, output_dir)` — SDK exposure
+- `tests/unit/services/analysis/test_orphan_detector.py` — unit tests
 
-| Option | FR | What to build |
-|---|---|---|
-| Dynamic diff | FR-7.4 | Compare `hot.md` + `graph.json` snapshots before/after fix; output a focused change summary |
-| Orphan detection | FR-7.5 | Walk graph entities with no incoming edges; auto-generate documentation stubs for them |
-| Impact report | FR-7.6 | Given a node name, traverse reverse-dependency edges and list all entities that would be affected by a change |
+**Remaining closure work**:
+1. Confirm or complete the public SDK path to `detect_orphans`.
+2. Add deterministic JSON report to `artifacts/runs/<run-id>/reports/orphan_report.json`.
+3. Add Markdown report to `artifacts/runs/<run-id>/reports/orphan_report.md` (rendered from JSON).
+4. Persist reports through the artifact/provenance layer (ArtifactStore).
+5. After T4.19: reuse GraphReader for graph access where appropriate.
+6. Add orphan report paths to run manifest (`extension_report_paths`).
+7. Add README usage section only after artifacts exist.
+8. Update evidence matrix with truthful evidence paths.
+9. Verify: happy path, empty graph, invalid threshold/input, and deterministic ordering all tested.
 
-**Definition of Done**:
+**Tests to verify or add**:
+- [x] Happy path (T7.07)
+- [x] Empty graph (T7.07)
+- [x] Isolated nodes (T7.07)
+- [x] Threshold edge cases (T7.07)
+- [ ] JSON report persisted to expected path
+- [ ] Markdown report derived from JSON
+- [ ] Deterministic ordering across two runs on same input
+- [ ] Invalid threshold raises ValueError
 
-- [ ] Chosen extension is implemented in its mapped file ([PLAN §11])
-- [ ] Extension is callable through the SDK
-- [ ] Unit tests cover the happy path and at least one error case
-- [ ] Output is included in `reports/` and referenced in README
+**Non-goals**:
+- Do not claim orphans are defects.
+- Do not add README section before artifacts exist.
+- Do not mark T6.05 Done until all closure items are verified.
+
+**Definition of Done** (T6.05 is Done only when):
+- [ ] FR-7.5 formally selected and explicitly traceable: T6.05 → FR-7.5 → T7.07.
+- [ ] Existing implementation and SDK exposure verified.
+- [ ] JSON and Markdown reports produced and persisted.
+- [ ] Happy, empty, invalid, and deterministic test cases pass.
+- [ ] README documents real usage and artifact paths with actual examples.
+- [ ] Evidence matrix points to actual tests and artifacts.
+- [ ] Limitations are explicit in the report.
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/services/comparison/test_diff_gen.py -v      # FR-7.4
-# or
-uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v # FR-7.5
-# or
-uv run pytest tests/unit/services/analysis/test_impact_reporter.py -v # FR-7.6
+uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v
 ```
 
 ---
@@ -1489,25 +1723,98 @@ uv run pytest tests/unit/services/comparison/test_fairness.py -v
 
 ---
 
-### T6.09 — Graph-Diff Comparison Report Section
+### T6.09 — Full Graph-Diff Comparison Report Section
 
 | Attribute | Value |
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
-| **PRD Reference** | [PRD FR-7.4], [PRD-EXT] |
-| **Estimate** | 60 min |
+| **Execution Order** | 5th of 6 remaining tasks (after T4.19 GraphReader) |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service], [PLAN ADR-007] |
+| **PRD Reference** | [PRD §5.7 FR-7.4], [PRD-CE §Graph-Diff Report Integration], [PRD-AP §Artifact Layout] |
+| **Depends On** | T4.19 GraphReader (operates on GraphReader/GraphData, not raw JSON) |
+| **Estimate** | 90 min |
 
-**Goal**: Add an optional pre/post graph-diff section to comparison reports so token metrics can be read beside structural graph changes.
+**Purpose**: Produce a full typed pre/post structural comparison of graph entities, relationships, and communities. The diff operates on `GraphReader`/`GraphData` — it must not load raw JSON independently.
 
-**Definition of Done**:
+**Planned package**: `src/ex04/services/comparison/graph_diff/`
 
-- [ ] Add deterministic graph diff helper for entity, relationship, and community changes
-- [ ] Render a Markdown section when both pre-fix and post-fix graph snapshots are available
-- [ ] Render a clear pending/blocked section when the post-fix graph snapshot is unavailable
-- [ ] Include graph-diff output path in comparison report artifacts
-- [ ] Unit tests cover changed graph, unchanged graph, and missing post-fix graph
+```
+__init__.py
+models.py          — GraphDiffResult, entity/relationship/community change models, typed status values
+canonicalize.py    — stable identity normalization for entities and relationships
+differ.py          — GraphDiffer: produce typed diff from two GraphData objects
+community_matcher.py — deterministic community matching by entity-membership overlap (Jaccard)
+renderer.py        — render GraphDiffResult to JSON and Markdown artifacts
+```
+
+**Entity classification**:
+```
+added | removed | changed | unchanged
+```
+
+**Relationship classification**:
+```
+added | removed | changed | unchanged
+```
+Relationship identity: (source entity ID, target entity ID, relationship type, direction).
+Non-identity attributes (confidence, weight, source anchor, metadata) determine `changed`.
+
+**Community classification**:
+```
+preserved | expanded | contracted | split | merged | added | removed
+```
+Community comparison must NOT use raw numeric community IDs (they can change between graph generations).
+Use deterministic entity-membership overlap (Jaccard similarity + deterministic tie-breaking).
+
+**Post-fix graph status values**:
+```python
+class PostGraphStatus(Enum):
+    AVAILABLE = "available"
+    UNCHANGED = "unchanged"
+    BLOCKED = "blocked"
+    MISSING = "missing"
+    INVALID = "invalid"
+```
+
+A missing or invalid post-fix graph must NOT destroy the comparison report.
+The comparison token metrics remain available regardless of graph-diff availability.
+
+**Planned artifacts**:
+- `artifacts/runs/<run-id>/reports/graph_diff.json` — canonical machine-readable diff
+- `artifacts/runs/<run-id>/reports/graph_diff.md` — rendered from JSON
+- Paths and SHA-256 hashes included in run manifest (`graph_diff_json_path`, `graph_diff_markdown_path`, `graph_diff_hash`, `pre_graph_hash`, `post_graph_hash`)
+
+**Implementation subtasks**:
+1. Create `models.py` with all typed change models and `PostGraphStatus`.
+2. Create `canonicalize.py` for stable entity and relationship identity normalization.
+3. Create `differ.py` — `GraphDiffer` consuming two `GraphData` objects via `GraphReader`.
+4. Create `community_matcher.py` — Jaccard-based community matching with tie-breaking.
+5. Create `renderer.py` — JSON and Markdown rendering with provenance fields.
+6. Wire into comparison service to optionally include diff when graph snapshots available.
+
+**Tests required** (`tests/unit/services/comparison/test_graph_diff.py`):
+- Changed graph: verify entity/relationship/community classifications.
+- Unchanged graph: all entries classified as `unchanged`.
+- Missing post-fix graph: `MISSING` status, comparison metrics still available.
+- Invalid post-fix graph: `INVALID` status with error details.
+- Community matching: no raw ID dependence; entity-membership overlap used.
+- Deterministic ordering: same result across two calls on same input.
+- Artifact persistence: JSON and Markdown written to expected paths.
+
+**Non-goals**:
+- Do not include repository-specific assertions (fixed Polygon node names, etc.) in the diff engine.
+- Do not load raw JSON graphs independently (always go through GraphReader/GraphData).
+- Do not block comparison report on graph-diff failure.
+
+**Definition of Done** (T6.09 is Done only when):
+- [ ] Entities, relationships, and communities receive complete classifications.
+- [ ] Stable identity and change semantics are implemented.
+- [ ] Community matching does not depend on raw IDs.
+- [ ] Missing/blocked/invalid post-graph states are typed and rendered honestly.
+- [ ] JSON and Markdown artifacts are persisted and hashed.
+- [ ] Comparison results remain available when graph diff is unavailable.
+- [ ] Unit, rendering, artifact, and integration tests pass.
 
 **Independent Verification**:
 
@@ -2026,19 +2333,90 @@ grep -c "##" README.md  # Should have multiple sections
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PRD Reference** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Execution Order** | 6th and final of 6 remaining tasks (depends on finalized architecture) |
+| **PLAN Reference** | [PLAN §3.10 Self-Grade Service], [PLAN ADR-009] |
+| **PRD Reference** | [PRD §5.8 FR-8.1–FR-8.4], [PRD-SG] |
+| **Depends On** | All other remaining tasks: T4.19, T5.03, T4.20, T6.05, T6.09 (service grades the finalized architecture) |
 | **Estimate** | 90 min |
 
-**Goal**: Add a reproducible self-grade service that assembles structural checks, quality gates, and a rubric score into one typed report.
+**Purpose**: Implement a reproducible, evidence-derived self-assessment service. Configuration defines maximum points and policies only — never pre-awarded earned scores. Score is derived from actual check results. Mandatory-gate failures cap the final score.
 
-**Definition of Done**:
+**T8.13 is implemented last** because its rubric and checks must evaluate the finalized architecture, reports, gates, and evidence — not an intermediate state.
 
-- [ ] Add `services/self_grade/` with typed check result and grade report models
-- [ ] Load rubric and gate commands from configuration
-- [ ] Run structural checks without provider credentials
-- [ ] Support injectable gate runner for tests and subprocess runner for production
-- [ ] Expose `Ex04SDK.self_grade()` and optional CLI command
-- [ ] Unit tests cover grade math, passing/failing checks, missing config, and injected gate runner behavior
+**Planned package**: `src/ex04/services/self_grade/`
+
+```
+__init__.py
+models.py      — CheckResult, GradeReport, CheckStatus enum (PASS/FAIL/ERROR/SKIPPED/BLOCKED)
+config.py      — load and validate rubric configuration (validates no earned_points field)
+runner.py      — GateRunnerInterface ABC + SubprocessGateRunner
+grader.py      — gate orchestration + evidence-derived score calculation + mandatory cap
+renderer.py    — render canonical JSON to Markdown
+```
+
+**Score calculation (mandatory)**:
+```
+check results → earned rubric points → raw score → mandatory-gate cap → final score
+```
+
+**Example (illustrative policy, not generated evidence)**:
+```
+Raw rubric score: 94
+Correctness gate: FAIL
+Mandatory cap: 59
+Final score: 59
+```
+
+**Status types**:
+| Status | Meaning |
+|---|---|
+| PASS | Check executed and met pass condition |
+| FAIL | Check executed and did not meet pass condition |
+| ERROR | Infrastructure/execution error (not a check failure) |
+| SKIPPED | Not run due to missing prerequisite |
+| BLOCKED | Cannot run because a prerequisite gate failed |
+
+**Required provenance fields in every report**: commit SHA, dirty-worktree state, rubric version, config hash, tool versions, commands executed, durations, timestamps, evidence paths.
+
+**Implementation subtasks**:
+1. Create `models.py` with `CheckResult`, `GradeReport`, `CheckStatus`.
+2. Create `config.py` to load rubric JSON; validate that no `earned_points` field exists.
+3. Create `runner.py` with `GateRunnerInterface` and `SubprocessGateRunner`.
+4. Create `grader.py` with score pipeline: results → earned points → raw → cap → final.
+5. Create `renderer.py` to render JSON to Markdown.
+6. Write `self_grade.json` as canonical; `self_grade.md` derived from it.
+7. Add `Ex04SDK.self_grade()`.
+8. Add optional thin CLI command (delegates entirely to SDK).
+
+**Tests required** (`tests/unit/services/self_grade/`):
+- Grade math: various PASS/FAIL combinations → correct raw score.
+- Mandatory cap: gate FAIL → cap applied correctly.
+- Multiple gates fail → lowest cap applied.
+- FAIL vs. ERROR distinction: command-not-found → ERROR.
+- Timeout → ERROR status, duration recorded.
+- BLOCKED propagation when prerequisite gate fails.
+- All provenance fields present in output.
+- JSON canonical; Markdown derived from JSON.
+- Injectable gate runner in tests.
+- Config validation rejects `earned_points` field.
+
+**Non-goals**:
+- Do not add business logic to the CLI.
+- Do not grade an intermediate architecture state.
+- Do not use pre-configured earned scores.
+
+**Definition of Done** (T8.13 is Done only when):
+- [ ] Rubric and gates are configuration-driven.
+- [ ] Earned scores are derived from check results.
+- [ ] Mandatory caps are applied correctly.
+- [ ] Timeouts, missing commands, failures, blocked checks, and execution errors are distinct.
+- [ ] Gate runner is injectable.
+- [ ] JSON is canonical and Markdown is rendered from it.
+- [ ] Provenance is complete.
+- [ ] SDK exposure exists.
+- [ ] Optional CLI remains thin.
+- [ ] Unit and integration tests pass.
+- [ ] The service grades the finalized repository.
 
 **Independent Verification**:
 
@@ -2146,6 +2524,29 @@ graph TD
     classDef phase8 fill:#e0e0e0,stroke:#212121
 ```
 
+### Remaining Task Dependency Order
+
+The six remaining open tasks have explicit dependencies overriding the default parallel policy:
+
+```mermaid
+graph TD
+    T402[T4.02 GraphParser - Done]
+    T402 --> T419[T4.19 GraphReader - Not Started]
+    T419 --> T420[T4.20 WeaknessDetector - Not Started]
+    T419 --> T609[T6.09 GraphDiff - Not Started]
+    T707[T7.07 OrphanDetector - Done]
+    T707 --> T605[T6.05 Orphan Closure - In Progress]
+    T419 -.->|optional reuse| T605
+    T503[T5.03 Parity Helpers - Not Started]
+    T419 --> T813[T8.13 Self-Grade - Not Started]
+    T503 --> T813
+    T420 --> T813
+    T605 --> T813
+    T609 --> T813
+```
+
+**Execution order**: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+
 ---
 
 ## 11. Statistics
@@ -2154,7 +2555,9 @@ graph TD
 |---|---|
 | Total tasks | 74 |
 | Done | 68 |
-| Genuinely open (unimplemented) | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
+| Open tasks | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
+| Genuinely unimplemented | 5 (T4.19, T4.20, T5.03, T6.09, T8.13) |
+| Implementation complete, closure/evidence pending | 1 (T6.05 — core OrphanDetector exists via T7.07; report persistence and closure work remain) |
 | P0 (critical) | 56 |
 | P1 (important) | 18 |
 | Phases | 8 |
@@ -2223,3 +2626,4 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.22 | 2026-06-21 | Mark P6-R10 through P8-R10 complete after local Ruff, mypy, validator, docs-sync, and pytest verification; keep P8-R11 incomplete until clean-clone and PR evidence are recorded. |
 | 1.23 | 2026-06-21 | Add pending follow-up tasks for typed graph reader, multi-signal weakness detector, agent workflow parity helpers, graph-diff comparison reporting, and self-grade service. |
 | 1.24 | 2026-06-21 | Full documentation sync: mark T1.02, T2.06, T3.01–T3.05, T4.00, T4.002, T4.01, T6.04, T8.01–T8.05 Done (implemented but status stale); mark P8-R11 Complete; update Statistics to 74 total / 68 Done / 6 open (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13). Traceability: [PRD §8], [PLAN §3], implementation verified in src/. |
+| 1.25 | 2026-06-21 | Define full contracts for 6 remaining tasks: rewrite T4.19 (GraphReader facade), T4.20 (weakness detector), T5.03 (parity helpers), T6.05 (orphan closure — In Progress, not Not Started), T6.09 (graph-diff report), T8.13 (self-grade service); add explicit task dependency graph and execution order; update statistics to distinguish T6.05 closure-pending from 5 genuinely unimplemented tasks. Traceability: [PRD §5.6 FR-6.4], [PRD §5.7 FR-7.7], [PRD §5.8 FR-8.1–FR-8.4], [PLAN ADR-007/ADR-008/ADR-009]. |

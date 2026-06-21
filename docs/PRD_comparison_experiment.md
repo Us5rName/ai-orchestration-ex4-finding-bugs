@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Requirement ID** | PRD-CE |
-| **Parent PRD** | [docs/PRD.md](PRD.md) §5.6 (FR-6.1–6.4) |
+| **Parent PRD** | [docs/PRD.md](PRD.md) §5.6 (FR-6.1–FR-6.4) |
 | **Status** | Active |
 | **Date** | 2026-06-20 |
 
@@ -48,6 +48,70 @@ Out of scope: LLM provider billing details, Graphify internals, vault note forma
 
 ---
 
+## Controlled vs. Treatment Field Classification
+
+The comparison experiment isolates **one** intentional experimental treatment: the context-acquisition strategy.
+
+### Controlled (shared by both modes — must be identical)
+
+| Field | Notes |
+|---|---|
+| Provider | Same provider name and base URL |
+| Model | Same model identifier |
+| Generation parameters | Temperature, max tokens, top-p, stop sequences |
+| System instructions | Same template and version |
+| Prompt envelope | Same canonical template and version (`prompt_envelope_version`) |
+| Response/output schema | Same response parser and output schema version |
+| Gatekeeper boundary | Both modes route through the same `ApiGatekeeper` |
+| Retry policy | Same retry count, backoff, and error handling |
+| Token-record conversion | Same `TokenRecord` constructor from `ProviderResponse` |
+| Budget ledger | Same cumulative budget accounting (`BudgetLedger`) |
+| Trace event creation | Same `ProviderTraceEvent` factory |
+| Correctness gate | Same `CorrectnessGate` logic and version |
+| Artifact schema | Same `RunManifest` and report schemas |
+| Failure representation | Same `RunMetrics` fields for partial/failed runs |
+
+### Treatment (intentionally different)
+
+| Field | Naive | Graph-Guided |
+|---|---|---|
+| Context acquisition strategy | Read raw source files without graph guidance | Navigate graph + vault; use ranked entities, dependency paths, and source anchors |
+| Resulting `ContextBundle` | Flat source content, bounded by naive file limit | Graph-ranked, vault-enriched, source-anchored context |
+
+## Parity Fingerprint
+
+A deterministic parity fingerprint is computed before provider calls and must match across both modes:
+
+```python
+@dataclass(frozen=True, slots=True)
+class ParityFingerprint:
+    provider: str
+    model: str
+    generation_params_hash: str   # SHA-256 of generation parameters
+    system_prompt_version: str
+    prompt_envelope_version: str
+    response_schema_version: str
+    retry_policy_hash: str
+    budget_policy_hash: str
+    correctness_gate_version: str
+```
+
+If the parity fingerprint mismatches between modes before provider calls, comparison execution shall raise `ParityMismatchError` and abort — no provider calls shall occur.
+
+## Shared Instrumented Call Service
+
+Both modes shall delegate provider calls through a shared `InstrumentedCallService` that produces an atomic result:
+
+```python
+@dataclass(frozen=True, slots=True)
+class InstrumentedCallResult:
+    response: ProviderResponse
+    token_record: TokenRecord
+    trace_event: ProviderTraceEvent
+```
+
+This design prevents a call path where a provider call succeeds but telemetry is forgotten because recording was a separate optional step.
+
 ## Contracts and Fairness Invariants
 
 Both modes **must share** (validated at runtime and in tests):
@@ -65,6 +129,16 @@ Both modes **must share** (validated at runtime and in tests):
 **Naive mode must not** use: graph rankings, vault notes, graph relationships, or graph-selected anchors.
 
 **Graph-guided mode must** use: ranked entities, dependency paths, vault notes (index.md, hot.md), and source anchors traceable to file+line.
+
+## Graph-Diff Report Integration
+
+When both a pre-fix and a post-fix graph snapshot are available, the comparison report shall include a graph-diff section classifying entity, relationship, and community changes.
+
+When the post-fix graph is unavailable, the report shall render an explicit `BLOCKED` or `MISSING` section with a typed status, not silence. The comparison token metrics shall remain available regardless of graph-diff availability.
+
+Planned artifact paths:
+- `artifacts/runs/<run-id>/reports/graph_diff.json`
+- `artifacts/runs/<run-id>/reports/graph_diff.md`
 
 ---
 
@@ -140,3 +214,4 @@ Both modes **must share** (validated at runtime and in tests):
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 6 finalization |
 | 1.1 | 2026-06-21 | Align with `ComparisonRequest`/`ComparisonOutcome`, grounded/verified semantics, and run-scoped reports. |
+| 1.2 | 2026-06-21 | Add controlled-vs-treatment field classification, parity fingerprint definition, shared `InstrumentedCallService`, pre-call mismatch rejection semantics, and graph-diff report integration. Traceability: [PRD §5.6 FR-6.4]. |

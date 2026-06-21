@@ -34,7 +34,18 @@ artifacts/
 ├── post_fix/         # Post-fix evidence for before/after comparison
 ├── runs/
 │   └── <run-id>/     # Per-run: manifest.json, result.json, gate_output.json
-└── manifests/        # Cross-run manifest index
+│       └── reports/
+│           ├── comparison.json
+│           ├── comparison.md
+│           ├── orphan_report.json      # Planned: T6.05 closure
+│           ├── orphan_report.md        # Planned: T6.05 closure
+│           ├── graph_diff.json         # Planned: T6.09
+│           └── graph_diff.md           # Planned: T6.09
+├── manifests/        # Cross-run manifest index
+└── self_grade/
+    └── <grade-id>/   # Planned: T8.13
+        ├── self_grade.json
+        └── self_grade.md
 
 reports/              # Legacy authored reports; production reports live under runs/
 obsidian/             # Obsidian vault (generated; committed when stable)
@@ -75,6 +86,15 @@ Every `artifacts/manifests/<run-id>_manifest.json` must contain:
 | `correctness_gate_status` | str | `not_requested` / `not_run` / `passed` / `failed` / `blocked` / `inconclusive` |
 | `limitations` | list[str] | Known limitations of this run |
 | `telemetry_available` | bool | Whether provider telemetry was returned |
+| `extension_report_paths` | list[str] \| null | Relative paths to extension reports (orphan, weakness, etc.) |
+| `graph_diff_json_path` | str \| null | Relative path to `graph_diff.json` (planned T6.09) |
+| `graph_diff_markdown_path` | str \| null | Relative path to `graph_diff.md` (planned T6.09) |
+| `pre_graph_hash` | str \| null | SHA-256 of pre-fix graph.json |
+| `post_graph_hash` | str \| null | SHA-256 of post-fix graph.json |
+| `graph_diff_hash` | str \| null | SHA-256 of graph_diff.json |
+| `self_grade_config_hash` | str \| null | SHA-256 of self-grade rubric configuration (planned T8.13) |
+
+**Note**: Self-grade artifacts (`artifacts/self_grade/<grade-id>/`) are repository-assessment artifacts. They are not attributed to either the naive or graph-guided comparison mode.
 
 ---
 
@@ -146,3 +166,4 @@ Every `artifacts/manifests/<run-id>_manifest.json` must contain:
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 7 finalization |
 | 1.1 | 2026-06-21 | Align manifest naming, full controlled hashes, token telemetry preservation, and production report layout. |
+| 1.2 | 2026-06-21 | Add planned artifact paths for extension reports (T6.05), graph-diff (T6.09), and self-grade (T8.13); add planned provenance fields `extension_report_paths`, `graph_diff_json_path`, `graph_diff_markdown_path`, `pre_graph_hash`, `post_graph_hash`, `graph_diff_hash`, `self_grade_config_hash`; clarify self-grade artifacts are not attributed to comparison modes. Traceability: [PRD §5.7 FR-7.5, FR-7.4], [PRD §5.8 FR-8.4]. |
