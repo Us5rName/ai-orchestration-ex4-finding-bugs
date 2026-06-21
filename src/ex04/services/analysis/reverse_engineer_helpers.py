@@ -34,9 +34,9 @@ def build_block_diagram_lines(graph_data: GraphData) -> list[str]:
     for file_key, entities in sorted(file_groups.items()):
         safe_name = file_key.replace(".", "_").replace("/", "_")
         lines.append(f'  id"{safe_name}" [{file_key}]')
-        for entity in entities:
-            safe_ent = entity.replace(" ", "_")
-            lines.append(f'  id"{safe_ent}" [{entity}]')
+        for entity_name in entities:
+            safe_ent = entity_name.replace(" ", "_")
+            lines.append(f'  id"{safe_ent}" [{entity_name}]')
 
     for rel in graph_data.relationships:
         src_safe = rel.source.replace(" ", "_")

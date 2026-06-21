@@ -59,6 +59,15 @@ def test_depth_one_finds_only_direct() -> None:
     assert all(n.depth <= 1 for n in report.direct_dependents)
 
 
+def test_zero_depth_reports_no_dependents() -> None:
+    """max_depth=0 reports only the changed symbol, not depth-1 dependents."""
+    graph = _make_graph()
+    report = PatchImpactAnalyzer().analyze(graph, ["A"], max_depth=0)
+    assert report.direct_dependents == []
+    assert report.transitive_dependents == []
+    assert report.impact_paths == []
+
+
 def test_symbol_not_in_graph_skipped() -> None:
     """Changed symbol not in graph is noted in limitations."""
     graph = _make_graph()
