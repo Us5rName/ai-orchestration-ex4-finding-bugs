@@ -1,12 +1,12 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 9. Configuration Schema
 
-[← Back to Home](./Home.md) | [Prev: API Contract](./08-API-Contract.md) | [Next: Project Structure →](./10-Project-Structure.md)
-
----
+[Back to Home](./Home.md)
 
 All configuration is externalized per [PRD NFR-4] and [PRD §6].
 
-## 9.1 `config/setup.json`
+### 9.1 `config/setup.json`
 
 ```json
 {
@@ -44,7 +44,7 @@ All configuration is externalized per [PRD NFR-4] and [PRD §6].
 }
 ```
 
-## 9.2 `config/rate_limits.json`
+### 9.2 `config/rate_limits.json`
 
 ```json
 {
@@ -63,7 +63,7 @@ All configuration is externalized per [PRD NFR-4] and [PRD §6].
 }
 ```
 
-## 9.3 `.env-example`
+### 9.3 `.env-example`
 
 ```bash
 OPENAI_API_KEY=sk-...
@@ -73,5 +73,3 @@ ANTHROPIC_BASE_URL=https://api.anthropic.com
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: API Contract](./08-API-Contract.md) | [Next: Project Structure →](./10-Project-Structure.md)

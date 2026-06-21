@@ -1,6 +1,5 @@
-"""Generate docs/plan-wiki/ and docs/todo-wiki/ from canonical documents.
+"""Generate wiki pages from canonical documentation.
 
-GENERATED CONTENT IS PLACED IN wiki subdirectories.
 The canonical sources are docs/PLAN.md and docs/TODO.md.
 Run: uv run python scripts/generate_doc_wikis.py
 """
@@ -17,7 +16,7 @@ TODO_SRC = ROOT / "docs" / "TODO.md"
 PLAN_WIKI = ROOT / "docs" / "plan-wiki"
 TODO_WIKI = ROOT / "docs" / "todo-wiki"
 
-HEADER = "<!-- GENERATED FROM CANONICAL DOCUMENTATION — DO NOT EDIT DIRECTLY -->\n\n"
+HEADER = "<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->\n\n"
 
 
 def _extract_h2_sections(text: str) -> list[tuple[str, str]]:
@@ -28,6 +27,8 @@ def _extract_h2_sections(text: str) -> list[tuple[str, str]]:
     for i, m in enumerate(matches):
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         heading = m.group(1).strip()
+        if heading == "Table of Contents":
+            continue
         body = text[m.end() : end].strip()
         sections.append((heading, body))
     return sections
@@ -35,35 +36,49 @@ def _extract_h2_sections(text: str) -> list[tuple[str, str]]:
 
 def _slug(heading: str) -> str:
     """Convert heading to filename slug."""
-    return re.sub(r"[^a-zA-Z0-9]+", "-", heading).strip("-")
+    plain = re.sub(r"^\d+\.\s+", "", heading)
+    slug = re.sub(r"[^a-zA-Z0-9]+", "-", plain).strip("-")
+    aliases = {
+        "Architectural-Decision-Records-ADRs": "ADRs",
+        "UML-Activity-Diagram-Main-Investigation-Flow": "UML-Activity-Diagram",
+        "Project-Structure-Final": "Project-Structure",
+        "Phase-6-Comparison-Service": "Phase-6-Comparison",
+        "Phase-7-End-to-End-Execution": "Phase-7-End-to-End",
+        "Task-Dependency-Summary": "Dependency-Summary",
+    }
+    return aliases.get(slug, slug)
+
+
+def _write_wiki(source: Path, out_dir: Path, label: str) -> None:
+    """Regenerate Home.md and one page per H2 section."""
+    text = source.read_text(encoding="utf-8")
+    sections = _extract_h2_sections(text)
+    home_lines = [HEADER, f"# {label.upper()} Wiki - Home\n\n"]
+    home_lines.append(f"Navigation index generated from `{source.relative_to(ROOT)}`.\n\n")
+    home_lines.append("| # | Section |\n|---|---|\n")
+    for idx, (heading, _body) in enumerate(sections, 1):
+        slug = _slug(heading)
+        page = f"{idx:02d}-{slug}.md"
+        home_lines.append(f"| {idx} | [{heading}](./{page}) |\n")
+        body = _section_page(label, heading, _body)
+        (out_dir / page).write_text(body, encoding="utf-8")
+    (out_dir / "Home.md").write_text("".join(home_lines), encoding="utf-8")
+    print(f"{label}-wiki updated ({len(sections)} sections)")
+
+
+def _section_page(label: str, heading: str, body: str) -> str:
+    """Return a generated section page."""
+    return f"{HEADER}# {heading}\n\n[Back to Home](./Home.md)\n\n{body}\n"
 
 
 def generate_plan_wiki() -> None:
-    """Regenerate plan-wiki Home.md from PLAN.md section headings."""
-    text = PLAN_SRC.read_text(encoding="utf-8")
-    sections = _extract_h2_sections(text)
-    home_lines = [HEADER, "# PLAN Wiki — Home\n\n"]
-    home_lines.append("Navigation index generated from `docs/PLAN.md`.\n\n")
-    home_lines.append("| # | Section |\n|---|---|\n")
-    for idx, (heading, _body) in enumerate(sections, 1):
-        slug = _slug(heading)
-        home_lines.append(f"| {idx} | [{heading}](./plan-{idx:02d}-{slug}.md) |\n")
-    (PLAN_WIKI / "Home.md").write_text("".join(home_lines), encoding="utf-8")
-    print(f"plan-wiki/Home.md updated ({len(sections)} sections)")
+    """Regenerate plan-wiki from PLAN.md."""
+    _write_wiki(PLAN_SRC, PLAN_WIKI, "plan")
 
 
 def generate_todo_wiki() -> None:
-    """Regenerate todo-wiki Home.md from TODO.md section headings."""
-    text = TODO_SRC.read_text(encoding="utf-8")
-    sections = _extract_h2_sections(text)
-    home_lines = [HEADER, "# TODO Wiki — Home\n\n"]
-    home_lines.append("Navigation index generated from `docs/TODO.md`.\n\n")
-    home_lines.append("| # | Section |\n|---|---|\n")
-    for idx, (heading, _body) in enumerate(sections, 1):
-        slug = _slug(heading)
-        home_lines.append(f"| {idx} | [{heading}](./todo-{idx:02d}-{slug}.md) |\n")
-    (TODO_WIKI / "Home.md").write_text("".join(home_lines), encoding="utf-8")
-    print(f"todo-wiki/Home.md updated ({len(sections)} sections)")
+    """Regenerate todo-wiki from TODO.md."""
+    _write_wiki(TODO_SRC, TODO_WIKI, "todo")
 
 
 def main() -> None:

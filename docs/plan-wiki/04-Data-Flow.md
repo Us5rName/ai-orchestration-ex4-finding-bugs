@@ -1,10 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 4. Data Flow
 
-[← Back to Home](./Home.md) | [Prev: Module Design](./03-Module-Design.md) | [Next: ADRs →](./05-ADRs.md)
+[Back to Home](./Home.md)
 
----
-
-## 4.1 End-to-End Workflow
+### 4.1 End-to-End Workflow
 
 ```mermaid
 sequenceDiagram
@@ -19,10 +19,10 @@ sequenceDiagram
 
     User->>SDK: run_graphify(target_path)
     SDK->>Graph: execute(target_path)
-    Graph-->>SDK: GraphResult (graph.json parsed)
+    Graph-->>SDK: GraphData (graph.json parsed)
 
     SDK->>Vault: build(GraphData)
-    Vault-->>SDK: VaultResult (index.md, hot.md created)
+    Vault-->>SDK: dict[str, Path] (index.md, hot.md created)
 
     User->>SDK: investigate_bug(bug_report)
     SDK->>Agent: run_workflow(bug_report, graph, vault)
@@ -44,7 +44,7 @@ sequenceDiagram
     SDK-->>User: root_cause, fix_applied
 ```
 
-## 4.2 Comparison Workflow
+### 4.2 Comparison Workflow
 
 ```mermaid
 sequenceDiagram
@@ -69,5 +69,3 @@ sequenceDiagram
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: Module Design](./03-Module-Design.md) | [Next: ADRs →](./05-ADRs.md)

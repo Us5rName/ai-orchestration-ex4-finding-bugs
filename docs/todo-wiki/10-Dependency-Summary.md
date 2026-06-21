@@ -1,6 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 10. Task Dependency Summary
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 ```mermaid
 graph TD
@@ -13,10 +15,11 @@ graph TD
 
     subgraph P2["Phase 2: Shared"]
         T201[T2.01 Version]
-        T202[T2.02 Config]
-        T203[T2.03 Gatekeeper]
-        T204[T2.04 Tokens]
-        T205[T2.05 __init__]
+        T202[T2.02 Types]
+        T203[T2.03 Config]
+        T204[T2.04 Gatekeeper]
+        T205[T2.05 Tokens]
+        T206[T2.06 __init__]
     end
 
     subgraph P3["Phase 3: Providers"]
@@ -65,6 +68,7 @@ graph TD
         T602[T6.02 Guided]
         T603[T6.03 Metrics]
         T604[T6.04 Report]
+        T605[T6.05 Extension]
     end
 
     subgraph P7["Phase 7: E2E"]
@@ -85,8 +89,15 @@ graph TD
     end
 
     P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
+
+    classDef phase1 fill:#e1f5fe,stroke:#01579b
+    classDef phase2 fill:#e8f5e9,stroke:#1b5e20
+    classDef phase3 fill:#fff3e0,stroke:#e65100
+    classDef phase4 fill:#f3e5f5,stroke:#4a148c
+    classDef phase5 fill:#e0f7fa,stroke:#006064
+    classDef phase6 fill:#fce4ec,stroke:#880e4f
+    classDef phase7 fill:#fff9c4,stroke:#f57f17
+    classDef phase8 fill:#e0e0e0,stroke:#212121
 ```
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §10.

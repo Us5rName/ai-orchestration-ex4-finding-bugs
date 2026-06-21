@@ -1,17 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 6. Phase 5 — SDK + CLI
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Wire all services through SDK. Add CLI entry point.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T5.01 — Implement SDK | See below |
-| T5.02 — Implement CLI Entry Point | See below |
-
----
 
 ### T5.01 — Implement SDK
 
@@ -41,8 +34,7 @@
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/sdk/test_sdk.py -v --cov=ex04.sdk.sdk --cov-report=term-missing
-# Tests with all services mocked
+uv run pytest tests/unit/sdk/test_sdk.py tests/integration/ -v
 ```
 
 ---
@@ -75,4 +67,30 @@ uv run python -m ex04 --help
 
 ---
 
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §6.
+### T5.03 — Agent Workflow Parity Helpers
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-4.1], [PRD FR-6.1] |
+| **Estimate** | 60 min |
+
+**Goal**: Centralize shared node call and token-recording behavior so graph-guided and naive workflows differ by context strategy, not instrumentation.
+
+**Definition of Done**:
+
+- [ ] Add shared helper for Gatekeeper-backed node calls
+- [ ] Add shared helper for converting provider responses into token records
+- [ ] Ensure graph-guided and naive paths use the same call/record helpers
+- [ ] Preserve existing workflow state fields and retry behavior
+- [ ] Unit tests verify parity of token accounting and node message shape across both paths
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/agent tests/unit/services/comparison -v
+```
+
+---

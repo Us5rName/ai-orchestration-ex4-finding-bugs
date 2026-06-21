@@ -1,8 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 10. Project Structure (Final)
 
-[← Back to Home](./Home.md) | [Prev: Configuration Schema](./09-Configuration-Schema.md) | [Next: Traceability Matrix →](./11-Traceability-Matrix.md)
-
----
+[Back to Home](./Home.md)
 
 ```
 code/
@@ -95,5 +95,3 @@ code/
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: Configuration Schema](./09-Configuration-Schema.md) | [Next: Traceability Matrix →](./11-Traceability-Matrix.md)

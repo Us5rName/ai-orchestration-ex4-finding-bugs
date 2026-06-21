@@ -1,10 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 1. Architecture Overview
 
-[← Back to Home](./Home.md) | [Next: C4 Model →](./02-C4-Model.md)
+[Back to Home](./Home.md)
 
----
-
-## 1.1 Design Philosophy
+### 1.1 Design Philosophy
 
 This system implements the requirements defined in **[PRD §2.1 Goals G1-G7]** and **[PRD §5 Functional Requirements FR-1 through FR-7]**. The architecture is designed around three core principles:
 
@@ -14,7 +14,7 @@ This system implements the requirements defined in **[PRD §2.1 Goals G1-G7]** a
 | **SDK-First** | All business logic flows through a single SDK entry point; CLI/REST are thin presentation layers | [PRD §5.4 FR-4.1] workflow definition |
 | **Modular Independence** | Each service is an independent building block with validated I/O contracts | Supports [PRD §2.2 KPIs] for testability and coverage |
 
-## 1.2 High-Level Architecture
+### 1.2 High-Level Architecture
 
 ```mermaid
 graph TD
@@ -71,5 +71,3 @@ graph TD
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Next: C4 Model →](./02-C4-Model.md)

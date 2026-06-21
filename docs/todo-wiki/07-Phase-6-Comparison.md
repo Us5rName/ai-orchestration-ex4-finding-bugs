@@ -1,20 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 7. Phase 6 — Comparison Service
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Implement token comparison (naive vs. graph-guided).
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T6.01 — Naive Runner | See below |
-| T6.02 — Graph-Guided Runner | See below |
-| T6.03 — Metrics Calculator | See below |
-| T6.04 — Comparison Report Generator | See below |
-| T6.05 — Implement an Additional Extension | See below |
-
----
 
 ### T6.01 — Naive Runner
 
@@ -157,4 +147,106 @@ uv run pytest tests/unit/services/analysis/test_impact_reporter.py -v # FR-7.6
 
 ---
 
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §7.
+### T6.06 — Deterministic Correctness Gate
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Measurable Acceptance Criteria |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `CorrectnessGate` validates patch against original failure reproduction
+- [x] Gate distinguishes: reproduced-failure / patch-applied / targeted-test / suite / policy / final verdict
+- [x] Machine-readable JSON and human-readable Markdown output
+- [x] `tests/unit/services/comparison/test_correctness_gate.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_correctness_gate.py -v
+```
+
+---
+
+### T6.07 — Run Ledgers and Metrics Reports
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Run Ledgers |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `RunManifest` dataclass covers all required provenance fields
+- [x] `ArtifactStore.save_manifest` writes JSON to `artifacts/manifests/`
+- [x] Overwrite protection raises `ArtifactOverwriteError`
+- [x] Signed deltas and negative savings preserved
+- [x] `tests/unit/shared/test_artifact_store.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_artifact_store.py -v
+```
+
+---
+
+### T6.08 — Fairness Invariant Tests
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Contracts and Fairness Invariants |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] Tests verify both modes receive identical config, bug report, provider, model
+- [x] Tests verify naive mode does not use graph data
+- [x] Tests verify graph-guided mode uses entity names and vault notes
+- [x] `tests/unit/services/comparison/test_fairness.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_fairness.py -v
+```
+
+---
+
+### T6.09 — Graph-Diff Comparison Report Section
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-7.4], [PRD-EXT] |
+| **Estimate** | 60 min |
+
+**Goal**: Add an optional pre/post graph-diff section to comparison reports so token metrics can be read beside structural graph changes.
+
+**Definition of Done**:
+
+- [ ] Add deterministic graph diff helper for entity, relationship, and community changes
+- [ ] Render a Markdown section when both pre-fix and post-fix graph snapshots are available
+- [ ] Render a clear pending/blocked section when the post-fix graph snapshot is unavailable
+- [ ] Include graph-diff output path in comparison report artifacts
+- [ ] Unit tests cover changed graph, unchanged graph, and missing post-fix graph
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py -v
+```
+
+---

@@ -1,14 +1,14 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 3. Module Design
 
-[← Back to Home](./Home.md) | [Prev: C4 Model](./02-C4-Model.md) | [Next: Data Flow →](./04-Data-Flow.md)
-
----
+[Back to Home](./Home.md)
 
 Each module is an **independent building block** with a well-defined interface. **No module imports another module's concrete implementation** — all inter-module dependencies flow through `*Interface` abstract classes. This enables **fully parallel development**: every team member works against a stable contract while the actual implementation is built in parallel.
 
 **Contract-First Rule**: For every service `XService`, an `XServiceInterface` ABC is defined **before** implementation begins. Other modules depend only on the interface. At runtime, the SDK injects the concrete implementation.
 
-## 3.1 Module Dependency Graph (Runtime)
+### 3.1 Module Dependency Graph (Runtime)
 
 Solid arrows = **runtime** dependencies (after SDK wiring). Dashed arrows = **compile-time** interface imports only (no blocking).
 
@@ -106,8 +106,6 @@ def count_tokens(self, text: str) -> int: ...
 def reverse_engineer(self, graph_data: GraphData) -> str: ...
 @abstractmethod
 def report(self, investigation: InvestigationResult) -> str: ...
-@abstractmethod
-def identify_patterns(self, graph_data: GraphData) -> list[str]: ...
 ```
 
 **AgentServiceInterface** (`services/agent/interface.py`, Phase 4 T4.07–T4.15):
@@ -171,7 +169,7 @@ gantt
 
 **Point**: After Phase 2 (interfaces are defined), **Phase 3 and 4 run fully in parallel**. No developer waits for another module's implementation.
 
-## 3.2 SDK Module — Single Entry Point
+### 3.2 SDK Module — Single Entry Point
 
 | Attribute | Value |
 |---|---|
@@ -227,61 +225,16 @@ class Ex04SDK:
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
     ) -> ComparisonReport: ...
-    def compare_target(
-        self,
-        target_path: str | Path,
-        bug_report: str,
-    ) -> ComparisonReport: ...
     def reverse_engineer(self, target_path: str) -> str: ...
-    def generate_report(self, investigation: InvestigationResult) -> str: ...
-    def identify_patterns(self, target_path: str) -> list[str]: ...
     def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
 ```
 
 `from_config()` is the concrete wiring point: it builds the Phase 4 service facades
-(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`, `ComparisonService`)
-from `config/setup.json`. Concrete service construction is **only allowed in `sdk/_wiring.py`**;
-`sdk/sdk.py` imports interfaces only.
+(`GraphService`, `VaultService`, `AgentService`, `AnalysisService`) and the
+Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
 
-### 3.2.1 Comparison Input Helper (`sdk/_comparison_inputs.py`)
-
-Shared helper for deterministic source-file discovery and vault-directory resolution.
-Not part of the public SDK API — used by `compare_target()` and `full_pipeline()`.
-
-```python
-def discover_source_files(
-    target_path: Path | str,
-    config: dict[str, Any] | None = None,
-) -> list[Path]:
-    """Recursively discover .py files, excluding generated/vendor/cache dirs.
-
-    Excluded dirs: .git, .venv, venv, env, __pycache__, .mypy_cache,
-    .pytest_cache, .ruff_cache, build, dist, site-packages, node_modules.
-    Sorts results deterministically. Enforces config["comparison"]["naive_file_limit"].
-    Raises FileNotFoundError if target missing or no eligible files found.
-    Raises NotADirectoryError if target is a file.
-    """
-
-def resolve_vault_dir(vault: dict[str, Path]) -> Path | None:
-    """Resolve vault directory from the artifact map.
-
-    Prefers vault["index"].parent; falls back to first value's parent.
-    Returns None for empty vault.
-    """
-```
-
-### 3.2.2 Architecture Boundary Rules
-
-| Rule | Allowed | Forbidden |
-|---|---|---|
-| Concrete construction | `sdk/_wiring.py` | Any other module |
-| Interface imports | All SDK/service modules | — |
-| Package-local re-exports | `services/<pkg>/__init__.py` | — |
-| Cross-service concrete imports | — | Any domain service module |
-| CLI service imports | — | `__main__.py` must use SDK only |
-
-## 3.3 Graph Service — Grphify Integration
+### 3.3 Graph Service — Grphify Integration
 
 | Attribute | Value |
 |---|---|
@@ -297,6 +250,7 @@ def resolve_vault_dir(vault: dict[str, Path]) -> Path | None:
 | `runner.py` | Execute Grphify CLI on target codebase |
 | `parser.py` | Parse `graph.json` into structured `GraphData` objects |
 | `analyzer.py` | Compute centrality, community detection, God Node identification |
+| `reader.py` | Planned read-only typed query facade over parsed `GraphData` |
 
 **Input**: Target codebase path (`str`), Grphify configuration (`dict`).
 
@@ -321,9 +275,18 @@ class GraphAnalyzer:
     def find_god_nodes(self, graph: GraphData, min_degree: int = 2) -> list[str]: ...
     def rank_by_centrality(self, graph: GraphData, ref_node: str) -> list[tuple[str, float]]: ...
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
+
+# reader.py (planned)
+class GraphReader:
+    """Read-only typed query facade over parsed graph data."""
+    def node(self, node_id: str) -> Entity: ...
+    def all_nodes(self) -> list[Entity]: ...
+    def edges_of(self, node_id: str) -> list[Relationship]: ...
+    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    def communities(self) -> dict[str, list[Entity]]: ...
 ```
 
-## 3.4 Vault Service — Obsidian Management
+### 3.4 Vault Service — Obsidian Management
 
 | Attribute | Value |
 |---|---|
@@ -368,7 +331,7 @@ class NoteManager:
     def update(self, note_type: str, content: str) -> Path: ...
 ```
 
-## 3.5 Agent Service — LangGraph Workflow
+### 3.5 Agent Service — LangGraph Workflow
 
 | Attribute | Value |
 |---|---|
@@ -389,6 +352,7 @@ class NoteManager:
 | `nodes/rootcause.py` | Root Cause node — determine exact bug origin |
 | `nodes/fix.py` | Fix Generation node — propose and apply code fix |
 | `nodes/verify.py` | Verification node — run tests to confirm fix |
+| `nodes/common.py` | Shared node helpers for context parsing and planned call/record parity |
 | `state.py` | Define the LangGraph state schema |
 
 **Input**: Bug report (`str`), graph data (`GraphData`), vault path (`Path`).
@@ -399,7 +363,7 @@ class NoteManager:
 
 ```python
 # state.py
-class AgentState(TypedDict):
+class AgentState(TypedDict, total=False):
     bug_report: str
     graph_context: str
     vault_context: str
@@ -410,7 +374,7 @@ class AgentState(TypedDict):
     proposed_fix: str
     fix_diff: str          # unified diff of the applied change, when available
     fix_applied: bool
-    test_results: dict
+    test_results: dict[str, Any]
     token_usage: TokenMetrics
     iterations: int        # verify→fix cycles completed (bounds retry loop)
 
@@ -456,9 +420,13 @@ class FixGenerationNode:
 class VerificationNode:
     """Run tests to confirm fix, increment iteration counter."""
     def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/common.py (planned extension)
+def call_with_gatekeeper(...) -> ProviderResponse: ...
+def token_record(...) -> TokenMetrics: ...
 ```
 
-## 3.6 Analysis Service — Reverse Engineering & Bug Reporting
+### 3.6 Analysis Service — Reverse Engineering & Bug Reporting
 
 | Attribute | Value |
 |---|---|
@@ -475,6 +443,7 @@ class VerificationNode:
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
 | `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
+| `weakness_detector.py` | Planned multi-signal weakness detector over graph and source evidence |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -502,9 +471,14 @@ class OrphanDetector:
     def find_orphans(self, graph: GraphData) -> list[Entity]: ...
     def generate_stub(self, entity: Entity) -> str: ...
     def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
+
+# weakness_detector.py (planned)
+class WeaknessDetector:
+    """Run deterministic graph/source weakness signals and rank findings."""
+    def detect(self, graph_data: GraphData) -> list[WeaknessFinding]: ...
 ```
 
-## 3.7 Comparison Service — Token Savings Proof
+### 3.7 Comparison Service — Token Savings Proof
 
 | Attribute | Value |
 |---|---|
@@ -521,6 +495,7 @@ class OrphanDetector:
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
+| `graph_diff.py` | Planned pre/post graph snapshot diff for comparison reports |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -544,9 +519,13 @@ class MetricsCalculator:
 class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
+
+# graph_diff.py (planned)
+def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
+def render_graph_diff(diff: GraphDiff) -> str: ...
 ```
 
-## 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
+### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
 
 | Attribute | Value |
 |---|---|
@@ -598,7 +577,7 @@ class ProviderFactory:
     # config must include: name, model, api_key_env, base_url (optional)
 ```
 
-## 3.9 Shared Layer — Infrastructure
+### 3.9 Shared Layer — Infrastructure
 
 | Attribute | Value |
 |---|---|
@@ -617,6 +596,7 @@ class ProviderFactory:
 | `types.py` | Re-exports all shared types from sub-modules |
 | `types_metrics.py` | TokenMetrics, RunMetrics, ComparisonMetrics, ComparisonReport |
 | `types_results.py` | ProviderResponse, Suspect, InvestigationResult, PipelineResult |
+| `graph_ops.py` | Shared degree and connected-component primitives |
 
 ```python
 # gatekeeper.py
@@ -755,4 +735,26 @@ class GraphData:
 
 ---
 
-**Navigation**: [← Back to Home](./Home.md) | [Prev: C4 Model](./02-C4-Model.md) | [Next: Data Flow →](./04-Data-Flow.md)
+### 3.10 Self-Grade Service — Reproducible Quality Gate
+
+| Attribute | Value |
+|---|---|
+| **Path** | `src/ex04/services/self_grade/` |
+| **Responsibility** | Assemble structural checks, configured gates, and rubric scoring |
+| **PRD Mapping** | [PRD §12 Final Checklist], [PRD NFR-7] |
+
+**Planned sub-modules**:
+
+| File | Responsibility |
+|---|---|
+| `models.py` | Typed check result and grade report dataclasses |
+| `checks.py` | Deterministic structural checks |
+| `grader.py` | Gate orchestration and rubric score calculation |
+
+```python
+class SelfGradeService:
+    """Run configured self-assessment gates and return a typed grade report."""
+    def grade(self) -> GradeReport: ...
+```
+
+---

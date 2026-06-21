@@ -1,8 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 6. OOP Schema
 
-[← Back to Home](./Home.md) | [Prev: ADRs](./05-ADRs.md) | [Next: UML Activity Diagram →](./07-UML-Activity-Diagram.md)
-
----
+[Back to Home](./Home.md)
 
 ```mermaid
 classDiagram
@@ -29,8 +29,8 @@ classDiagram
     }
 
     class GraphRunner {
+        +__init__(command) void
         +execute(target_path) Path
-        +_run_cli(args) subprocess.CompletedProcess
     }
 
     class GraphParser {
@@ -40,20 +40,19 @@ classDiagram
     }
 
     class GraphAnalyzer {
-        +find_god_nodes(graph) list~Node~
+        +find_god_nodes(graph, min_degree) list~str~
         +rank_by_centrality(graph, ref) list~tuple~
         +detect_communities(graph) list~Community~
     }
 
     class VaultBuilder {
-        +build(graph) VaultResult
-        +create_index(graph) Path
-        +create_hot(focus_area) Path
+        +__init__(vault_path) void
+        +build(graph_data) dict~str, Path~
     }
 
     class VaultNavigator {
-        +find_relevant_notes(query) list~Note~
-        +navigate_from_index(target) Note
+        +__init__(vault_path) void
+        +navigate(query) list~dict~
     }
 
     class NoteManager {
@@ -62,31 +61,30 @@ classDiagram
     }
 
     class WorkflowBuilder {
-        +build() StateGraph
-        +add_nodes(graph) StateGraph
-        +add_edges(graph) StateGraph
+        +__init__(max_iterations) void
+        +build() CompiledStateGraph
+        +_verify_route(state) str
     }
 
     class Ex04SDK {
-        +run_graphify(target_path) GraphResult
-        +build_vault(graph) VaultResult
-        +investigate_bug(bug_report) InvestigationResult
-        +run_comparison(bug_report) ComparisonReport
-        +reverse_engineer(target_path) EngineeringResult
+        +run_graphify(target_path) GraphData
+        +build_vault(graph_data) dict~str, Path~
+        +investigate_bug(bug_report, graph_path, vault_path) InvestigationResult
+        +run_comparison(bug_report, source_files, graph_data, vault_path) ComparisonReport
+        +reverse_engineer(target_path) str
         +detect_orphans(graph_data, output_dir) OrphanReport
         +full_pipeline(target_path, bug_report) PipelineResult
     }
 
     class APIGatekeeper {
         +send(provider, messages) ProviderResponse
-        +enqueue(provider, messages) QueueItem
         +get_queue_status() dict
-        +get_call_log() list~Entry~
+        +get_call_log() list~dict~
     }
 
     class ConfigManager {
-        +load(config_path) Config
-        +get(key) any
+        +load(path) dict~str, Any~
+        +get(key_path) Any
         +validate(config) bool
     }
 
@@ -117,9 +115,9 @@ classDiagram
     }
 
     class ReverseEngineer {
-        +extract_block_schema(graph) str
-        +extract_oop_schema(graph) str
-        +identify_patterns(graph) list~Pattern~
+        +reverse_engineer(graph_data) str
+        +extract_block_schema(graph_data) str
+        +extract_oop_schema(graph_data) str
     }
 
     class DiagramGenerator {
@@ -164,5 +162,3 @@ classDiagram
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: ADRs](./05-ADRs.md) | [Next: UML Activity Diagram →](./07-UML-Activity-Diagram.md)
