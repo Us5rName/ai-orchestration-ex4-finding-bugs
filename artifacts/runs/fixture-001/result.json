@@ -1,0 +1,21 @@
+{
+  "run_id": "fixture-001",
+  "mode": "graph_guided",
+  "evidence_class": "fixture",
+  "diagnosis": {
+    "root_cause": "process_data accesses items[0] without checking for empty list",
+    "suspected_files": ["buggy.py:14-28"],
+    "suspected_symbols": ["process_data", "BuggyModule"],
+    "proposed_patch": "Add empty-list guard before items[0] access in process_data",
+    "confidence": 0.85
+  },
+  "source_anchors": ["buggy.py:14-28", "buggy.py:5-12"],
+  "correctness_gate": {
+    "final_verdict": "skipped",
+    "limitations": ["Live target snapshot not available — gate skipped."]
+  },
+  "limitations": [
+    "This is a representative fixture — not a live LLM run.",
+    "Token counts are unavailable."
+  ]
+}
