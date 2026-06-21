@@ -71,7 +71,7 @@ uv run python -m ex04 --help
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 2nd of 6 remaining tasks (independent of T4.19; implemented early for fair comparison evidence) |
 | **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service], [PLAN ADR-008] |

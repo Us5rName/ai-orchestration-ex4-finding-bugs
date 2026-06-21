@@ -150,12 +150,12 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 1st of 6 remaining tasks |
 | **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
-| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (see below) |
+| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (Done) |
 | **Depends On** | T4.02 GraphParser (Done) |
 | **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |

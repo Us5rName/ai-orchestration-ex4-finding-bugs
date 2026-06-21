@@ -74,7 +74,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted — planned implementation T4.19 |
+| **Status** | Accepted — implemented (T4.19a + T4.19 Done, commits b078da9 & 5011543) |
 | **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
 | **Context** | Multiple consumers (graph analysis, weakness detection, orphan analysis, patch-impact analysis, graph-guided context construction, graph diff) each independently query graph data. Without a shared facade, each consumer rebuilds degree maps, adjacency indexes, and community groupings — duplicating computation and creating divergent behavior. |
 | **Decision** | `GraphReader` is the canonical typed read-only boundary over parsed `GraphData`. All consumers must use `GraphReader` rather than rebuilding graph indexes independently. `GraphReader` accepts an existing `GraphData` directly, or a path-based constructor that delegates parsing to `GraphParser`. |

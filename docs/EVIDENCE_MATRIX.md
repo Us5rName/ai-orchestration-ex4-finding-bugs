@@ -51,6 +51,10 @@
 | T7.07 → FR-7.5 (Orphan Detection core) | `src/ex04/services/analysis/orphan_detector.py`, SDK `detect_orphans()` | `tests/unit/services/analysis/test_orphan_detector.py` | deterministic tests | Complete (core) | Report persistence (T6.05 closure) and artifact paths remain pending |
 | T6.05 → FR-7.5 (Orphan Detection closure) | report persistence to `artifacts/runs/<run-id>/reports/orphan_report.{json,md}` | closure verification | artifact paths | In Progress | Core implementation (T7.07) is Done; closure work remains |
 
+| T4.19a → enriched graph models | `src/ex04/shared/types_graph_enums.py`, `src/ex04/shared/types.py`, `src/ex04/services/graph/_parser_helpers.py`, `src/ex04/services/graph/parser.py` | `tests/unit/services/graph/test_graph_models.py` (71 tests) | ConfidenceState/EdgeDirection enums; enriched Entity/Relationship; validated parser | Done | Deterministic keyless evidence; commit b078da9 |
+| T4.19 → GraphReader facade | `src/ex04/services/graph/reader.py` | `tests/unit/services/graph/test_reader.py` (52 tests) | O(1) indexed edge lookup; deterministic ordering; immutable public results; EdgeDirection; from_path delegation | Done | Deterministic keyless evidence; commit 5011543 |
+| T5.03 → comparison parity | `src/ex04/services/comparison/context_bundle.py`, `call_service.py`, `prompt_builder.py`, `parity.py` | `tests/unit/services/comparison/test_call_service.py`, `test_context_bundle.py`, `test_prompt_builder.py`, `test_parity.py` (111 tests) | one prompt envelope; atomic call path; SHA-256 parity fingerprint; pre-call mismatch rejection | Done | Deterministic keyless evidence; commits 25b1c2d, d63d13f |
+
 ## Revision History
 
 | Version | Date | Change |
@@ -60,3 +64,4 @@
 | 1.02 | 2026-06-21 | Add P6-R10 through P8-R10 repair rows and update coverage to 531 tests / 95.35%. |
 | 1.04 | 2026-06-21 | Sync header version to 1.04 per corrective commit; no evidence rows changed in this commit. Traceability: [PRD-EXT §EXT-1].
 | 1.03 | 2026-06-21 | Add T7.07→FR-7.5 (core complete) and T6.05→FR-7.5 (closure in progress) rows; distinguish core implementation evidence from closure/report-persistence evidence. Traceability: [TODO T6.05], [PRD-EXT §EXT-1]. |
+| 1.05 | 2026-06-21 | Add Wave 1 evidence rows: T4.19a (graph model enrichment), T4.19 (GraphReader facade), T5.03 (comparison parity). 659 tests / 96.51% coverage. Traceability: [PLAN ADR-007, ADR-008], [PRD §5.7 FR-7.7], [PRD §5.6 FR-6.4]. |

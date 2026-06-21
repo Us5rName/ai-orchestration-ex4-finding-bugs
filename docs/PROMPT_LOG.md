@@ -859,3 +859,70 @@ tests/unit/services/analysis/
 | 1.30 | 2026-06-21 | Added Prompt 50 entry with full context, decisions, files changed, verification, limitations, outcome.
 | 1.31 | 2026-06-21 | Added full Prompts 50 and 51 entries (corrective commit); previous v1.29 entry was only a revision-history line. Traceability: [TODO T4.19, T4.20, T5.03, T6.05, T6.09, T8.13].
 | 1.32 | 2026-06-21 | Added Prompt 52 — Final remaining-task documentation consistency pass: fix prompt-log numbering (Prompts 49/50/51), sync document versions and parent references, fix self-grade scoring contract (non-PASS semantics), add OrphanReport current vs. target schema distinction, consistency sweep. Commit 3f2f610.
+
+---
+
+### Prompt 53 — Wave 1 Implementation: T4.19a, T4.19, T5.03
+
+**Date**: 2026-06-21
+**Model**: Claude Sonnet 4.6
+**Effort**: low
+**Branch**: `feat/remaining-task-completion`
+**Base SHA**: `1d18198`
+
+**Objective**: Implement Wave 1 of the remaining-task plan: T4.19a (canonical graph-model and parser enrichment), T4.19 (typed GraphReader facade), T5.03 (agent workflow parity helpers). Two isolated worktrees, two parallel implementation agents, sequential integration.
+
+**Worktrees / branches**:
+- Track A: `../ex04-wave1-t419` / `impl/t4.19-graph-reader`
+- Track B: `../ex04-wave1-t503` / `impl/t5.03-parity`
+
+**Key design decisions**:
+
+*Track A*:
+- `Entity.name` and `Entity.id` kept as separate fields; `id`/`source_id`/`target_id`/`rel_type` added as property aliases for backward compatibility
+- `ConfidenceState.UNKNOWN` is the default for absent confidence — never silently upgraded to EXTRACTED
+- `EdgeDirection.BOTH` is the canonical name per TODO contract
+- All public GraphReader collections returned as tuples or `MappingProxyType`
+- Degree counts both directions; self-loops contribute 2 to the owning node
+- Consumer migration (OrphanDetector, PatchImpact) deferred to T6.05 per TODO assignment
+
+*Track B*:
+- `ContextBundle` / `ContextStrategy` / `SourceRef` / `ContextProvenance` as frozen dataclasses
+- `PromptBuilder` with single canonical system prompt and user template; both modes use same instance
+- `ComparisonCallService` centralizes provider call, token conversion, budget update, trace recording
+- `ControlledConfig` + `compute_parity_fingerprint()` — deterministic SHA-256 of sorted canonical JSON
+- `assert_parity()` raises `ParityError` before any provider call on mismatch
+- Context strategy/content excluded from fingerprint (it is the treatment variable)
+
+**Track A commits** (cherry-picked to integration branch):
+- `b078da9` — `[T4.19a] Enrich canonical graph models and parser`
+- `5011543` — `[T4.19] Add typed GraphReader facade and indexes`
+
+**Track B commits** (cherry-picked to integration branch):
+- `25b1c2d` — `[T5.03] Centralize comparison calls and telemetry`
+- `d63d13f` — `[T5.03] Enforce prompt and controlled-configuration parity`
+
+**Files added**:
+- `src/ex04/shared/types_graph_enums.py`
+- `src/ex04/services/graph/_parser_helpers.py`
+- `src/ex04/services/graph/reader.py`
+- `src/ex04/services/comparison/context_bundle.py`
+- `src/ex04/services/comparison/call_service.py`
+- `src/ex04/services/comparison/prompt_builder.py`
+- `src/ex04/services/comparison/parity.py`
+- `tests/unit/services/graph/test_graph_models.py` (71 tests)
+- `tests/unit/services/graph/test_reader.py` (52 tests)
+- `tests/unit/services/comparison/test_call_service.py`
+- `tests/unit/services/comparison/test_context_bundle.py`
+- `tests/unit/services/comparison/test_prompt_builder.py`
+- `tests/unit/services/comparison/test_parity.py`
+
+**Verification**: 659 tests / 96.51% coverage / ruff 0 violations / mypy clean / validate_repo PASSED / pre-commit PASSED
+
+**Limitations**:
+- Consumer migration (OrphanDetector, PatchImpact internal GraphReader delegation) deferred to T6.05 per canonical TODO assignment
+- `assert_parity()` available but not yet wired into the comparison service orchestration layer (available for caller to invoke)
+- T4.20, T6.05 closure, T6.09, T8.13 NOT implemented
+
+**Integration outcome**: All 4 commits cherry-picked linearly onto `feat/remaining-task-completion`. Full suite green.
+| 1.33 | 2026-06-21 | Added Prompt 53 — Wave 1 implementation: T4.19a graph model enrichment, T4.19 GraphReader facade, T5.03 comparison parity helpers. 659 tests / 96.51% coverage. Commits b078da9, 5011543, 25b1c2d, d63d13f. |

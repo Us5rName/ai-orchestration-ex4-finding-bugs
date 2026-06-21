@@ -107,14 +107,14 @@ The six remaining open tasks have explicit dependencies overriding the default p
 ```mermaid
 graph TD
     T402[T4.02 GraphParser - Done]
-    T402 --> T419a[T4.19a Graph Model Enrichment - Not Started]
-    T419a --> T419[T4.19 GraphReader - Not Started]
+    T402 --> T419a[T4.19a Graph Model Enrichment - Done]
+    T419a --> T419[T4.19 GraphReader - Done]
     T419 --> T420[T4.20 WeaknessDetector - Not Started]
     T419 --> T609[T6.09 GraphDiff - Not Started]
     T707[T7.07 OrphanDetector - Done]
     T707 --> T605[T6.05 Orphan Closure - In Progress]
     T419 -.->|optional reuse| T605
-    T503[T5.03 Parity Helpers - Not Started]
+    T503[T5.03 Parity Helpers - Done]
     T419 --> T813[T8.13 Self-Grade - Not Started]
     T503 --> T813
     T420 --> T813

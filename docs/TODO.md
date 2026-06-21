@@ -743,12 +743,12 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 1st of 6 remaining tasks |
 | **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
-| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (see below) |
+| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (Done) |
 | **Depends On** | T4.02 GraphParser (Done) |
 | **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |
@@ -1460,7 +1460,7 @@ uv run python -m ex04 --help
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **Execution Order** | 2nd of 6 remaining tasks (independent of T4.19; implemented early for fair comparison evidence) |
 | **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service], [PLAN ADR-008] |
@@ -2583,14 +2583,14 @@ The six remaining open tasks have explicit dependencies overriding the default p
 ```mermaid
 graph TD
     T402[T4.02 GraphParser - Done]
-    T402 --> T419a[T4.19a Graph Model Enrichment - Not Started]
-    T419a --> T419[T4.19 GraphReader - Not Started]
+    T402 --> T419a[T4.19a Graph Model Enrichment - Done]
+    T419a --> T419[T4.19 GraphReader - Done]
     T419 --> T420[T4.20 WeaknessDetector - Not Started]
     T419 --> T609[T6.09 GraphDiff - Not Started]
     T707[T7.07 OrphanDetector - Done]
     T707 --> T605[T6.05 Orphan Closure - In Progress]
     T419 -.->|optional reuse| T605
-    T503[T5.03 Parity Helpers - Not Started]
+    T503[T5.03 Parity Helpers - Done]
     T419 --> T813[T8.13 Self-Grade - Not Started]
     T503 --> T813
     T420 --> T813
@@ -2607,9 +2607,9 @@ graph TD
 | Metric | Value |
 |---|---|
 | Total tasks | 74 |
-| Done | 68 |
-| Open tasks | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
-| Genuinely unimplemented | 5 (T4.19, T4.20, T5.03, T6.09, T8.13) |
+| Done | 71 |
+| Open tasks | 4 (T4.20, T6.05, T6.09, T8.13) |
+| Genuinely unimplemented | 3 (T4.20, T6.09, T8.13) |
 | Implementation complete, closure/evidence pending | 1 (T6.05 — core OrphanDetector exists via T7.07; report persistence and closure work remain) |
 | P0 (critical) | 56 |
 | P1 (important) | 18 |
@@ -2682,3 +2682,4 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.25 | 2026-06-21 | Define full contracts for 6 remaining tasks: rewrite T4.19 (GraphReader facade), T4.20 (weakness detector), T5.03 (parity helpers), T6.05 (orphan closure — In Progress, not Not Started), T6.09 (graph-diff report), T8.13 (self-grade service); add explicit task dependency graph and execution order; update statistics to distinguish T6.05 closure-pending from 5 genuinely unimplemented tasks. Traceability: [PRD §5.6 FR-6.4], [PRD §5.7 FR-7.7], [PRD §5.8 FR-8.1–FR-8.4], [PLAN ADR-007/ADR-008/ADR-009]. |
 | 1.26 | 2026-06-21 | Reconcile graph-model and remaining-task contracts: add T4.19a enrichment prerequisite block; replace GraphReader/WeaknessFinding mutable types with immutable tuple/Mapping forms; add EvidenceAnchor and RelationshipKey typed models; fix T6.05 GraphReader delegation wording (mandatory internal, public compatible); fix T6.05 README wording; update TOC links for T6.05/T6.09; add T4.19a to Mermaid diagram; sync header to v1.26. Traceability: [PRD §5.7 FR-7.7], [PLAN §3.3 GraphReader], [PLAN ADR-007].
 | 1.27 | 2026-06-21 | Finalize remaining-task documentation consistency: update parent PRD reference to v1.03; update PLAN reference to v1.13; fix revision-history ordering (1.25/1.26 were out of order). Traceability: [PRD v1.03], [PLAN v1.13].
+| 1.28 | 2026-06-21 | Wave 1 implementation: mark T4.19a, T4.19, T5.03 Done; update statistics to 71 Done / 4 open (T4.20, T6.05, T6.09, T8.13); update Mermaid diagram. Traceability: [PLAN ADR-007, ADR-008], [PRD §5.7 FR-7.7], [PRD §5.6 FR-6.4]. Evidence: commits b078da9, 5011543, 25b1c2d, d63d13f on feat/remaining-task-completion. |
