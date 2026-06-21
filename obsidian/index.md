@@ -1,35 +1,52 @@
-# EX04 Investigation Vault — Index
+# Graph Index
 
-> **Evidence class**: Representative deterministic fixture
-> **Note**: This vault was built from the `andela/buggy-python` target.
-> Live Graphify extraction is required for production use — see T7.01.
+Auto-generated from graph analysis.
 
-## Navigation
+## Entities
+- [[notes/snippets_init|snippets_init]] (code)
+- [[notes/snippets_foobar|snippets_foobar]] (code)
+- [[notes/snippets_foobar_foo|snippets_foobar_foo]] (code)
+- [[notes/snippets_foobar_rationale_1|snippets_foobar_rationale_1]] (rationale)
+- [[notes/snippets_io|snippets_io]] (code)
+- [[notes/snippets_io_read_file|snippets_io_read_file]] (code)
+- [[notes/snippets_io_calculate_unpaid_loans|snippets_io_calculate_unpaid_loans]] (code)
+- [[notes/snippets_io_calculate_paid_loans|snippets_io_calculate_paid_loans]] (code)
+- [[notes/snippets_io_average_paid_loans|snippets_io_average_paid_loans]] (code)
+- [[notes/snippets_io_rationale_1|snippets_io_rationale_1]] (rationale)
+- [[notes/snippets_loop|snippets_loop]] (code)
+- [[notes/snippets_loop_lambda_array|snippets_loop_lambda_array]] (code)
+- [[notes/snippets_loop_rationale_1|snippets_loop_rationale_1]] (rationale)
 
-- [[hot]] — Bug-focused hot notes (active investigation context)
-- [[components/BuggyModule]] — Primary suspect module
+## Relationships
+- snippets_init --[re_exports]--> snippets_foobar
+- snippets_init --[imports]--> snippets_foobar_foo
+- snippets_foobar --[contains]--> snippets_foobar_foo
+- snippets_foobar_rationale_1 --[rationale_for]--> snippets_foobar
+- snippets_io --[contains]--> snippets_io_average_paid_loans
+- snippets_io --[contains]--> snippets_io_calculate_paid_loans
+- snippets_io --[contains]--> snippets_io_calculate_unpaid_loans
+- snippets_io --[contains]--> snippets_io_read_file
+- snippets_io_rationale_1 --[rationale_for]--> snippets_io
+- snippets_loop --[contains]--> snippets_loop_lambda_array
+- snippets_loop_rationale_1 --[rationale_for]--> snippets_loop
 
-## Target
+## Communities
+### Community 1
+- [[notes/snippets_init|snippets_init]]
+- [[notes/snippets_foobar|snippets_foobar]]
+- [[notes/snippets_foobar_foo|snippets_foobar_foo]]
+- [[notes/snippets_foobar_rationale_1|snippets_foobar_rationale_1]]
 
-- **Repository**: andela/buggy-python
-- **Selected bug**: Off-by-one error in loop boundary condition
-- **Reproduction**: `python buggy.py` raises `IndexError` on empty input
+### Community 0
+- [[notes/snippets_io|snippets_io]]
+- [[notes/snippets_io_read_file|snippets_io_read_file]]
+- [[notes/snippets_io_calculate_unpaid_loans|snippets_io_calculate_unpaid_loans]]
+- [[notes/snippets_io_calculate_paid_loans|snippets_io_calculate_paid_loans]]
+- [[notes/snippets_io_average_paid_loans|snippets_io_average_paid_loans]]
+- [[notes/snippets_io_rationale_1|snippets_io_rationale_1]]
 
-## Research Questions Addressed
+### Community 2
+- [[notes/snippets_loop|snippets_loop]]
+- [[notes/snippets_loop_lambda_array|snippets_loop_lambda_array]]
+- [[notes/snippets_loop_rationale_1|snippets_loop_rationale_1]]
 
-| # | Question | Status |
-|---|---|---|
-| RQ5 | Bug identification and root cause | Addressed in [[hot]] |
-| RQ6 | Graph-guided vs. naive advantage | See `reports/token_comparison.md` |
-| RQ7 | Token savings mechanism | Centrality ranking reduced files read |
-
-## Graph Overview
-
-Entities: 12 total (4 classes, 8 functions)
-High-degree nodes: `BuggyModule` (degree=6), `process_data` (degree=4)
-Communities: 3 clusters detected
-
-## Wikilinks
-
-- [[hot]]
-- [[components/BuggyModule]]

@@ -306,7 +306,7 @@ uv run pytest tests/unit/test_mocks.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — version.py] |
 | **PRD Reference** | [PRD NFR] version 1.00 |
@@ -1560,10 +1560,10 @@ ls -la graph-home/graphify-out/graph.json
 
 **Definition of Done**:
 
-- [ ] `obsidian/index.md` exists with proper navigation structure
-- [ ] `obsidian/hot.md` exists with bug-focused context
-- [ ] At least 2 component notes exist
-- [ ] Wikilinks are valid (target notes exist)
+- [x] `obsidian/index.md` exists with proper navigation structure
+- [x] `obsidian/hot.md` exists with bug-focused context
+- [x] At least 2 component notes exist
+- [x] Wikilinks are valid (target notes exist)
 
 **Independent Verification**:
 
