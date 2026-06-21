@@ -1,11 +1,4 @@
-"""Code Inspection Node — fetches relevant code snippets.
-
-Fetches code snippets for the top-ranked suspects, records
-files read for comparison metrics, and uses the gatekeeper
-to perform LLM-assisted inspection analysis of the snippets.
-
-Implementation: **Phase 4** (T4.12)
-"""
+"""Code Inspection Node — fetches and analyzes relevant code snippets."""
 
 from __future__ import annotations
 
@@ -29,18 +22,7 @@ _INSPECTION_PROMPT = (
 
 
 class CodeInspectionNode:
-    """Fetches code snippets for ranked suspects and performs LLM analysis.
-
-    Reads source files for each suspect location (line_start to line_end),
-    formats them as structured text with file path headers and line numbers,
-    records the number of files read for comparison metrics, and optionally
-    calls the LLM via the gatekeeper to highlight suspicious patterns.
-
-    Attributes:
-        target_path: Root directory of the target codebase.
-        gatekeeper: Optional gatekeeper for LLM inspection calls.
-        provider: LLM provider name forwarded to the gatekeeper.
-    """
+    """Fetches code snippets for ranked suspects and performs LLM analysis."""
 
     def __init__(
         self,
@@ -63,17 +45,7 @@ class CodeInspectionNode:
         )
 
     def __call__(self, state: AgentState) -> AgentState:
-        """Inspect code for all ranked suspects.
-
-        Reads source files, formats snippets, accumulates files_read
-        (cumulative across retries), calls the gatekeeper LLM.
-
-        Args:
-            state: Current agent state with suspects list.
-
-        Returns:
-            State with inspected_code, files_read, and token_usage updated.
-        """
+        """Inspect code for all ranked suspects."""
         suspects = state.get("suspects", [])
         if not suspects:
             logger.info("CodeInspectionNode: no suspects to inspect")
@@ -106,14 +78,7 @@ class CodeInspectionNode:
         }
 
     def _read_snippet(self, suspect: Suspect) -> str | None:
-        """Read a code snippet for a single suspect.
-
-        Args:
-            suspect: Suspect location with file path and line range.
-
-        Returns:
-            Formatted snippet string, or None if the file cannot be read.
-        """
+        """Read a code snippet for a single suspect."""
         file_path = self.target_path / suspect.file_path
         if not file_path.is_file():
             logger.warning("CodeInspectionNode: file not found: %s", suspect.file_path)

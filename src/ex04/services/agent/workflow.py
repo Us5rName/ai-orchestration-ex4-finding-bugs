@@ -1,17 +1,4 @@
-"""Agent Workflow — assembles LangGraph state machine for debugging.
-
-Builds a LangGraph StateGraph with 7 nodes implementing the bug
-investigation pipeline: knowledge → analysis → suspect → inspect →
-rootcause → fix → verify, with a retry loop from verify back to suspect.
-
-## Contract (AgentServiceInterface)
-
-| Method | Input | Output | Phase |
-|---|---|---|---|
-| `build()` | — | StateGraph | P4 |
-
-Implementation: **Phase 4** (T4.08)
-"""
+"""Agent Workflow — assembles the LangGraph debugging state machine."""
 
 from __future__ import annotations
 
@@ -70,15 +57,7 @@ def add_retry_edge(graph: StateGraph, route: Callable[[AgentState], str]) -> Non
 
 
 class WorkflowBuilder:
-    """Assembles the LangGraph debugging workflow.
-
-    Registers all 7 investigation nodes and configures the control flow:
-    a linear pipeline with a conditional retry loop from verify back to
-    suspect when tests fail, bounded by ``max_iterations``.
-
-    Attributes:
-        max_iterations: Cap on verify→suspect retries before forcing END.
-    """
+    """Assembles the linear workflow and bounded verify retry loop."""
 
     def __init__(
         self,
@@ -113,15 +92,7 @@ class WorkflowBuilder:
         )
 
     def build(self) -> CompiledStateGraph:
-        """Build and compile the LangGraph debugging workflow.
-
-        Creates a StateGraph with AgentState, registers all 7 nodes,
-        configures linear edges and the retry loop, then compiles
-        the graph for execution.
-
-        Returns:
-            Compiled graph ready for execution.
-        """
+        """Build and compile the LangGraph debugging workflow."""
         graph = StateGraph(AgentState)
 
         for name, node in build_nodes(self.deps).items():
@@ -136,19 +107,7 @@ class WorkflowBuilder:
         return compiled
 
     def _verify_route(self, state: AgentState) -> str:
-        """Determine next step after verification.
-
-        Routes to 'suspect' to retry when tests still fail and the retry
-        budget is not exhausted; otherwise routes to END. Bounding by
-        ``max_iterations`` prevents an unbounded loop (and the resulting
-        LangGraph GraphRecursionError) when a fix never passes.
-
-        Args:
-            state: Current agent state with test_results and iterations.
-
-        Returns:
-            'retry' to loop back to suspect, or 'pass' to end.
-        """
+        """Route to retry while tests fail and the retry budget remains."""
         failed = state.get("test_results", {}).get("failed", 0)
         iterations = state.get("iterations", 0)
 

@@ -26,9 +26,9 @@
     "stderr": ""
   },
   "token_usage": {
-    "input_tokens": 1404,
+    "input_tokens": 1464,
     "output_tokens": 80,
-    "total_tokens": 1484,
+    "total_tokens": 1544,
     "provider": "phase7",
     "model": "phase7-deterministic"
   },
@@ -41,12 +41,12 @@
   "target_commit": "887009334e17556880f62d58315f96c2b305aa05",
   "parser_status": "not_run",
   "diagnosis_status": "grounded_candidate",
-  "gate_status": "pass_without_gate",
+  "gate_status": "not_requested",
   "verification_status": "verified",
   "evidence": [],
   "limitations": [],
   "telemetry_available": true,
-  "input_tokens": 1404,
+  "input_tokens": 1464,
   "output_tokens": 80,
   "context_tokens": 0,
   "bytes_read": 230,

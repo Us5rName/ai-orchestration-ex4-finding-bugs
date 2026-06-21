@@ -34,6 +34,10 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+exclude = [
+    "artifacts/runs/*/target",
+    "graph-home/.graphify/repos",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]

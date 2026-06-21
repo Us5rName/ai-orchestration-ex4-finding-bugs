@@ -10,7 +10,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — version.py] |
 | **PRD Reference** | [PRD NFR] version 1.00 |
@@ -35,7 +35,7 @@ uv run pytest tests/unit/shared/test_version.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — types.py] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding, [PRD §5.6 FR-6] token metrics |
@@ -68,7 +68,7 @@ uv run pytest tests/unit/shared/test_types.py -v --cov=ex04.shared.types --cov-r
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding |
@@ -96,7 +96,7 @@ uv run pytest tests/unit/shared/test_config.py -v --cov=ex04.shared.config --cov
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
 | **PRD Reference** | [PRD NFR-6] all API calls through gatekeeper |
@@ -127,7 +127,7 @@ uv run pytest tests/unit/shared/test_gatekeeper.py -v --cov=ex04.shared.gatekeep
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — token_tracker.py] |
 | **PRD Reference** | [PRD §5.6 FR-6] token comparison metrics |

@@ -59,7 +59,7 @@ def _complete_result(result: InvestigationResult, run_dir: Path, work_target: Pa
     result.trace_path = str(run_dir / "result.json")
     result.diagnosis_status = "grounded_candidate"
     result.verification_status = "verified" if result.test_results.get("passed") else "rejected"
-    result.gate_status = "pass_without_gate"
+    result.gate_status = "not_requested"
     result.telemetry_available = True
     result.input_tokens = result.token_usage.input_tokens
     result.output_tokens = result.token_usage.output_tokens
