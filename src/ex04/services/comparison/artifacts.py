@@ -31,10 +31,13 @@ def persist_outcome(
         str(store.save_manifest(naive_manifest)),
         str(store.save_manifest(guided_manifest)),
     ]
-    report_paths = [str(p) for p in write_comparison_reports(
-        outcome.naive_result, outcome.guided_result, outcome.signed_metrics,
+    reports = write_comparison_reports(
+        outcome.naive_result,
+        outcome.guided_result,
+        outcome.signed_metrics,
         root / "runs" / request.run_id,
-    )]
+    )
+    report_paths = [str(path) for path in reports]
     outcome.manifest_paths = manifest_paths
     outcome.report_paths = report_paths
     return outcome
@@ -47,26 +50,38 @@ def _attach_trace(result: InvestigationResult, trace: TraceRecorder) -> None:
 
 def _manifest(result: InvestigationResult, request: ComparisonRequest) -> RunManifest:
     return RunManifest(
-        run_id=result.run_id, mode=result.mode, provider=request.provider,
-        model=request.model, model_params=request.model_params,
-        config_hash=result.config_hash, shared_config_hash=result.config_hash,
-        schema_version=request.schema_version, parser_version=request.parser_version,
+        run_id=result.run_id,
+        mode=result.mode,
+        provider=request.provider,
+        model=request.model,
+        model_params=request.model_params,
+        config_hash=result.config_hash,
+        shared_config_hash=result.config_hash,
+        schema_version=request.schema_version,
+        parser_version=request.parser_version,
         manifest_version=request.manifest_version,
         pricing_config_version=request.pricing_version,
-        repo_commit=request.repo_commit, prompt_version=request.prompt_version,
-        target_identifier=request.target_repo, target_commit=request.target_commit,
+        repo_commit=request.repo_commit,
+        prompt_version=request.prompt_version,
+        target_identifier=request.target_repo,
+        target_commit=request.target_commit,
         target_snapshot_hash=request.target_snapshot_hash,
-        input_tokens=result.input_tokens, output_tokens=result.output_tokens,
-        total_tokens=_total_tokens(result), model_calls=result.model_calls,
-        tool_calls=result.tool_calls, files_read=result.files_read,
-        bytes_read=result.bytes_read, iterations=result.iterations,
+        input_tokens=result.input_tokens,
+        output_tokens=result.output_tokens,
+        total_tokens=_total_tokens(result),
+        model_calls=result.model_calls,
+        tool_calls=result.tool_calls,
+        files_read=result.files_read,
+        bytes_read=result.bytes_read,
+        iterations=result.iterations,
         duration_seconds=result.duration_seconds,
         diagnosis_status=result.diagnosis_status,
         correctness_gate_status=result.gate_status,
         limitations=result.limitations,
         telemetry_available=result.telemetry_available,
         evidence_class=result.evidence_class,
-        trace_path=result.trace_path, trace_hash=result.trace_hash,
+        trace_path=result.trace_path,
+        trace_hash=result.trace_hash,
     )
 
 

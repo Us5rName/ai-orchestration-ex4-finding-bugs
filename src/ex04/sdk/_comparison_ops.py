@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Any
 
 from ex04.services.comparison.correctness_gate import CorrectnessGate
+from ex04.services.comparison.result_metrics import result_to_run_metrics
 from ex04.shared.artifact_store import ArtifactStore
-from ex04.shared.types import GraphData, RunMetrics
+from ex04.shared.types import GraphData
 from ex04.shared.types_experiment import (
     ComparisonOutcome,
     GateOutput,
@@ -18,22 +19,7 @@ from ex04.shared.types_experiment import (
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
-
-def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
-    """Bridge InvestigationResult to RunMetrics for legacy calculators."""
-    tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
-    found = (
-        result.verification_status == "verified"
-        or result.gate_status in {"passed", "pass_without_gate"}
-        or result.parser_status == "parsed_ok"
-    )
-    return RunMetrics(
-        tokens_used=tokens,
-        files_read=result.files_read,
-        iterations=result.iterations,
-        time_seconds=result.duration_seconds,
-        found_root_cause=found,
-    )
+_to_run_metrics = result_to_run_metrics
 
 
 class ComparisonOpsMixin:

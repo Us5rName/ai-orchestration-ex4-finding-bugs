@@ -13,30 +13,16 @@ from ex04.services.comparison.interface import ComparisonServiceInterface
 from ex04.services.comparison.metrics import MetricsCalculator
 from ex04.services.comparison.naive_runner import NaiveRunner
 from ex04.services.comparison.report_gen import ReportGenerator
+from ex04.services.comparison.result_metrics import result_to_run_metrics
 from ex04.services.comparison.signed_metrics import SignedMetricsCalculator
 from ex04.services.comparison.trace import TraceRecorder
 from ex04.shared.gatekeeper import GatekeeperInterface
-from ex04.shared.types import ComparisonReport, GraphData, RunMetrics
+from ex04.shared.types import ComparisonReport, GraphData
 from ex04.shared.types_experiment import ComparisonOutcome, SignedMetrics
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
-
-def _to_run_metrics(result: InvestigationResult) -> RunMetrics:
-    """Bridge InvestigationResult to RunMetrics for legacy calculators."""
-    tokens = (result.input_tokens or 0) + (result.output_tokens or 0)
-    found = (
-        result.verification_status == "verified"
-        or result.gate_status in {"passed", "pass_without_gate"}
-        or result.parser_status == "parsed_ok"
-    )
-    return RunMetrics(
-        tokens_used=tokens,
-        files_read=result.files_read,
-        iterations=result.iterations,
-        time_seconds=result.duration_seconds,
-        found_root_cause=found,
-    )
+_to_run_metrics = result_to_run_metrics
 
 
 class ComparisonService(ComparisonServiceInterface):
@@ -79,7 +65,7 @@ class ComparisonService(ComparisonServiceInterface):
     ) -> InvestigationResult:
         """Public single-mode operation for SDK delegation."""
         request.validate()
-        return self._naive.run(replace(request, mode="naive"), source_files)
+        return self._naive.run(_strategy_request(request, "naive"), source_files)
 
     def run_graph_investigation(
         self,
@@ -89,7 +75,7 @@ class ComparisonService(ComparisonServiceInterface):
     ) -> InvestigationResult:
         """Public graph-mode operation for SDK delegation."""
         request.validate()
-        return self._guided.run(replace(request, mode="graph"), graph_data, vault_path)
+        return self._guided.run(_strategy_request(request, "graph"), graph_data, vault_path)
 
     def compute_metrics(
         self,
@@ -109,18 +95,8 @@ class ComparisonService(ComparisonServiceInterface):
     ) -> ComparisonOutcome:
         request.validate()
         config_hash = request.controlled_config_hash()
-        naive_req = replace(
-            request,
-            run_id=f"{request.run_id}-naive",
-            mode="naive",
-            strategy_artifact_dir="naive",
-        )
-        guided_req = replace(
-            request,
-            run_id=f"{request.run_id}-graph",
-            mode="graph",
-            strategy_artifact_dir="graph",
-        )
+        naive_req = _strategy_request(request, "naive", run_id=f"{request.run_id}-naive")
+        guided_req = _strategy_request(request, "graph", run_id=f"{request.run_id}-graph")
         self._enforcer.check(naive_req, guided_req)
         naive_trace = TraceRecorder(naive_req.run_id)
         guided_trace = TraceRecorder(guided_req.run_id)
@@ -147,3 +123,18 @@ class ComparisonService(ComparisonServiceInterface):
         naive_rm = _to_run_metrics(outcome.naive_result)
         guided_rm = _to_run_metrics(outcome.guided_result)
         return self._reports.generate(self._metrics.compare(naive_rm, guided_rm))
+
+
+def _strategy_request(
+    request: ComparisonRequest,
+    mode: str,
+    *,
+    run_id: str | None = None,
+) -> ComparisonRequest:
+    """Return a request specialized for one comparison strategy."""
+    return replace(
+        request,
+        run_id=run_id or request.run_id,
+        mode=mode,
+        strategy_artifact_dir=mode,
+    )
