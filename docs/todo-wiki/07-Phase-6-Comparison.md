@@ -222,3 +222,31 @@ uv run pytest tests/unit/services/comparison/test_fairness.py -v
 ```
 
 ---
+
+### T6.09 — Graph-Diff Comparison Report Section
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-7.4], [PRD-EXT] |
+| **Estimate** | 60 min |
+
+**Goal**: Add an optional pre/post graph-diff section to comparison reports so token metrics can be read beside structural graph changes.
+
+**Definition of Done**:
+
+- [ ] Add deterministic graph diff helper for entity, relationship, and community changes
+- [ ] Render a Markdown section when both pre-fix and post-fix graph snapshots are available
+- [ ] Render a clear pending/blocked section when the post-fix graph snapshot is unavailable
+- [ ] Include graph-diff output path in comparison report artifacts
+- [ ] Unit tests cover changed graph, unchanged graph, and missing post-fix graph
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py -v
+```
+
+---

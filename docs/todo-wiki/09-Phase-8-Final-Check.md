@@ -243,3 +243,31 @@ grep -c "##" README.md  # Should have multiple sections
 - [x] Report includes: SHA, Python version, uv version, ruff, mypy, pytest, coverage
 
 ---
+
+### T8.13 — Self-Grade Service
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Estimate** | 90 min |
+
+**Goal**: Add a reproducible self-grade service that assembles structural checks, quality gates, and a rubric score into one typed report.
+
+**Definition of Done**:
+
+- [ ] Add `services/self_grade/` with typed check result and grade report models
+- [ ] Load rubric and gate commands from configuration
+- [ ] Run structural checks without provider credentials
+- [ ] Support injectable gate runner for tests and subprocess runner for production
+- [ ] Expose `Ex04SDK.self_grade()` and optional CLI command
+- [ ] Unit tests cover grade math, passing/failing checks, missing config, and injected gate runner behavior
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/self_grade tests/unit/sdk/test_sdk.py -v
+```
+
+---

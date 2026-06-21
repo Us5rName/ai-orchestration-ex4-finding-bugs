@@ -53,15 +53,19 @@
    - [T4.16 — Analysis Service: Reverse Engineer](#t416--analysis-service-reverse-engineer)
    - [T4.17 — Analysis Service: Diagram Generator](#t417--analysis-service-diagram-generator)
    - [T4.18 — Analysis Service: Bug Reporter](#t418--analysis-service-bug-reporter)
+   - [T4.19 — Typed Graph Reader Facade](#t419--typed-graph-reader-facade)
+   - [T4.20 — Multi-Signal Weakness Detector](#t420--multi-signal-weakness-detector)
 6. [Phase 5 — SDK + CLI](#6-phase-5--sdk--cli)
    - [T5.01 — Implement SDK](#t501--implement-sdk)
    - [T5.02 — Implement CLI Entry Point](#t502--implement-cli-entry-point)
+   - [T5.03 — Agent Workflow Parity Helpers](#t503--agent-workflow-parity-helpers)
 7. [Phase 6 — Comparison Service](#7-phase-6--comparison-service)
    - [T6.01 — Naive Runner](#t601--naive-runner)
    - [T6.02 — Graph-Guided Runner](#t602--graph-guided-runner)
    - [T6.03 — Metrics Calculator](#t603--metrics-calculator)
    - [T6.04 — Comparison Report Generator](#t604--comparison-report-generator)
    - [T6.05 — Implement an Additional Extension](#t605--implement-an-additional-extension)
+   - [T6.09 — Graph-Diff Comparison Report Section](#t609--graph-diff-comparison-report-section)
 8. [Phase 7 — End-to-End Execution](#8-phase-7--end-to-end-execution)
    - [T7.01 — Run Grphify on Target Codebase](#t701--run-grphify-on-target-codebase)
    - [T7.02 — Build Obsidian Vault](#t702--build-obsidian-vault)
@@ -75,6 +79,7 @@
    - [T8.03 — Verify File Length Limits](#t803--verify-file-length-limits)
    - [T8.04 — Update README.md](#t804--update-readmemd)
    - [T8.05 — Final Checklist](#t805--final-checklist)
+   - [T8.13 — Self-Grade Service](#t813--self-grade-service)
 10. [Task Dependency Summary](#10-task-dependency-summary)
 11. [Statistics](#11-statistics)
 12. [Revision History](#12-revision-history)
@@ -734,6 +739,34 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 ---
 
+### T4.19 — Typed Graph Reader Facade
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.3 Graph Service] |
+| **PRD Reference** | [PRD FR-1.1], [PRD FR-7.2] |
+| **Estimate** | 60 min |
+
+**Goal**: Add a read-only query facade over `GraphData` so graph consumers do not repeatedly rebuild degree maps, community groupings, or edge indexes.
+
+**Definition of Done**:
+
+- [ ] `GraphReader` accepts `GraphData` or a parsed `graph.json` path
+- [ ] Exposes typed `node()`, `all_nodes()`, `edges_of()`, `top_n_by_degree()`, and `communities()` queries
+- [ ] Precomputes/caches degree and adjacency indexes at construction time
+- [ ] Used by graph analyzer, extension analysis, and graph-guided context builders where appropriate
+- [ ] Unit tests cover missing nodes, edge-only nodes, isolated nodes, and ranking stability
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/graph/test_reader.py -v
+```
+
+---
+
 ### T4.04 — Vault Service: Builder
 
 | Attribute | Value |
@@ -1114,6 +1147,34 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 
 ---
 
+### T4.20 — Multi-Signal Weakness Detector
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.6 Analysis Service] |
+| **PRD Reference** | [PRD FR-7.5], [PRD-EXT] |
+| **Estimate** | 90 min |
+
+**Goal**: Extend the current orphan/ranking analysis into a dedicated weakness detector with typed findings and pure signal functions.
+
+**Definition of Done**:
+
+- [ ] Add `WeaknessFinding` type with tag, severity, evidence anchors, and source-validation fields
+- [ ] Add pure signal functions for high-degree nodes, isolated clusters, ambiguous/low-confidence edges, broken source paths, and semantic duplicates
+- [ ] Add `WeaknessDetector.detect(graph_data)` orchestration and deterministic ranking
+- [ ] Expose the detector through `Ex04SDK`
+- [ ] Unit tests cover each signal, ranking order, empty graph, and missing source anchors
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_weakness_detector.py -v
+```
+
+---
+
 ## 6. Phase 5 — SDK + CLI
 
 **Goal**: Wire all services through SDK. Add CLI entry point.
@@ -1175,6 +1236,34 @@ uv run pytest tests/unit/sdk/test_sdk.py tests/integration/ -v
 ```bash
 uv run python -m ex04 --help
 # Should display available commands
+```
+
+---
+
+### T5.03 — Agent Workflow Parity Helpers
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-4.1], [PRD FR-6.1] |
+| **Estimate** | 60 min |
+
+**Goal**: Centralize shared node call and token-recording behavior so graph-guided and naive workflows differ by context strategy, not instrumentation.
+
+**Definition of Done**:
+
+- [ ] Add shared helper for Gatekeeper-backed node calls
+- [ ] Add shared helper for converting provider responses into token records
+- [ ] Ensure graph-guided and naive paths use the same call/record helpers
+- [ ] Preserve existing workflow state fields and retry behavior
+- [ ] Unit tests verify parity of token accounting and node message shape across both paths
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/agent tests/unit/services/comparison -v
 ```
 
 ---
@@ -1396,6 +1485,34 @@ uv run pytest tests/unit/shared/test_artifact_store.py -v
 
 ```bash
 uv run pytest tests/unit/services/comparison/test_fairness.py -v
+```
+
+---
+
+### T6.09 — Graph-Diff Comparison Report Section
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-7.4], [PRD-EXT] |
+| **Estimate** | 60 min |
+
+**Goal**: Add an optional pre/post graph-diff section to comparison reports so token metrics can be read beside structural graph changes.
+
+**Definition of Done**:
+
+- [ ] Add deterministic graph diff helper for entity, relationship, and community changes
+- [ ] Render a Markdown section when both pre-fix and post-fix graph snapshots are available
+- [ ] Render a clear pending/blocked section when the post-fix graph snapshot is unavailable
+- [ ] Include graph-diff output path in comparison report artifacts
+- [ ] Unit tests cover changed graph, unchanged graph, and missing post-fix graph
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/services/comparison/test_comparison_reports.py -v
 ```
 
 ---
@@ -1903,6 +2020,34 @@ grep -c "##" README.md  # Should have multiple sections
 
 ---
 
+### T8.13 — Self-Grade Service
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Estimate** | 90 min |
+
+**Goal**: Add a reproducible self-grade service that assembles structural checks, quality gates, and a rubric score into one typed report.
+
+**Definition of Done**:
+
+- [ ] Add `services/self_grade/` with typed check result and grade report models
+- [ ] Load rubric and gate commands from configuration
+- [ ] Run structural checks without provider credentials
+- [ ] Support injectable gate runner for tests and subprocess runner for production
+- [ ] Expose `Ex04SDK.self_grade()` and optional CLI command
+- [ ] Unit tests cover grade math, passing/failing checks, missing config, and injected gate runner behavior
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/self_grade tests/unit/sdk/test_sdk.py -v
+```
+
+---
+
 ## 10. Task Dependency Summary
 
 ```mermaid
@@ -2007,11 +2152,11 @@ graph TD
 
 | Metric | Value |
 |---|---|
-| Total tasks | 45 |
-| P0 (critical) | 39 |
-| P1 (important) | 6 |
+| Total tasks | 50 |
+| P0 (critical) | 40 |
+| P1 (important) | 10 |
 | Phases | 8 |
-| Estimated total implementation time | ~29.5 hours (excluding LLM API time) |
+| Estimated total implementation time | ~35.5 hours (excluding LLM API time) |
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
 
 ---
@@ -2074,3 +2219,4 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.21 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repair tasks for Phase 6-8 controlled-experiment finalization. |
 | 1.20 | 2026-06-21 | Add §12 Repair Inventory with stable P6-R/P7-R/P8-R task IDs covering 14 post-submission truthfulness repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
 | 1.22 | 2026-06-21 | Mark P6-R10 through P8-R10 complete after local Ruff, mypy, validator, docs-sync, and pytest verification; keep P8-R11 incomplete until clean-clone and PR evidence are recorded. |
+| 1.23 | 2026-06-21 | Add pending follow-up tasks for typed graph reader, multi-signal weakness detector, agent workflow parity helpers, graph-diff comparison reporting, and self-grade service. |

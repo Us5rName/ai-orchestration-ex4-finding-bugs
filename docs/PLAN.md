@@ -541,6 +541,7 @@ Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
 | `runner.py` | Execute Grphify CLI on target codebase |
 | `parser.py` | Parse `graph.json` into structured `GraphData` objects |
 | `analyzer.py` | Compute centrality, community detection, God Node identification |
+| `reader.py` | Planned read-only typed query facade over parsed `GraphData` |
 
 **Input**: Target codebase path (`str`), Grphify configuration (`dict`).
 
@@ -565,6 +566,15 @@ class GraphAnalyzer:
     def find_god_nodes(self, graph: GraphData, min_degree: int = 2) -> list[str]: ...
     def rank_by_centrality(self, graph: GraphData, ref_node: str) -> list[tuple[str, float]]: ...
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
+
+# reader.py (planned)
+class GraphReader:
+    """Read-only typed query facade over parsed graph data."""
+    def node(self, node_id: str) -> Entity: ...
+    def all_nodes(self) -> list[Entity]: ...
+    def edges_of(self, node_id: str) -> list[Relationship]: ...
+    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    def communities(self) -> dict[str, list[Entity]]: ...
 ```
 
 ### 3.4 Vault Service — Obsidian Management
@@ -633,6 +643,7 @@ class NoteManager:
 | `nodes/rootcause.py` | Root Cause node — determine exact bug origin |
 | `nodes/fix.py` | Fix Generation node — propose and apply code fix |
 | `nodes/verify.py` | Verification node — run tests to confirm fix |
+| `nodes/common.py` | Shared node helpers for context parsing and planned call/record parity |
 | `state.py` | Define the LangGraph state schema |
 
 **Input**: Bug report (`str`), graph data (`GraphData`), vault path (`Path`).
@@ -700,6 +711,10 @@ class FixGenerationNode:
 class VerificationNode:
     """Run tests to confirm fix, increment iteration counter."""
     def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/common.py (planned extension)
+def call_with_gatekeeper(...) -> ProviderResponse: ...
+def token_record(...) -> TokenMetrics: ...
 ```
 
 ### 3.6 Analysis Service — Reverse Engineering & Bug Reporting
@@ -719,6 +734,7 @@ class VerificationNode:
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
 | `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
+| `weakness_detector.py` | Planned multi-signal weakness detector over graph and source evidence |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -746,6 +762,11 @@ class OrphanDetector:
     def find_orphans(self, graph: GraphData) -> list[Entity]: ...
     def generate_stub(self, entity: Entity) -> str: ...
     def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
+
+# weakness_detector.py (planned)
+class WeaknessDetector:
+    """Run deterministic graph/source weakness signals and rank findings."""
+    def detect(self, graph_data: GraphData) -> list[WeaknessFinding]: ...
 ```
 
 ### 3.7 Comparison Service — Token Savings Proof
@@ -765,6 +786,7 @@ class OrphanDetector:
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
+| `graph_diff.py` | Planned pre/post graph snapshot diff for comparison reports |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -788,6 +810,10 @@ class MetricsCalculator:
 class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
+
+# graph_diff.py (planned)
+def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
+def render_graph_diff(diff: GraphDiff) -> str: ...
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
@@ -861,6 +887,7 @@ class ProviderFactory:
 | `types.py` | Re-exports all shared types from sub-modules |
 | `types_metrics.py` | TokenMetrics, RunMetrics, ComparisonMetrics, ComparisonReport |
 | `types_results.py` | ProviderResponse, Suspect, InvestigationResult, PipelineResult |
+| `graph_ops.py` | Shared degree and connected-component primitives |
 
 ```python
 # gatekeeper.py
@@ -995,6 +1022,30 @@ class GraphData:
     entities: list[Entity] = field(default_factory=list)
     relationships: list[Relationship] = field(default_factory=list)
     communities: list[Community] = field(default_factory=list)
+```
+
+---
+
+### 3.10 Self-Grade Service — Reproducible Quality Gate
+
+| Attribute | Value |
+|---|---|
+| **Path** | `src/ex04/services/self_grade/` |
+| **Responsibility** | Assemble structural checks, configured gates, and rubric scoring |
+| **PRD Mapping** | [PRD §12 Final Checklist], [PRD NFR-7] |
+
+**Planned sub-modules**:
+
+| File | Responsibility |
+|---|---|
+| `models.py` | Typed check result and grade report dataclasses |
+| `checks.py` | Deterministic structural checks |
+| `grader.py` | Gate orchestration and rubric score calculation |
+
+```python
+class SelfGradeService:
+    """Run configured self-assessment gates and return a typed grade report."""
+    def grade(self) -> GradeReport: ...
 ```
 
 ---
@@ -1721,4 +1772,5 @@ architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
 | 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
+| 1.10 | 2026-06-21 | Add planned architecture entries for typed graph reader, weakness detector, agent workflow parity helpers, graph-diff reporting, shared graph operations, and self-grade service. |
 | 1.10 | 2026-06-21 | Reconcile production comparison semantics: canonical request, shared budgets/traces, grounded-candidate vs verified status, full config hashes, strict correctness-gate verdicts, and immutable report/manifest layout. |

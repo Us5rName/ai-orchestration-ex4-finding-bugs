@@ -146,6 +146,34 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 ---
 
+### T4.19 — Typed Graph Reader Facade
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.3 Graph Service] |
+| **PRD Reference** | [PRD FR-1.1], [PRD FR-7.2] |
+| **Estimate** | 60 min |
+
+**Goal**: Add a read-only query facade over `GraphData` so graph consumers do not repeatedly rebuild degree maps, community groupings, or edge indexes.
+
+**Definition of Done**:
+
+- [ ] `GraphReader` accepts `GraphData` or a parsed `graph.json` path
+- [ ] Exposes typed `node()`, `all_nodes()`, `edges_of()`, `top_n_by_degree()`, and `communities()` queries
+- [ ] Precomputes/caches degree and adjacency indexes at construction time
+- [ ] Used by graph analyzer, extension analysis, and graph-guided context builders where appropriate
+- [ ] Unit tests cover missing nodes, edge-only nodes, isolated nodes, and ranking stability
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/graph/test_reader.py -v
+```
+
+---
+
 ### T4.04 — Vault Service: Builder
 
 | Attribute | Value |
@@ -522,6 +550,34 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 ```bash
 uv run pytest tests/unit/services/analysis/test_bug_report.py -v
+```
+
+---
+
+### T4.20 — Multi-Signal Weakness Detector
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.6 Analysis Service] |
+| **PRD Reference** | [PRD FR-7.5], [PRD-EXT] |
+| **Estimate** | 90 min |
+
+**Goal**: Extend the current orphan/ranking analysis into a dedicated weakness detector with typed findings and pure signal functions.
+
+**Definition of Done**:
+
+- [ ] Add `WeaknessFinding` type with tag, severity, evidence anchors, and source-validation fields
+- [ ] Add pure signal functions for high-degree nodes, isolated clusters, ambiguous/low-confidence edges, broken source paths, and semantic duplicates
+- [ ] Add `WeaknessDetector.detect(graph_data)` orchestration and deterministic ranking
+- [ ] Expose the detector through `Ex04SDK`
+- [ ] Unit tests cover each signal, ranking order, empty graph, and missing source anchors
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_weakness_detector.py -v
 ```
 
 ---

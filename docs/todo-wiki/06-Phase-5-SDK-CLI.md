@@ -66,3 +66,31 @@ uv run python -m ex04 --help
 ```
 
 ---
+
+### T5.03 — Agent Workflow Parity Helpers
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD FR-4.1], [PRD FR-6.1] |
+| **Estimate** | 60 min |
+
+**Goal**: Centralize shared node call and token-recording behavior so graph-guided and naive workflows differ by context strategy, not instrumentation.
+
+**Definition of Done**:
+
+- [ ] Add shared helper for Gatekeeper-backed node calls
+- [ ] Add shared helper for converting provider responses into token records
+- [ ] Ensure graph-guided and naive paths use the same call/record helpers
+- [ ] Preserve existing workflow state fields and retry behavior
+- [ ] Unit tests verify parity of token accounting and node message shape across both paths
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/agent tests/unit/services/comparison -v
+```
+
+---
