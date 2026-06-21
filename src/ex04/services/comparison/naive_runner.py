@@ -6,25 +6,34 @@ import time
 from collections.abc import Sequence
 from pathlib import Path
 
-from ex04.providers.interface import Message
-from ex04.services.comparison._output_parser import JSON_SCHEMA, parse_json_response
+from ex04.services.comparison._output_parser import parse_json_response
 from ex04.services.comparison.budget import (
     BudgetExceededError,
     BudgetLedger,
     estimate_context_tokens,
 )
+from ex04.services.comparison.call_service import ComparisonCallService
+from ex04.services.comparison.context_bundle import (
+    ContextBundle,
+    ContextProvenance,
+    ContextStrategy,
+    SourceRef,
+)
 from ex04.services.comparison.naive_helpers import (
     anchored_evidence,
+    build_naive_result,
     extract_keywords,
     legacy_request,
-    parsed_str,
 )
+from ex04.services.comparison.prompt_builder import ComparisonPromptInput, PromptBuilder
 from ex04.services.comparison.trace import TraceRecorder
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
 _parse_json_response = parse_json_response
+_prompt_builder = PromptBuilder()
+
 
 
 class NaiveRunner:
@@ -43,6 +52,7 @@ class NaiveRunner:
         self.max_files = max_files
         self.max_bytes = max_bytes
         self.timeout_seconds = timeout_seconds
+        self._call_service = ComparisonCallService(gatekeeper)
 
     def run(
         self,
@@ -69,39 +79,13 @@ class NaiveRunner:
         recorder = trace or TraceRecorder(req.run_id or "naive")
         started = time.perf_counter()
         context, limitations = self._build_context(req, source_files, ledger, recorder)
-        response = self._call_provider(req, context, ledger, recorder)
+        bundle = self._make_bundle(context, source_files)
+        response = self._call_provider(req, bundle, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         evidence, anchor_lims = anchored_evidence(parsed, source_files, req)
         limitations.extend(anchor_lims)
         diagnosis = "grounded_candidate" if status == "parsed_ok" and evidence else "unverified"
-        result = InvestigationResult(
-            root_cause=parsed_str(parsed, "root_cause"),
-            proposed_fix=parsed_str(parsed, "patch"),
-            original_problem=req.bug_report,
-            files_read=ledger.files_read,
-            bytes_read=ledger.bytes_read,
-            context_tokens=ledger.context_tokens,
-            tool_calls=ledger.tool_calls,
-            model_calls=ledger.model_calls,
-            iterations=ledger.iterations,
-            retries=ledger.retries,
-            duration_seconds=time.perf_counter() - started,
-            input_tokens=response.input_tokens,
-            output_tokens=response.output_tokens,
-            parser_status=status,
-            diagnosis_status=diagnosis,
-            gate_status="not_requested" if not req.gate_enabled else "not_run",
-            verification_status="unverified",
-            evidence=evidence,
-            limitations=limitations + ledger.limitations,
-            evidence_class=req.evidence_class,
-            telemetry_available=response.input_tokens > 0 or response.output_tokens > 0,
-            run_id=req.run_id,
-            mode=req.mode or "naive",
-            config_hash=req.controlled_config_hash(),
-            target_commit=req.target_commit,
-        )
-        return result
+        return build_naive_result(req, ledger, response, status, parsed, evidence, limitations, started, diagnosis)
 
     def _build_context(
         self,
@@ -132,17 +116,24 @@ class NaiveRunner:
                 break
         return "\n\n".join(parts) if parts else "(no files read)", limitations
 
+    def _make_bundle(self, context: str, files: Sequence[Path]) -> ContextBundle:
+        """Wrap naive context text in a typed ContextBundle."""
+        refs = tuple(SourceRef(path=str(f), kind="file") for f in files if f.is_file())
+        prov = ContextProvenance(
+            strategy=ContextStrategy.NAIVE,
+            token_count=estimate_context_tokens(context),
+            source_count=len(refs),
+        )
+        return ContextBundle(content=context, strategy=ContextStrategy.NAIVE,
+                             source_refs=refs, provenance=prov)
+
     def _call_provider(
-        self,
-        req: ComparisonRequest,
-        context: str,
-        ledger: BudgetLedger,
-        trace: TraceRecorder,
+        self, req: ComparisonRequest, bundle: ContextBundle,
+        ledger: BudgetLedger, trace: TraceRecorder,
     ):
-        ledger.check(models=1, iterations=1)
-        content = f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n{context}\n\n{JSON_SCHEMA}"
-        messages: list[Message] = [{"role": "user", "content": content}]
-        response = self.gatekeeper.send(req.provider, messages)
-        ledger.record(models=1, iterations=1)
-        trace.record("provider_call", ledger, provider=req.provider, model=req.model)
-        return response
+        """Build canonical prompt and execute via shared call service."""
+        inp = ComparisonPromptInput(system_prompt=req.system_prompt,
+                                    bug_report=req.bug_report, context_bundle=bundle)
+        return self._call_service.execute(
+            _prompt_builder.build_messages(inp), req.provider, req.model, ledger, trace
+        ).response
