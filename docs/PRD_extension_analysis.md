@@ -5,7 +5,7 @@
 | **Requirement ID** | PRD-EXT |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.7 (FR-7.4–7.6) |
 | **Status** | Active |
-| **Version** | 1.2 |
+| **Version** | 1.3 |
 | **Date** | 2026-06-21 |
 
 ---
@@ -45,32 +45,95 @@ A planned third extension is described in §EXT-3 below:
 |---|---|---|
 | `OrphanReport` | dataclass | List of orphan nodes, weak components, summary |
 
-### OrphanReport Schema
+### Current (T7.07) Implementation Schema
+
+The following schema is what the existing implementation exposes. It uses mutable lists and a
+string source anchor. Do not assume it has immutability or stable-ID semantics it does not
+currently possess.
 
 ```python
 @dataclass
 class OrphanNode:
-    name: str
+    name: str          # display name (not a stable graph ID)
     kind: str
     file_path: str
     connection_count: int
-    source_anchor: str  # "file:start-end"
+    source_anchor: str  # "file:start-end" string, not a typed anchor
 
 @dataclass
 class WeakComponent:
-    component_id: int
-    members: list[str]
+    component_id: int   # traversal-order integer, not content-derived
+    members: list[str]  # mutable list of display names
     size: int
 
 @dataclass
 class OrphanReport:
-    orphan_nodes: list[OrphanNode]
-    weak_components: list[WeakComponent]
+    orphan_nodes: list[OrphanNode]       # mutable list
+    weak_components: list[WeakComponent] # mutable list
     total_entities: int
     orphan_count: int
     weak_component_count: int
     threshold_used: int
-    limitations: list[str]
+    limitations: list[str]               # mutable list
+```
+
+### Target (T6.05) Closure Schema
+
+The following defines the immutable, typed report DTO that T6.05 must produce. The existing
+analysis result (T7.07) shall be **adapted** into this schema — one canonical report model,
+no competing public schemas, no second graph-parsing path.
+
+```python
+@dataclass(frozen=True, slots=True)
+class EvidenceAnchor:
+    file_path: str
+    start_line: int | None
+    end_line: int | None
+    entity_id: str | None
+
+@dataclass(frozen=True, slots=True)
+class OrphanNodeView:
+    entity_id: str           # stable graph node ID (separate from display label)
+    label: str               # display name
+    kind: str
+    connection_count: int
+    source_anchor: EvidenceAnchor | None
+
+@dataclass(frozen=True, slots=True)
+class WeakComponentView:
+    component_id: str        # deterministic, content-derived ID (not traversal-order int)
+    member_ids: tuple[str, ...] # immutable tuple of stable entity IDs
+    size: int
+
+@dataclass(frozen=True, slots=True)
+class OrphanReport:
+    orphan_nodes: tuple[OrphanNodeView, ...]       # immutable, deterministically ordered
+    weak_components: tuple[WeakComponentView, ...] # immutable, ordered by component_id
+    total_entities: int
+    orphan_count: int
+    weak_component_count: int
+    threshold_used: int
+    limitations: tuple[str, ...]  # immutable
+```
+
+**Key design decisions for T6.05**:
+- `entity_id` is the stable graph node ID; `label` is the display name — they are separate fields.
+- `EvidenceAnchor` replaces the opaque `"file:start-end"` string.
+- All public collections are `tuple` (immutable). No mutable lists in the public DTO.
+- `component_id` is content-derived and deterministic, not an integer assigned by traversal order.
+- `orphan_nodes` ordered by `entity_id`; `weak_components` ordered by `component_id`; `member_ids` ordered by `entity_id`.
+- `limitations` is an immutable tuple.
+- JSON is canonical for persisted reports; Markdown is rendered from the canonical JSON, not independently authored.
+
+**Compatibility and migration rule**:
+
+```
+The public SDK call shape (Ex04SDK.detect_orphans(graph_data, min_connections)) remains unchanged.
+After T4.19, OrphanDetector shall delegate graph queries internally to GraphReader.
+T6.05 adapts the existing analysis result into the immutable OrphanReport DTO.
+There is one canonical public report schema — the target schema above.
+No second graph-parsing path is created.
+No competing public report schema is maintained alongside the target schema.
 ```
 
 ### Invariants
@@ -81,7 +144,8 @@ class OrphanReport:
 
 ### GraphReader Integration
 
-After T4.19 is implemented, the `OrphanDetector` shall reuse `GraphReader` for graph access rather than rebuilding degree indexes independently.
+After T4.19 is implemented, the `OrphanDetector` shall delegate graph queries internally to `GraphReader`.
+The public SDK API remains `GraphData`-compatible for backward compatibility.
 
 ### Report Artifacts (Closure Work for T6.05)
 
@@ -103,9 +167,13 @@ T6.05 (additional extension) → FR-7.5 (Orphan Detection) → T7.07 (OrphanDete
 - [x] `OrphanDetector.detect(graph_data, min_connections)` returns `OrphanReport`. *(implemented in T7.07)*
 - [x] Report is exposed via `Ex04SDK.detect_orphans(graph_data, min_connections)`. *(implemented in T7.07)*
 - [x] Unit tests cover: empty graph, fully connected, isolated nodes, threshold edge cases. *(implemented in T7.07)*
-- [ ] Output saved to `artifacts/runs/<run-id>/reports/orphan_report.json`. *(closure work)*
-- [ ] Markdown report saved to `artifacts/runs/<run-id>/reports/orphan_report.md`. *(closure work)*
-- [ ] Reports include stable IDs, deterministic ordering, typed source anchors. *(closure work)*
+- [ ] `OrphanDetector` delegates graph queries internally to `GraphReader` after T4.19. *(closure work — internal, not public API)*
+- [ ] Output saved to `artifacts/runs/<run-id>/reports/orphan_report.json` using the target closure schema (immutable DTOs). *(closure work)*
+- [ ] Markdown report saved to `artifacts/runs/<run-id>/reports/orphan_report.md` rendered from canonical JSON. *(closure work)*
+- [ ] Reports use stable `entity_id` fields, typed `EvidenceAnchor`, deterministic ordering, immutable tuples. *(closure work)*
+- [ ] Component IDs are content-derived and deterministic (not traversal-order integers). *(closure work)*
+- [ ] Existing SDK call shape (`detect_orphans(graph_data, min_connections)`) preserved. *(backward compatibility)*
+- [ ] Migration/regression tests verify the adapted target schema matches the existing test fixtures. *(closure work)*
 - [ ] README documents real usage and artifact paths with actual examples. *(closure work — do not add before artifacts exist)*
 - [ ] Evidence matrix updated with truthful evidence paths. *(closure work)*
 - [ ] T6.05 → FR-7.5 → T7.07 traceability is explicit in all documentation. *(this document, TODO, PLAN)*
@@ -256,5 +324,6 @@ src/ex04/services/analysis/weakness_detector/
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 6-7 extensions |
-| 1.2 | 2026-06-21 | Add version header field; sync date to 2026-06-21; EvidenceAnchor/RelationshipKey/WeaknessFinding typed immutable models referenced in EXT-3 — see PLAN.md for full model. Traceability: [PLAN §3.6 weakness_detector], [TODO T4.20].
 | 1.1 | 2026-06-21 | Formally select FR-7.5 as T6.05 extension; add T6.05 traceability and closure work definition; add GraphReader integration requirement; update EXT-1 acceptance criteria to distinguish implemented vs. closure-pending items; add §EXT-3 for planned FR-7.7 weakness detection (T4.20). Traceability: [PRD §5.7 FR-7.5, FR-7.7], [TODO T6.05, T7.07, T4.20]. |
+| 1.2 | 2026-06-21 | Add version header field; sync date to 2026-06-21; EvidenceAnchor/RelationshipKey/WeaknessFinding typed immutable models referenced in EXT-3 — see PLAN.md for full model. Traceability: [PLAN §3.6 weakness_detector], [TODO T4.20].
+| 1.3 | 2026-06-21 | Add explicit Current (T7.07) vs. Target (T6.05) OrphanReport schema distinction; define immutable closure DTOs (EvidenceAnchor, OrphanNodeView, WeakComponentView, OrphanReport) with design decisions; expand T6.05 acceptance criteria with stable IDs, typed anchors, immutable DTOs, deterministic ordering, GraphReader delegation, backward compatibility, migration tests; fix revision-history ordering. Traceability: [PRD §5.7 FR-7.5], [TODO T6.05]. |

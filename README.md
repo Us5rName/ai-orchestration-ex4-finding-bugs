@@ -6,7 +6,7 @@
 A LangGraph-based AI agent that investigates bugs in unfamiliar Python codebases
 using **code-graph analysis** (Grphify) and **knowledge management** (Obsidian vault),
 then measures the token-efficiency advantage of graph-guided context selection
-versus naive full-corpus reading.
+versus naive context selection without graph-derived prioritization.
 
 ---
 
@@ -14,7 +14,7 @@ versus naive full-corpus reading.
 
 | Field | Value |
 |---|---|
-| **Central question** | Does graph-guided context selection reduce token usage compared to naive full-corpus reading? |
+| **Central question** | Does graph-guided context selection reduce token usage compared to naive context selection without graph-derived prioritization? |
 | **Target** | andela/buggy-python |
 | **Selected bug** | `ImportError: cannot import name 'lambda_array' from 'snippets'` — `__init__.py` has all imports commented out; additional type/name bugs in `loop.py` and `io.py` |
 | **Provenance** | `artifacts/pre_fix/provenance.json` |

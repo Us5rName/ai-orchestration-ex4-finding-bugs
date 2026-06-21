@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.02 |
+| **Version** | 1.03 |
 | **Course** | AI Orchestration, שנה 3 |
 | **Instructor** | ד"ר יורם סגל |
 | **Date** | 2026-06-21 |
@@ -409,5 +409,5 @@ code/
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial PRD creation |
 | 1.01 | 2026-06-19 | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |
-| 1.03 | 2026-06-21 | Correct FR-7.5 status from "Implemented" to "Partially Implemented" — core algorithm and SDK exposure exist (T7.07); run-scoped JSON/Markdown reporting remains pending (T6.05). Traceability: [TODO T6.05], [PRD-EXT §EXT-1].
 | 1.02 | 2026-06-21 | Add FR-6.4 Experimental Parity; refine FR-7.4 for typed pre/post structural comparison; update FR-7.5 and FR-7.6 as implemented; add FR-7.7 Multi-Signal Weakness Detection; add §5.8 FR-8.1–FR-8.4 Self-Grade Service requirements. Traceability: [ASSIGNMENT.md §5.5–5.6], project engineering requirements supporting scientific validity. |
+| 1.03 | 2026-06-21 | Correct FR-7.5 status from "Implemented" to "Partially Implemented" — core algorithm and SDK exposure exist (T7.07); run-scoped JSON/Markdown reporting remains pending (T6.05). Traceability: [TODO T6.05], [PRD-EXT §EXT-1].

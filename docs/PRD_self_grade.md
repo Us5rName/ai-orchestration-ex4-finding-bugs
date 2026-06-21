@@ -5,7 +5,7 @@
 | **Requirement ID** | PRD-SG |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.8 (FR-8.1–FR-8.4) |
 | **Status** | Planned |
-| **Version** | 1.1 |
+| **Version** | 1.2 |
 | **Date** | 2026-06-21 |
 
 ---
@@ -150,13 +150,21 @@ A mandatory gate contributes to an admissible grade **only** when its status is 
 ```
 check results
     ↓
-earned rubric points  (from PASS results only; FAIL/ERROR/SKIPPED → 0 for that check)
+earned rubric points
+    - PASS: earns configured points
+    - FAIL, ERROR, BLOCKED, and required SKIPPED: earn 0
+    - optional SKIPPED: omitted from numerator and denominator
     ↓
-raw score             (sum of earned points / sum of max points × 100)
+raw score             (sum of earned points / eligible maximum points × 100)
     ↓
-mandatory-gate cap    (if any mandatory gate is FAIL, cap raw score at mandatory_cap)
+mandatory-gate evaluation
+    - every mandatory gate must be PASS for an uncapped admissible score
+    - any mandatory non-PASS status activates its configured cap
+    - if multiple caps apply, use the lowest cap
+    - ERROR, BLOCKED, or required SKIPPED also mark the assessment INCOMPLETE
     ↓
-final score           (min(raw_score, mandatory_cap) — or raw_score if no gate failed)
+final score           (min(raw_score, lowest applicable mandatory cap)
+                       — or raw_score when every mandatory gate passes)
 ```
 
 **Example (illustrative policy documentation, not generated evidence):**
@@ -243,6 +251,12 @@ The CLI must delegate entirely to the SDK. No grading logic in the CLI.
 | Unit: mandatory cap | Verify cap is applied correctly; multiple caps select lowest |
 | Unit: timeout | Verify timeout → ERROR status, duration recorded |
 | Unit: BLOCKED | Verify BLOCKED propagation when prerequisite gate fails |
+| Unit: ERROR cap | Verify mandatory ERROR activates cap and marks assessment INCOMPLETE |
+| Unit: BLOCKED cap | Verify mandatory BLOCKED activates cap and marks assessment INCOMPLETE |
+| Unit: required SKIPPED | Verify required SKIPPED treated as BLOCKED (cap applies, INCOMPLETE) |
+| Unit: optional SKIPPED | Verify optional SKIPPED excluded from both numerator and denominator |
+| Unit: lowest cap | Verify multiple caps select the lowest applicable cap |
+| Unit: all PASS uncapped | Verify all mandatory gates PASS produces an uncapped final score |
 | Unit: provenance | Verify all required provenance fields present and non-empty |
 | Unit: JSON → Markdown | Verify Markdown is derived from JSON, not independently authored |
 | Integration: real checks | Run ruff and file-length checks against test fixtures |
@@ -254,7 +268,7 @@ The CLI must delegate entirely to the SDK. No grading logic in the CLI.
 - [ ] `GradeReport` contains all required provenance fields.
 - [ ] Score calculation follows: check results → earned points → raw score → mandatory cap → final score.
 - [ ] Configuration never contains pre-awarded earned scores.
-- [ ] Mandatory gate failure reduces final score to cap.
+- [ ] Any mandatory non-PASS status (FAIL, ERROR, BLOCKED, required SKIPPED) reduces final score to its configured cap.
 - [ ] `FAIL` and `ERROR` statuses are distinct and separately counted.
 - [ ] `BLOCKED` status propagates when a prerequisite gate fails.
 - [ ] `self_grade.json` is the canonical report; `self_grade.md` is derived from it.
@@ -279,5 +293,6 @@ The CLI must delegate entirely to the SDK. No grading logic in the CLI.
 
 | Version | Date | Change |
 |---|---|---|
-| 1.1 | 2026-06-21 | Add explicit Mandatory Gate Cap Policy section covering ERROR, BLOCKED, and required SKIPPED gate statuses; expand Behavior Table with INCOMPLETE assessment status. Traceability: [PRD §5.8 FR-8.3], [PLAN ADR-009].
 | 1.0 | 2026-06-21 | Initial creation defining self-grade contract for T8.13. Traceability: [PRD §5.8 FR-8.1–FR-8.4], [TODO T8.13], [PLAN §3.10]. |
+| 1.1 | 2026-06-21 | Add explicit Mandatory Gate Cap Policy section covering ERROR, BLOCKED, and required SKIPPED gate statuses; expand Behavior Table with INCOMPLETE assessment status. Traceability: [PRD §5.8 FR-8.3], [PLAN ADR-009].
+| 1.2 | 2026-06-21 | Fix Score Calculation block to reflect all mandatory non-PASS statuses (not only FAIL) activating cap; add ERROR/BLOCKED/required SKIPPED semantics to denominator rule; expand Testing Strategy with 6 new test cases; fix revision-history ordering. Traceability: [PRD §5.8 FR-8.3], [PLAN ADR-009].

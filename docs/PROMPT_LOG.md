@@ -639,7 +639,7 @@ tests/unit/services/analysis/
 **Validation**: Confirmed that the Phase 8 final-checklist NFR-3 item is unchecked in both mirrored documents.
 ---
 
-### Prompt 41 — Plan Documentation Alignment: Remove Undefined Types
+### Prompt 49 — Plan Documentation Alignment: Remove Undefined Types
 
 **Prompt**: "go over section 3 of the plan, and tell me what items have missing or inconsistent with actual implementation signatures defined and why" → "go for it" → "Add what was done to the prompt log"
 
@@ -694,7 +694,7 @@ tests/unit/services/analysis/
 
 ---
 
-### Prompt 46 — Remaining-Task Contract Definition
+### Prompt 50 — Remaining-Task Contract Definition
 
 **Date**: 2026-06-21
 **Model**: Claude 4.6 Sonnet
@@ -729,13 +729,13 @@ tests/unit/services/analysis/
 
 **Verification**: ruff 0 violations; validate_repo 19 checks passed; check_docs_sync clean; pre-commit (mypy + pytest ≥85%) passed.
 
-**Limitations**: Static keyless validation only. No CI run on remote. Some header metadata inconsistencies found in subsequent review (corrected in Prompt 47).
+**Limitations**: Static keyless validation only. No CI run on remote. Some header metadata inconsistencies found in subsequent review (corrected in Prompt 51).
 
 **Actual outcome**: Branch feat/remaining-task-completion created and pushed. Commit 8ef07ad. 23 files changed, 1724 insertions, 208 deletions. Documentation-only — no production code.
 
 ---
 
-### Prompt 47 — Reconcile Graph-Model and Remaining-Task Contracts
+### Prompt 51 — Reconcile Graph-Model and Remaining-Task Contracts
 
 **Date**: 2026-06-21
 **Model**: Claude 4.6 Sonnet
@@ -777,6 +777,50 @@ tests/unit/services/analysis/
 
 **Actual outcome**: Single documentation-only commit on feat/remaining-task-completion. All 12 corrective items addressed.
 
+### Prompt 52 — Finalize Remaining-Task Documentation Consistency
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only task; no production code)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Final documentation-consistency pass before production implementation of T4.19a/T4.19/T5.03/T4.20/T6.05/T6.09/T8.13 begins. Remove every remaining contradiction or ambiguity in the planned implementation contracts.
+
+**Context**: Branch `feat/remaining-task-completion` contained commits 8ef07ad (Prompt 50) and ec82461 (Prompt 51). A post-review audit identified four known defects and one bounded repository-wide consistency sweep required before implementation starts.
+
+**Exact corrections made**:
+
+1. **Prompt-log numbering**: Renamed duplicate `### Prompt 41` → `### Prompt 49`, `### Prompt 46` → `### Prompt 50`, `### Prompt 47` → `### Prompt 51`; updated all revision-history references to corrected numbers (v1.25 "Prompt 41" → "Prompt 49", v1.26 "Prompt 42" → "Prompt 49 session", v1.29 "Prompt 45" → "Prompt 50", v1.30 "Prompt 46" → "Prompt 50", v1.31 "Prompt 46 and Prompt 47" → "Prompts 50 and 51"); fixed revision-history ordering (1.31, 1.30, 1.29 → 1.29, 1.30, 1.31); corrected internal cross-reference in Prompt 50 body ("corrected in Prompt 47" → "corrected in Prompt 51").
+
+2. **Document version and parent reference sync**: `docs/PRD.md` header updated 1.02 → 1.03 to match latest revision entry; PRD revision history re-ordered (1.03 was listed before 1.02); `docs/PLAN.md` parent PRD reference updated v1.02 → v1.03, version incremented 1.12 → 1.13, revision history ordering fixed (1.12 before 1.11 → 1.11 then 1.12), entry 1.13 added; `docs/TODO.md` parent PRD reference updated v1.02 → v1.03, PLAN reference updated v1.12 → v1.13, version incremented 1.26 → 1.27, revision history ordering fixed (1.26 before 1.25 → 1.25 then 1.26), entry 1.27 added; `docs/PRD_comparison_experiment.md` merged duplicate 1.1 revision entries into one, header updated 1.1 → 1.2 (latest); `docs/PRD_self_grade.md` header updated 1.1 → 1.2, revision history ordering fixed (1.1 before 1.0 → 1.0 then 1.1), entry 1.2 added; `docs/PRD_extension_analysis.md` version updated 1.2 → 1.3, revision history ordering fixed (1.0, 1.2, 1.1 → 1.0, 1.1, 1.2), entry 1.3 added.
+
+3. **Self-grade scoring contract**: Fixed `Score Calculation` block — changed "if any mandatory gate is FAIL" to cover all mandatory non-PASS statuses (FAIL, ERROR, BLOCKED, required SKIPPED); added `optional SKIPPED omitted from denominator` to earned-points rule; changed "or raw_score if no gate failed" to "or raw_score when every mandatory gate passes"; added 7 new planned test cases covering ERROR cap + INCOMPLETE, BLOCKED cap + INCOMPLETE, required SKIPPED as BLOCKED, optional SKIPPED denominator exclusion, multiple caps selecting lowest, and all PASS uncapped; fixed Acceptance Criteria wording from "Mandatory gate failure" to "Any mandatory non-PASS status".
+
+4. **OrphanReport current vs. target schema**: Added explicit "Current (T7.07) Implementation Schema" section (mutable lists, string anchor, traversal-order component IDs) and "Target (T6.05) Closure Schema" section (immutable frozen dataclasses: `EvidenceAnchor`, `OrphanNodeView`, `WeakComponentView`, `OrphanReport` using tuples); documented compatibility/migration rule (public SDK shape preserved; T6.05 adapts existing result into one canonical immutable DTO; no second parser path; no competing public schema); expanded T6.05 Acceptance Criteria with stable IDs, typed anchors, immutable DTOs, deterministic ordering, GraphReader delegation, backward compatibility, migration tests.
+
+5. **Consistency sweep**: `NaiveRunner` description in `README.md` updated — "full-corpus reading" replaced with "context selected without graph-derived prioritization" to match bounded implementation; ran targeted rg checks — no stale `T6\.05.*Not Started`, `6 genuinely unimplemented` (in non-historical context), `diff_gen\.py`, or `impact_reporter\.py` matches in current-state sections.
+
+**Files modified**:
+- `docs/PROMPT_LOG.md` (this document)
+- `docs/PRD.md`
+- `docs/PRD_comparison_experiment.md`
+- `docs/PRD_self_grade.md`
+- `docs/PRD_extension_analysis.md`
+- `docs/PLAN.md`
+- `docs/TODO.md`
+- `README.md`
+- Generated wikis regenerated via `uv run python scripts/generate_doc_wikis.py`
+
+**Validation**: ruff 0 violations; validate_repo passed; check_docs_sync clean; prompt headings unique; all parent references current.
+
+**Limitations**: Static keyless validation only. No live provider CI run. Wiki regeneration outputs not manually verified line-by-line.
+
+**Actual outcome**: Single documentation-only commit on feat/remaining-task-completion. Branch ready for T4.19a/T4.19 implementation.
+
+**Commit hash**: TBD (recorded after commit)
+
+---
+
 ---
 
 
@@ -807,10 +851,11 @@ tests/unit/services/analysis/
 | 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
 | 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |
 | 1.24 | 2026-06-20 | Added Prompt 48 — reverted mistaken Phase 8 checklist updates in TODO and todo-wiki, leaving Phase 8 pending for final verification. |
-| 1.25 | 2026-06-20 | Added Prompt 41 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
-| 1.26 | 2026-06-20 | Added Prompt 42 — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
+| 1.25 | 2026-06-20 | Added Prompt 49 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
+| 1.26 | 2026-06-20 | Added Prompt 49 session — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.27 | 2026-06-20 | Added Prompt 43 — Phase 6-8 recovery and finalization audit: preserved interrupted work, verified recovered commits, added mypy as a dev dependency, expanded generated wiki synchronization, added evidence matrix/self-assessment/blocked-operation/assets docs, and corrected T8.12 to pending until clean-clone verification is actually recorded. |
 | 1.28 | 2026-06-20 | Added Prompt 44 — Clean-clone verification: created an isolated worktree, ran dependency sync, keyless import, Ruff, mypy, pytest with coverage, docs sync, and repository validation; recorded results in `reports/clean_clone_verification.md`. |
-| 1.31 | 2026-06-21 | Added full Prompt 46 and Prompt 47 entries (corrective commit); previous v1.29 entry was only a revision-history line. Traceability: [TODO T4.19, T4.20, T5.03, T6.05, T6.09, T8.13].
-| 1.30 | 2026-06-21 | Added Prompt 46 entry with full context, decisions, files changed, verification, limitations, outcome.
-| 1.29 | 2026-06-21 | Added Prompt 45 — Remaining-task contract definition (feat/remaining-task-completion): define full contracts for T4.19 GraphReader, T5.03 parity helpers, T4.20 weakness detector, T6.05 orphan closure, T6.09 graph-diff, T8.13 self-grade; add ADR-007/ADR-008/ADR-009 and task dependency graph to PLAN; add FR-6.4/FR-7.7/FR-8.1–FR-8.4 to PRD; create PRD_self_grade.md; documentation-only commit. Claude 4.6 Sonnet, 2026-06-21. |
+| 1.29 | 2026-06-21 | Added Prompt 50 — Remaining-task contract definition (feat/remaining-task-completion): define full contracts for T4.19 GraphReader, T5.03 parity helpers, T4.20 weakness detector, T6.05 orphan closure, T6.09 graph-diff, T8.13 self-grade; add ADR-007/ADR-008/ADR-009 and task dependency graph to PLAN; add FR-6.4/FR-7.7/FR-8.1–FR-8.4 to PRD; create PRD_self_grade.md; documentation-only commit. Claude 4.6 Sonnet, 2026-06-21. |
+| 1.30 | 2026-06-21 | Added Prompt 50 entry with full context, decisions, files changed, verification, limitations, outcome.
+| 1.31 | 2026-06-21 | Added full Prompts 50 and 51 entries (corrective commit); previous v1.29 entry was only a revision-history line. Traceability: [TODO T4.19, T4.20, T5.03, T6.05, T6.09, T8.13].
+| 1.32 | 2026-06-21 | Added Prompt 52 — Final remaining-task documentation consistency pass: fix prompt-log numbering (Prompts 49/50/51), sync document versions and parent references, fix self-grade scoring contract (non-PASS semantics), add OrphanReport current vs. target schema distinction, consistency sweep. Commit TBD.
