@@ -68,7 +68,9 @@ class ComparisonRequest:
     gate_verification_commands: list[str] = list_field()
     gate_policy_checks: list[str] = field(
         default_factory=lambda: [
-            "prohibited_files_clean", "tests_not_deleted", "assertions_not_weakened",
+            "prohibited_files_clean",
+            "tests_not_deleted",
+            "assertions_not_weakened",
         ],
         metadata={"fairness": CONTROLLED},
     )
@@ -99,7 +101,11 @@ class ComparisonRequest:
     def controlled_payload(self) -> dict[str, object]:
         """Return all fields classified as controlled, in stable key order."""
         data = asdict(self)
-        return {f.name: data[f.name] for f in fields(self) if fairness_of(f.name) == CONTROLLED}
+        return {
+            f.name: data[f.name]
+            for f in fields(self)
+            if fairness_of(f.name) == CONTROLLED
+        }
 
     def controlled_config_hash(self) -> str:
         """Return full SHA-256 digest of the controlled payload."""
@@ -107,12 +113,22 @@ class ComparisonRequest:
         return hashlib.sha256(payload.encode()).hexdigest()
 
     def _validate_limits(self) -> None:
-        for name in ("max_files", "max_bytes", "token_budget", "max_tool_calls",
-                     "max_model_calls", "max_iterations", "timeout_seconds",
-                     "max_output_tokens", "provider_timeout", "max_changed_files",
-                     "max_patch_bytes"):
+        for name in (
+            "max_files",
+            "max_bytes",
+            "token_budget",
+            "max_tool_calls",
+            "max_model_calls",
+            "max_iterations",
+            "timeout_seconds",
+            "max_output_tokens",
+            "provider_timeout",
+            "max_changed_files",
+            "max_patch_bytes",
+        ):
             if int(getattr(self, name)) <= 0:
                 raise ValueError(f"{name} must be positive, got {getattr(self, name)}")
+
 
 def fairness_of(name: str) -> str:
     """Return fairness classification for a ComparisonRequest field."""

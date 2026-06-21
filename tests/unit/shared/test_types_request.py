@@ -40,22 +40,34 @@ def test_validate_raises_on_empty_run_id() -> None:
 
 
 def test_validate_raises_on_zero_budget() -> None:
-    req = ComparisonRequest(bug_report="test bug", provider="openai", run_id="r1", max_files=0)
+    req = ComparisonRequest(
+        bug_report="test bug",
+        provider="openai",
+        run_id="r1",
+        max_files=0,
+    )
     with pytest.raises(ValueError, match="max_files"):
         req.validate()
 
 
 def test_validate_raises_on_negative_budget() -> None:
     req = ComparisonRequest(
-        bug_report="test bug", provider="openai", run_id="r1", token_budget=-1
+        bug_report="test bug",
+        provider="openai",
+        run_id="r1",
+        token_budget=-1,
     )
     with pytest.raises(ValueError, match="token_budget"):
         req.validate()
 
 
 def test_validate_passes_on_valid_request() -> None:
-    req = ComparisonRequest(bug_report="IndexError in process_data", provider="openai", run_id="r1")
-    req.validate()  # must not raise
+    req = ComparisonRequest(
+        bug_report="IndexError in process_data",
+        provider="openai",
+        run_id="r1",
+    )
+    req.validate()
 
 
 def test_default_gate_policy_checks() -> None:
@@ -66,14 +78,19 @@ def test_default_gate_policy_checks() -> None:
 
 
 def test_every_field_has_fairness_classification() -> None:
-    names = {name for name in ComparisonRequest.__dataclass_fields__}
-    classified = {name for kind in FAIRNESS_CLASSES for name in classified_field_names(kind)}
+    names = set(ComparisonRequest.__dataclass_fields__)
+    classified = {
+        name for kind in FAIRNESS_CLASSES for name in classified_field_names(kind)
+    }
     assert classified == names
 
 
 def test_invalid_target_identity_rejected_for_non_fixture() -> None:
     req = ComparisonRequest(
-        bug_report="bug", provider="openai", run_id="r1", evidence_class="deterministic"
+        bug_report="bug",
+        provider="openai",
+        run_id="r1",
+        evidence_class="deterministic",
     )
     with pytest.raises(ValueError, match="target_commit"):
         req.validate()
@@ -81,7 +98,10 @@ def test_invalid_target_identity_rejected_for_non_fixture() -> None:
 
 def test_invalid_evidence_class_rejected() -> None:
     req = ComparisonRequest(
-        bug_report="bug", provider="openai", run_id="r1", evidence_class="demo"
+        bug_report="bug",
+        provider="openai",
+        run_id="r1",
+        evidence_class="demo",
     )
     with pytest.raises(ValueError, match="evidence_class"):
         req.validate()
@@ -98,7 +118,10 @@ def test_controlled_hash_is_full_sha256() -> None:
 def test_mode_fields_do_not_change_controlled_hash() -> None:
     base = ComparisonRequest(bug_report="bug", provider="openai", run_id="naive")
     guided = ComparisonRequest(
-        bug_report="bug", provider="openai", run_id="guided", mode="graph"
+        bug_report="bug",
+        provider="openai",
+        run_id="guided",
+        mode="graph",
     )
     assert base.controlled_config_hash() == guided.controlled_config_hash()
 
