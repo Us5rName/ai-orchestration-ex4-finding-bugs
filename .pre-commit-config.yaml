@@ -1,0 +1,28 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check src tests
+        language: system
+        pass_filenames: false
+      - id: mypy-src
+        name: mypy src
+        entry: uv run mypy src/ex04 --ignore-missing-imports
+        language: system
+        pass_filenames: false
+      - id: pytest
+        name: pytest with coverage
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+      - id: validate-repo
+        name: repository validation
+        entry: uv run python scripts/validate_repo.py
+        language: system
+        pass_filenames: false
+      - id: docs-sync
+        name: generated docs sync
+        entry: uv run python scripts/check_docs_sync.py
+        language: system
+        pass_filenames: false

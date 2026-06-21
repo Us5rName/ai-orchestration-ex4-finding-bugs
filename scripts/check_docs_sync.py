@@ -1,4 +1,4 @@
-"""Check that plan-wiki/Home.md and todo-wiki/Home.md are up-to-date.
+"""Check that generated wiki pages are up-to-date.
 
 Exits with code 1 and a diff summary if wikis are out of sync with canonical docs.
 Run: uv run python scripts/check_docs_sync.py
@@ -12,59 +12,72 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-PLAN_HOME = ROOT / "docs" / "plan-wiki" / "Home.md"
-TODO_HOME = ROOT / "docs" / "todo-wiki" / "Home.md"
 GEN_SCRIPT = ROOT / "scripts" / "generate_doc_wikis.py"
 
 
-def check_file_sync(existing: Path, label: str) -> bool:
-    """Return True if the file matches what generate_doc_wikis.py would produce."""
-    if not existing.exists():
-        print(f"MISSING: {label} ({existing})")
-        return False
+def _generated_files(wiki_dir: Path) -> list[Path]:
+    """Return generated Markdown files in a wiki directory."""
+    return sorted(path for path in wiki_dir.glob("*.md") if _is_generated(path))
 
-    with tempfile.TemporaryDirectory() as tmp:
-        import shutil
 
-        tmp_path = Path(tmp)
-        # Copy docs dir into temp, run generator, compare Home.md
-        tmp_docs = tmp_path / "docs"
-        shutil.copytree(ROOT / "docs", tmp_docs)
-        tmp_scripts = tmp_path / "scripts"
-        tmp_scripts.mkdir()
-        shutil.copy(GEN_SCRIPT, tmp_scripts / "generate_doc_wikis.py")
+def _is_generated(path: Path) -> bool:
+    """Return True when a wiki file carries the generated marker."""
+    return path.exists() and path.read_text(encoding="utf-8").startswith("<!-- GENERATED")
 
-        result = subprocess.run(
-            [sys.executable, str(tmp_scripts / "generate_doc_wikis.py")],
-            cwd=tmp_path,
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
-            print(f"Generator failed: {result.stderr}")
-            return False
 
-        if label.startswith("plan"):
-            generated = tmp_docs / "plan-wiki" / "Home.md"
-        else:
-            generated = tmp_docs / "todo-wiki" / "Home.md"
+def check_wiki_sync(existing_dir: Path, generated_dir: Path, label: str) -> bool:
+    """Return True if all generated files match the canonical output."""
+    expected = {path.name: path for path in _generated_files(generated_dir)}
+    existing = {path.name: path for path in _generated_files(existing_dir)}
+    ok = True
+    for name, generated in expected.items():
+        current = existing.get(name)
+        if current is None:
+            print(f"MISSING: {label}/{name}")
+            ok = False
+            continue
+        if current.read_text(encoding="utf-8") != generated.read_text(encoding="utf-8"):
+            print(f"OUT OF SYNC: {label}/{name}")
+            ok = False
+    stale = sorted(set(existing) - set(expected))
+    for name in stale:
+        print(f"STALE GENERATED FILE: {label}/{name}")
+        ok = False
+    if ok:
+        print(f"OK: {label}")
+    return ok
 
-        existing_text = existing.read_text(encoding="utf-8")
-        generated_text = generated.read_text(encoding="utf-8") if generated.exists() else ""
 
-        if existing_text == generated_text:
-            print(f"OK: {label}")
-            return True
-        else:
-            print(f"OUT OF SYNC: {label}")
-            print("  Run: uv run python scripts/generate_doc_wikis.py")
-            return False
+def _build_expected_docs(tmp_path: Path) -> Path:
+    """Generate expected docs in a temporary copy."""
+    import shutil
+
+    tmp_docs = tmp_path / "docs"
+    shutil.copytree(ROOT / "docs", tmp_docs)
+    tmp_scripts = tmp_path / "scripts"
+    tmp_scripts.mkdir()
+    shutil.copy(GEN_SCRIPT, tmp_scripts / "generate_doc_wikis.py")
+    result = subprocess.run(
+        [sys.executable, str(tmp_scripts / "generate_doc_wikis.py")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+    return tmp_docs
 
 
 def main() -> None:
-    """Check both wiki Home files."""
-    ok_plan = check_file_sync(PLAN_HOME, "plan-wiki/Home.md")
-    ok_todo = check_file_sync(TODO_HOME, "todo-wiki/Home.md")
+    """Check both generated wiki directories."""
+    with tempfile.TemporaryDirectory() as tmp:
+        try:
+            tmp_docs = _build_expected_docs(Path(tmp))
+        except RuntimeError as exc:
+            print(f"Generator failed: {exc}")
+            sys.exit(1)
+        ok_plan = check_wiki_sync(ROOT / "docs" / "plan-wiki", tmp_docs / "plan-wiki", "plan-wiki")
+        ok_todo = check_wiki_sync(ROOT / "docs" / "todo-wiki", tmp_docs / "todo-wiki", "todo-wiki")
     if ok_plan and ok_todo:
         print("All wikis are in sync.")
         sys.exit(0)
