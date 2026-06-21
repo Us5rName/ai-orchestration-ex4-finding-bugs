@@ -9,6 +9,7 @@ Implementation: **Phase 4** (T4.15)
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -45,10 +46,11 @@ class VerificationNode:
             State with test_results populated and the iteration counter bumped.
         """
         logger.info("VerificationNode: running tests")
-        command = state.get("test_command", self.command)
+        command: list[str] = state.get("test_command", self.command)
+        cwd: os.PathLike[str] | str = state.get("test_cwd", self.cwd)
         completed = subprocess.run(
             command,
-            cwd=state.get("test_cwd", self.cwd),
+            cwd=cwd,
             capture_output=True,
             text=True,
             check=False,

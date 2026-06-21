@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import logging
 
-from ex04.services.agent.nodes.common import call_gatekeeper, merge_tokens, parse_suspects
+from ex04.services.agent.deps import NodeDeps
+from ex04.services.agent.nodes import common
 from ex04.services.agent.state import AgentState
 from ex04.shared.gatekeeper import GatekeeperInterface
 
@@ -29,8 +30,7 @@ class BugAnalysisNode:
 
     def __init__(self, gatekeeper: GatekeeperInterface | None = None, provider: str = "openai") -> None:
         """Initialize with optional Gatekeeper dependency."""
-        self.gatekeeper = gatekeeper
-        self.provider = provider
+        self.deps = NodeDeps(gatekeeper=gatekeeper, provider=provider)
 
     def __call__(self, state: AgentState) -> AgentState:
         """Analyze bug and produce suspects.
@@ -44,8 +44,13 @@ class BugAnalysisNode:
         logger.info("BugAnalysisNode: analyzing bug report")
         prompt = (
             "Identify suspect Python locations as file.py:line-line.\n"
-            f"Bug:\n{state.get('bug_report', '')}\n\nGraph:\n{state.get('graph_context', '')}"
+            f"Bug:\n{state.get('bug_report', '')}\n\nContext:\n{common.context_for_prompt(state)}"
         )
-        response = call_gatekeeper(self.gatekeeper, self.provider, prompt)
-        suspects = parse_suspects(response.text) or state.get("suspects", [])
-        return {**state, "suspects": suspects, "token_usage": merge_tokens(state, response)}
+        response = common.call_llm(self.deps, state, "analysis", prompt)
+        suspects = common.parse_suspects(response.text) or state.get("suspects", [])
+        return {**common.state_with_tokens(state, response), "suspects": suspects}
+
+
+def build_analysis_node(deps: NodeDeps) -> BugAnalysisNode:
+    """Build the analysis node from workflow dependencies."""
+    return BugAnalysisNode(deps.gatekeeper, deps.provider)

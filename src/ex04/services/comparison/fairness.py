@@ -1,4 +1,8 @@
-"""Runtime fairness enforcement for controlled comparison experiments."""
+"""Runtime fairness enforcement for controlled comparison experiments.
+
+Verifies that naive and graph-guided ComparisonRequest instances are identical
+on every field classified as controlled before any provider call.
+"""
 
 from __future__ import annotations
 
@@ -12,25 +16,14 @@ class FairnessViolationError(RuntimeError):
 
 
 class FairnessEnforcer:
-    """Enforce experiment fairness before any provider call.
-
-    Compares all fields classified as controlled. If any differs, raises
-    FairnessViolationError with the field name and both values.
-    Must be called before gatekeeper.send() — no exceptions.
-    """
+    """Enforce experiment fairness before any provider call."""
 
     def check(
-        self, naive_req: ComparisonRequest, guided_req: ComparisonRequest
+        self,
+        naive_req: ComparisonRequest,
+        guided_req: ComparisonRequest,
     ) -> None:
-        """Assert that all controlled fields are identical.
-
-        Args:
-            naive_req: ComparisonRequest for the naive run.
-            guided_req: ComparisonRequest for the graph-guided run.
-
-        Raises:
-            FairnessViolationError: If any controlled field differs.
-        """
+        """Assert that all controlled fields are identical."""
         naive_dict, guided_dict = asdict(naive_req), asdict(guided_req)
         for field in classified_field_names(CONTROLLED):
             naive_val, guided_val = naive_dict[field], guided_dict[field]

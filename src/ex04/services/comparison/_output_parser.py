@@ -7,7 +7,11 @@ import re
 from typing import Any
 
 _REQUIRED_KEYS = (
-    "root_cause", "suspected_files", "suspected_symbols", "confidence", "evidence",
+    "root_cause",
+    "suspected_files",
+    "suspected_symbols",
+    "confidence",
+    "evidence",
 )
 _CONFIDENCE = frozenset({"low", "medium", "high"})
 _FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.DOTALL | re.MULTILINE)
@@ -44,7 +48,9 @@ def _valid_payload(data: Any) -> bool:
         return False
     if not isinstance(data["root_cause"], str) or not data["root_cause"].strip():
         return False
-    if not _string_list(data["suspected_files"]) or not _string_list(data["suspected_symbols"]):
+    if not _string_list(data["suspected_files"]) or not _string_list(
+        data["suspected_symbols"]
+    ):
         return False
     if data["confidence"] not in _CONFIDENCE:
         return False

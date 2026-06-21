@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import re
 
+from ex04.shared.graph_ops import degree_map
 from ex04.shared.types import Entity, Relationship
 
 _KIND_SCORES: dict[str, float] = {
@@ -93,14 +94,11 @@ def rank_entities(
         List of (entity, score) pairs, highest score first.
     """
     terms = extract_terms(bug_report)
-    degree_map: dict[str, int] = {}
-    for rel in relationships:
-        degree_map[rel.source] = degree_map.get(rel.source, 0) + 1
-        degree_map[rel.target] = degree_map.get(rel.target, 0) + 1
+    degrees = degree_map(relationships)
 
-    max_degree = max(degree_map.values(), default=1)
+    max_degree = max(degrees.values(), default=1)
     scored = [
-        (e, score_entity(e, terms, degree_map, max_degree)) for e in entities
+        (e, score_entity(e, terms, degrees, max_degree)) for e in entities
     ]
     scored.sort(key=lambda x: x[1], reverse=True)
     return scored[:max_count]

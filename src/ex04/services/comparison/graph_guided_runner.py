@@ -45,7 +45,10 @@ class GraphGuidedRunner:
         recorder = trace or TraceRecorder(req.run_id or "graph")
         started = time.perf_counter()
         graph_text, evidence, limitations = graph_context(
-            graph_data, req.bug_report, ledger, recorder
+            graph_data,
+            req.bug_report,
+            ledger,
+            recorder,
         )
         vault_text, vault_ev, vault_lims = vault_context(vault_path, ledger, recorder)
         evidence.extend(vault_ev)
@@ -53,7 +56,10 @@ class GraphGuidedRunner:
         response = self._call_provider(req, graph_text, vault_text, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         if parsed and req.target_snapshot_path:
-            anchors, anchor_lims = validate_evidence_anchors(parsed, Path(req.target_snapshot_path))
+            anchors, anchor_lims = validate_evidence_anchors(
+                parsed,
+                Path(req.target_snapshot_path),
+            )
             evidence.extend(anchors)
             limitations.extend(anchor_lims)
         self._mark_referenced(parsed, evidence)
@@ -87,11 +93,18 @@ class GraphGuidedRunner:
         )
 
     def _call_provider(
-        self, req: ComparisonRequest, graph_text: str, vault_text: str,
-        ledger: BudgetLedger, trace: TraceRecorder,
+        self,
+        req: ComparisonRequest,
+        graph_text: str,
+        vault_text: str,
+        ledger: BudgetLedger,
+        trace: TraceRecorder,
     ):
         ledger.check(models=1, iterations=1)
-        content = f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n{graph_text}\n\n{vault_text}\n\n{JSON_SCHEMA}"
+        content = (
+            f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n"
+            f"{graph_text}\n\n{vault_text}\n\n{JSON_SCHEMA}"
+        )
         messages: list[Message] = [{"role": "user", "content": content}]
         response = self.gatekeeper.send(req.provider, messages)
         ledger.record(models=1, iterations=1)
@@ -100,7 +113,8 @@ class GraphGuidedRunner:
 
     @staticmethod
     def _mark_referenced(
-        parsed: dict[str, object] | None, evidence: list[StructuredEvidence]
+        parsed: dict[str, object] | None,
+        evidence: list[StructuredEvidence],
     ) -> None:
         if not parsed:
             return

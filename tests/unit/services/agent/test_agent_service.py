@@ -29,3 +29,14 @@ def test_agent_service_maps_workflow_state_to_result(tmp_path: Path) -> None:
     assert result.suspects[0].file_path == "app.py"
     assert result.files_read == 3
     assert service.get_state()["graph_context"] == "graph.json"
+    assert service.get_state()["mode"] == "graph"
+
+
+def test_agent_service_marks_naive_mode_without_context_paths(tmp_path: Path) -> None:
+    service = AgentService(tmp_path)
+    service._builder.build = lambda: _Workflow()  # type: ignore[method-assign]
+
+    service.investigate("crash")
+
+    assert service.get_state()["mode"] == "naive"
+    assert service.get_state()["source_context"] == str(tmp_path)
