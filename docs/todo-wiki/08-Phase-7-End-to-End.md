@@ -141,7 +141,7 @@ grep -c 'mermaid' reports/*.md
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service] |
 | **PRD Reference** | [PRD FR-5.3] before/after knowledge level |
@@ -149,9 +149,9 @@ grep -c 'mermaid' reports/*.md
 
 **Definition of Done**:
 
-- [ ] Bug investigation findings added to vault as new notes
-- [ ] `hot.md` updated with fix details
-- [ ] Before/after comparison documented in vault
+- [x] Bug investigation findings added to vault as new notes
+- [x] `hot.md` updated with fix details
+- [x] Before/after comparison documented in vault
 
 **Independent Verification**:
 

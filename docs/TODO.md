@@ -423,7 +423,7 @@ uv run pytest tests/unit/shared/test_gatekeeper.py -v --cov=ex04.shared.gatekeep
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — token_tracker.py] |
 | **PRD Reference** | [PRD §5.6 FR-6] token comparison metrics |
@@ -1664,9 +1664,9 @@ grep -c 'mermaid' reports/*.md
 
 **Definition of Done**:
 
-- [ ] Bug investigation findings added to vault as new notes
-- [ ] `hot.md` updated with fix details
-- [ ] Before/after comparison documented in vault
+- [x] Bug investigation findings added to vault as new notes
+- [x] `hot.md` updated with fix details
+- [x] Before/after comparison documented in vault
 
 **Independent Verification**:
 
