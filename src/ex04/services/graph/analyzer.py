@@ -16,8 +16,8 @@ Implementation: Phase 4 (T4.03)
 from __future__ import annotations
 
 import logging
-from collections import defaultdict
 
+from ex04.shared.graph_ops import connected_components, degree_map
 from ex04.shared.types import Community, GraphData
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class GraphAnalyzer:
         Returns:
             List of entity names with degree >= min_degree, sorted descending.
         """
-        degree = self._compute_degree(graph)
+        degree = degree_map(graph.relationships)
         god_nodes = [name for name, deg in degree.items() if deg >= min_degree]
         god_nodes.sort(key=lambda n: degree[n], reverse=True)
         logger.info("Found %d God Nodes (min_degree=%d)", len(god_nodes), min_degree)
@@ -64,7 +64,7 @@ class GraphAnalyzer:
         Returns:
             List of (node_name, centrality_score) tuples sorted descending.
         """
-        degree = self._compute_degree(graph)
+        degree = degree_map(graph.relationships)
         total = max(len(degree), 1)
 
         ranking: list[tuple[str, float]] = []
@@ -90,55 +90,13 @@ class GraphAnalyzer:
         if not graph.entities and not graph.relationships:
             return []
 
-        # Build adjacency list
-        adjacency: dict[str, set[str]] = defaultdict(set)
-        all_nodes: set[str] = {e.name for e in graph.entities}
-
-        for rel in graph.relationships:
-            adjacency[rel.source].add(rel.target)
-            adjacency[rel.target].add(rel.source)
-            all_nodes.add(rel.source)
-            all_nodes.add(rel.target)
-
-        # BFS connected components
-        visited: set[str] = set()
-        communities: list[Community] = []
-        cluster_id = 0
-
-        for node in sorted(all_nodes):
-            if node in visited:
-                continue
-            cluster_id += 1
-            members: list[str] = []
-            queue: list[str] = [node]
-            while queue:
-                current = queue.pop(0)
-                if current in visited:
-                    continue
-                visited.add(current)
-                members.append(current)
-                for neighbor in sorted(adjacency.get(current, set())):
-                    if neighbor not in visited:
-                        queue.append(neighbor)
-            communities.append(
-                Community(name=f"cluster_{cluster_id}", entities=members, size=len(members))
+        communities = [
+            Community(name=f"cluster_{idx}", entities=members, size=len(members))
+            for idx, members in enumerate(
+                connected_components(graph.entities, graph.relationships),
+                start=1,
             )
+        ]
 
         logger.info("Detected %d communities", len(communities))
         return communities
-
-    @staticmethod
-    def _compute_degree(graph: GraphData) -> dict[str, int]:
-        """Compute node degrees from relationships.
-
-        Args:
-            graph: Parsed graph data.
-
-        Returns:
-            Dict mapping node names to their degree (connection count).
-        """
-        degree: dict[str, int] = defaultdict(int)
-        for rel in graph.relationships:
-            degree[rel.source] += 1
-            degree[rel.target] += 1
-        return dict(degree)
