@@ -78,8 +78,10 @@ class NaiveRunner:
         ledger = budget or BudgetLedger.from_request(req)
         recorder = trace or TraceRecorder(req.run_id or "naive")
         started = time.perf_counter()
-        context, limitations = self._build_context(req, source_files, ledger, recorder)
-        bundle = self._make_bundle(context, source_files)
+        context, included_files, limitations = self._build_context(
+            req, source_files, ledger, recorder
+        )
+        bundle = self._make_bundle(context, included_files)
         response = self._call_provider(req, bundle, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         evidence, anchor_lims = anchored_evidence(parsed, source_files, req)
@@ -93,9 +95,11 @@ class NaiveRunner:
         files: Sequence[Path],
         ledger: BudgetLedger,
         trace: TraceRecorder,
-    ) -> tuple[str, list[str]]:
+    ) -> tuple[str, list[Path], list[str]]:
+        """Read and assemble file context; return (text, included_paths, limitations)."""
         keywords = extract_keywords(req.bug_report)
         parts: list[str] = []
+        included: list[Path] = []
         limitations: list[str] = []
         trace.record("tree_list", ledger, file_count=len(files))
         for path in sorted((p for p in files if p.is_file()), key=lambda p: p.name):
@@ -110,15 +114,20 @@ class NaiveRunner:
                 ledger.record(files=1, bytes_=encoded_len, tokens=tokens, tools=1)
                 trace.record("read_file", ledger, path=str(path), bytes=encoded_len)
                 parts.append(f"--- {path.name} ---\n{chunk}")
+                included.append(path)
             except (OSError, BudgetExceededError) as exc:
                 limitations.append(str(exc))
                 trace.budget_stop(ledger, str(exc))
                 break
-        return "\n\n".join(parts) if parts else "(no files read)", limitations
+        return "\n\n".join(parts) if parts else "(no files read)", included, limitations
 
-    def _make_bundle(self, context: str, files: Sequence[Path]) -> ContextBundle:
-        """Wrap naive context text in a typed ContextBundle."""
-        refs = tuple(SourceRef(path=str(f), kind="file") for f in files if f.is_file())
+    def _make_bundle(self, context: str, included: list[Path]) -> ContextBundle:
+        """Wrap naive context text in a typed ContextBundle.
+
+        source_refs contains ONLY files that were actually read and included
+        in the serialized context — not all candidate files.
+        """
+        refs = tuple(SourceRef(path=str(f), kind="file") for f in included)
         prov = ContextProvenance(
             strategy=ContextStrategy.NAIVE,
             token_count=estimate_context_tokens(context),

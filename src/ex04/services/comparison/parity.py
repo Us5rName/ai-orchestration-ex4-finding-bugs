@@ -106,3 +106,28 @@ def assert_parity(naive_config: ControlledConfig, graph_config: ControlledConfig
             f"Naive: {naive_config}\n"
             f"Graph: {graph_config}"
         )
+
+
+def assert_request_parity(naive_req: object, graph_req: object) -> None:  # type: ignore[misc]
+    """Assert that two ComparisonRequest controlled payloads are identical.
+
+    Canonical parity check for ComparisonRequest objects. Delegates to each
+    request's controlled_config_hash() — the single authoritative fingerprint.
+    Callers that require field-level diagnostics should catch ParityError
+    and perform a secondary field scan.
+
+    Args:
+        naive_req: ComparisonRequest for the naive mode run.
+        graph_req: ComparisonRequest for the graph-guided mode run.
+
+    Raises:
+        ParityError: If controlled_config_hash() values differ.
+    """
+    naive_fp: str = naive_req.controlled_config_hash()  # type: ignore[attr-defined]
+    graph_fp: str = graph_req.controlled_config_hash()  # type: ignore[attr-defined]
+    if naive_fp != graph_fp:
+        raise ParityError(
+            "Controlled configuration mismatch detected before provider call.\n"
+            f"Naive fingerprint:  {naive_fp}\n"
+            f"Graph fingerprint:  {graph_fp}"
+        )

@@ -31,6 +31,31 @@ def _legacy_request(bug_report: str, provider: str) -> ComparisonRequest:
     return ComparisonRequest(bug_report=bug_report, provider=provider, run_id="legacy-graph")
 
 
+def _build_graph_bundle(
+    graph_text: str, vault_text: str, evidence: list[StructuredEvidence]
+) -> ContextBundle:
+    """Build ContextBundle from only actually-serialized evidence sources (H4)."""
+    combined = f"{graph_text}\n\n{vault_text}" if vault_text else graph_text
+    seen: set[str] = set()
+    refs: list[SourceRef] = []
+    for ev in evidence:
+        if ev.graph_node and ev.sent_to_model:
+            key = f"node:{ev.graph_node}"
+            if key not in seen:
+                seen.add(key)
+                refs.append(SourceRef(path=ev.source_file or ev.graph_node, kind="node", label=ev.graph_node))
+        elif ev.vault_note and ev.sent_to_model:
+            key = f"vault:{ev.vault_note}"
+            if key not in seen:
+                seen.add(key)
+                refs.append(SourceRef(path=ev.vault_note, kind="vault_note"))
+    ref_tuple = tuple(refs)
+    prov = ContextProvenance(strategy=ContextStrategy.GRAPH_GUIDED,
+                             token_count=estimate_context_tokens(combined), source_count=len(ref_tuple))
+    return ContextBundle(content=combined, strategy=ContextStrategy.GRAPH_GUIDED,
+                         source_refs=ref_tuple, provenance=prov)
+
+
 class GraphGuidedRunner:
     """Run the focused graph/vault-guided comparison mode."""
 
@@ -54,16 +79,11 @@ class GraphGuidedRunner:
         ledger = budget or BudgetLedger.from_request(req)
         recorder = trace or TraceRecorder(req.run_id or "graph")
         started = time.perf_counter()
-        graph_text, evidence, limitations = graph_context(
-            graph_data,
-            req.bug_report,
-            ledger,
-            recorder,
-        )
+        graph_text, evidence, limitations = graph_context(graph_data, req.bug_report, ledger, recorder)
         vault_text, vault_ev, vault_lims = vault_context(vault_path, ledger, recorder)
         evidence.extend(vault_ev)
         limitations.extend(vault_lims)
-        bundle = self._make_bundle(graph_text, vault_text, graph_data)
+        bundle = _build_graph_bundle(graph_text, vault_text, list(evidence))
         response = self._call_provider(req, bundle, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         if parsed and req.target_snapshot_path:
@@ -103,21 +123,8 @@ class GraphGuidedRunner:
             target_commit=req.target_commit,
         )
 
-    def _make_bundle(self, graph_text: str, vault_text: str, graph_data: GraphData | None) -> ContextBundle:
-        """Wrap graph/vault context in a typed ContextBundle."""
-        combined = f"{graph_text}\n\n{vault_text}" if vault_text else graph_text
-        refs: tuple[SourceRef, ...] = ()
-        if graph_data:
-            refs = tuple(SourceRef(path=e.file_path or e.name, kind="node", label=e.name)
-                         for e in graph_data.entities)
-        prov = ContextProvenance(strategy=ContextStrategy.GRAPH_GUIDED,
-                                 token_count=estimate_context_tokens(combined), source_count=len(refs))
-        return ContextBundle(content=combined, strategy=ContextStrategy.GRAPH_GUIDED,
-                             source_refs=refs, provenance=prov)
-
     def _call_provider(self, req: ComparisonRequest, bundle: ContextBundle,
                        ledger: BudgetLedger, trace: TraceRecorder):
-        """Build canonical prompt and execute via shared call service."""
         inp = ComparisonPromptInput(system_prompt=req.system_prompt,
                                     bug_report=req.bug_report, context_bundle=bundle)
         return self._call_service.execute(
@@ -125,10 +132,7 @@ class GraphGuidedRunner:
         ).response
 
     @staticmethod
-    def _mark_referenced(
-        parsed: dict[str, object] | None,
-        evidence: list[StructuredEvidence],
-    ) -> None:
+    def _mark_referenced(parsed: dict[str, object] | None, evidence: list[StructuredEvidence]) -> None:
         if not parsed:
             return
         diagnosed = set(_string_items(parsed.get("suspected_files", [])))

@@ -212,11 +212,12 @@ class TestTopNByDegree:
         assert len(top) == 3
 
     def test_returns_tuple_of_entity_degree_pairs(self) -> None:
+        from ex04.services.graph.reader_models import EntityView
         r = self._reader()
         top = r.top_n_by_degree(2)
         assert isinstance(top, tuple)
         for pair in top:
-            assert isinstance(pair[0], Entity)
+            assert isinstance(pair[0], EntityView)
             assert isinstance(pair[1], int)
 
     def test_tie_breaking_by_id(self) -> None:
