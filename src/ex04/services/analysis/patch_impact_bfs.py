@@ -36,6 +36,8 @@ def bfs_impact(
         for dependent in rev.get(node, []):
             if dependent in visited:
                 continue
+            if depth + 1 > max_depth:
+                continue
             visited.add(dependent)
             new_path = path + [dependent]
             entity = entity_map.get(dependent)

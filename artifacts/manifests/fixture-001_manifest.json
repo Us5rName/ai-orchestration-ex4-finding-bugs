@@ -5,7 +5,7 @@
   "provider": "unavailable",
   "model": "unavailable",
   "model_params": {},
-  "config_hash": "fixture_config_hash",
+  "config_hash": "43f5bfb5683539ebaaee6a06036aff44bffda6d572a8614614a7b1961cb746da",
   "prompt_version": "P6-GGI-01 v1.0",
   "target_identifier": "andela/buggy-python",
   "target_commit": "unknown",

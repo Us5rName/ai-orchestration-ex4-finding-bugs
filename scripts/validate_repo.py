@@ -24,6 +24,7 @@ _PATH = re.compile(r'["\']/(home|Users)/[A-Za-z0-9_.-]{2,}/')
 _SDK_IMPORT = re.compile(r"from ex04\.sdk")
 _PROVIDER_IMPORT = re.compile(r"from ex04\.providers\.\w+_provider")
 _ANCHOR_FMT = re.compile(r"^[^:]+:\d+-\d+$")
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 Violations = list[str]
 
@@ -71,6 +72,14 @@ def check_provider_boundary() -> Violations:
     return violations
 
 
+def check_sdk_private_comparison_access() -> Violations:
+    """Check 6: SDK must not pierce private comparison-service collaborators."""
+    sdk = SRC / "ex04" / "sdk"
+    bad = re.compile(r"_comparison\._(naive|guided|signed)")
+    return [f"SDK_PRIVATE_COMPARISON: {p.relative_to(ROOT)}" for p in sdk.rglob("*.py")
+            if bad.search(p.read_text())]
+
+
 def check_pricing_no_retired() -> Violations:
     """Check 6: No retired models in active pricing models list."""
     cfg_path = ROOT / "config" / "pricing.json"
@@ -83,7 +92,7 @@ def check_pricing_no_retired() -> Violations:
     return [f"RETIRED_IN_ACTIVE: {m}" for m in sorted(overlap)]
 
 
-# ── Checks 7–11: artifact / provenance invariants ────────────────────────────
+# ── Checks 7–12: artifact / provenance invariants ────────────────────────────
 
 def check_manifest_keys() -> Violations:
     """Check 7: Manifests in artifacts/manifests/ have required fields."""
@@ -100,6 +109,21 @@ def check_manifest_keys() -> Violations:
                 violations.append(f"MANIFEST_SCHEMA: {p.name} missing {miss}")
         except json.JSONDecodeError:
             violations.append(f"MANIFEST_INVALID: {p.name}")
+    return violations
+
+
+def check_manifest_hash_format() -> Violations:
+    """Check: manifest config/trace hashes must be full SHA-256 when present."""
+    mdir = ARTS / "manifests"
+    if not mdir.exists():
+        return []
+    violations: Violations = []
+    for p in mdir.glob("*.json"):
+        data = json.loads(p.read_text())
+        for key in ("config_hash", "shared_config_hash", "trace_hash"):
+            value = data.get(key)
+            if value and not _SHA256.match(str(value)):
+                violations.append(f"HASH_FORMAT: {p.name} {key}")
     return violations
 
 
@@ -148,6 +172,15 @@ def check_source_anchors() -> Violations:
                     violations.append(f"ANCHOR_FORMAT: {p.name}: {anchor!r}")
         except (json.JSONDecodeError, TypeError):
             pass
+    return violations
+
+
+def check_legacy_success_sentinels() -> Violations:
+    """Check: production source must not use pass_without_gate as correctness."""
+    violations: Violations = []
+    for p in _py_files():
+        if "pass_without_gate" in p.read_text():
+            violations.append(f"LEGACY_GATE_STATUS: {p.relative_to(ROOT)}")
     return violations
 
 
@@ -240,9 +273,11 @@ def main() -> None:
     """Run all validation checks and exit with code 1 if violations found."""
     all_checks = [
         check_file_size, check_secrets, check_personal_paths,
-        check_sdk_boundary, check_provider_boundary, check_pricing_no_retired,
-        check_manifest_keys, check_manifest_run_linkage, check_provenance_keys,
-        check_source_anchors, check_broken_doc_links, check_wiki_sync,
+        check_sdk_boundary, check_provider_boundary, check_sdk_private_comparison_access,
+        check_pricing_no_retired, check_manifest_keys, check_manifest_hash_format,
+        check_manifest_run_linkage, check_provenance_keys,
+        check_source_anchors, check_legacy_success_sentinels,
+        check_broken_doc_links, check_wiki_sync,
         check_vault_wikilinks, check_keyless_import,
         check_hardcoded_config, check_pricing_format,
     ]
@@ -255,7 +290,7 @@ def main() -> None:
         for v in violations:
             print(f"  ✗ {v}")
         sys.exit(1)
-    print(f"Validation PASSED (checked {len(_py_files())} files, 16 checks)")
+    print(f"Validation PASSED (checked {len(_py_files())} files, {len(all_checks)} checks)")
     sys.exit(0)
 
 
