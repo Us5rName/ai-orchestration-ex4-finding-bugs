@@ -257,8 +257,8 @@ report = sdk.analyze_patch_impact(graph_data, ["process_data"], max_depth=3)
 | NFR-2 | Ruff = 0 | All sources | `ruff check .` | 0 violations | Complete |
 | NFR-3 | Max 150 lines | All sources | `validate_repo.py` | Passes | Complete |
 | G1 | Graphify extraction | `services/graph/runner.py` | T7.01 | **Complete** (code-only, keyless) | See artifacts/pre_fix/ |
-| G4-G5 | Bug investigation | Agent + SDK | T7.03 | **Blocked** | Blocked |
-| G6 | Token comparison | ComparisonService | T7.04 | **Blocked** | Blocked |
+| G4-G5 | Bug investigation | Agent + SDK | T7.03 | **Complete** | `reports/bug_analysis.md` |
+| G6 | Token comparison | ComparisonService | T7.04 | **Complete** | `artifacts/runs/phase7-comparison/reports/comparison.md` |
 
 ---
 
@@ -280,6 +280,37 @@ report = sdk.analyze_patch_impact(graph_data, ["process_data"], max_depth=3)
 | Architecture diagram | `assets/diagrams/architecture.md` | Generated documentation |
 | CI workflow | `.github/workflows/ci.yml` | Infrastructure |
 | Prompt registry | `docs/PROMPTS.md` | Generated documentation |
+| Phase 7 bug analysis | `reports/bug_analysis.md` | Deterministic keyless |
+| Phase 7 comparison report | `artifacts/runs/phase7-comparison/reports/comparison.md` | Deterministic keyless |
+| Phase 7 diagrams | `reports/diagrams.md` | Deterministic keyless |
+
+---
+
+## Phase 7 End-to-End Evidence
+
+The committed Phase 7 run is keyless and reproducible. It uses the target
+snapshot in `graph-home/.graphify/repos/andela/buggy-python`, the graph in
+`graph-home/graphify-out/`, the generated vault in `obsidian/`, and immutable
+run artifacts under `artifacts/runs/phase7-*`.
+
+```mermaid
+flowchart LR
+    target[Target snapshot] --> graph[Graphify graph]
+    graph --> vault[Obsidian vault]
+    graph --> agent[Graph-guided agent]
+    vault --> agent
+    agent --> bug[reports/bug_analysis.md]
+    agent --> cmp[comparison.md]
+    graph --> diagrams[reports/diagrams.md]
+```
+
+Reports:
+
+- `reports/bug_analysis.md`
+- `reports/root_cause.md`
+- `reports/diff_foobar.md`
+- `reports/diagrams.md`
+- `reports/pipeline.md`
 
 ---
 

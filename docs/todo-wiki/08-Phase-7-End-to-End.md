@@ -116,7 +116,7 @@ find artifacts/runs -path "*/reports/comparison.md" -print
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service] |
 | **PRD Reference** | [PRD G3] |
@@ -124,9 +124,9 @@ find artifacts/runs -path "*/reports/comparison.md" -print
 
 **Definition of Done**:
 
-- [ ] Architectural block diagram generated (Mermaid)
-- [ ] OOP schema generated (Mermaid)
-- [ ] Diagrams saved to `reports/` and embedded in `README.md`
+- [x] Architectural block diagram generated (Mermaid)
+- [x] OOP schema generated (Mermaid)
+- [x] Diagrams saved to `reports/` and embedded in `README.md`
 
 **Independent Verification**:
 

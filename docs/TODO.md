@@ -392,7 +392,7 @@ uv run pytest tests/unit/shared/test_config.py -v --cov=ex04.shared.config --cov
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
 | **PRD Reference** | [PRD NFR-6] all API calls through gatekeeper |
@@ -1639,9 +1639,9 @@ find artifacts/runs -path "*/reports/comparison.md" -print
 
 **Definition of Done**:
 
-- [ ] Architectural block diagram generated (Mermaid)
-- [ ] OOP schema generated (Mermaid)
-- [ ] Diagrams saved to `reports/` and embedded in `README.md`
+- [x] Architectural block diagram generated (Mermaid)
+- [x] OOP schema generated (Mermaid)
+- [x] Diagrams saved to `reports/` and embedded in `README.md`
 
 **Independent Verification**:
 
