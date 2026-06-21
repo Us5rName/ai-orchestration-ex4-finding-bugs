@@ -1,8 +1,4 @@
-"""Experiment-specific types for Phase 6–8 controlled comparison.
-
-Defines RunManifest, GateOutput, InvestigationRunResult, and ExperimentConfig.
-These supplement the existing types_metrics and types_results without replacing them.
-"""
+"""Experiment-specific types for Phase 6–8 controlled comparison."""
 
 from __future__ import annotations
 
@@ -14,11 +10,7 @@ from ex04.shared.types_results import InvestigationResult
 
 @dataclass
 class ExperimentConfig:
-    """Shared configuration for both comparison modes (fairness invariant).
-
-    Both naive and graph-guided runs must receive identical values for all
-    fields below. Any divergence is a fairness violation.
-    """
+    """Shared configuration for both comparison modes."""
 
     bug_report: str = ""
     provider: str = ""
@@ -33,11 +25,7 @@ class ExperimentConfig:
 
 @dataclass
 class GateOutput:
-    """Output from the deterministic correctness gate.
-
-    Each field records a distinct verification step. New fields capture
-    stdout/stderr for reproducibility evidence and report artifact paths.
-    """
+    """Output from the deterministic correctness gate."""
 
     failure_reproduced: bool = False
     failure_signature_found: bool = False
@@ -105,15 +93,16 @@ class RunManifest:
     evidence_class: str = "fixture"
     trace_path: str = ""
     trace_hash: str = ""
+    graph_diff_json_path: str = ""
+    graph_diff_markdown_path: str = ""
+    graph_diff_hash: str = ""
+    pre_graph_hash: str = ""
+    post_graph_hash: str = ""
 
 
 @dataclass
 class SignedMetrics:
-    """Signed deltas between naive and graph-guided runs.
-
-    Negative values indicate the graph-guided run performed worse on that metric.
-    These must not be clamped to zero — a regression is valid evidence.
-    """
+    """Signed deltas between naive and graph-guided runs."""
 
     naive_tokens: int | None = None
     guided_tokens: int | None = None

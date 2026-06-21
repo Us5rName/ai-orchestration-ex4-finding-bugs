@@ -10,6 +10,7 @@ import json
 from dataclasses import asdict
 from pathlib import Path
 
+from ex04.services.comparison.graph_diff.models import GraphDiffResult
 from ex04.shared.types import ComparisonMetrics, ComparisonReport
 from ex04.shared.types_experiment import SignedMetrics
 from ex04.shared.types_results import InvestigationResult
@@ -39,6 +40,7 @@ def write_comparison_reports(
     guided: InvestigationResult,
     metrics: SignedMetrics,
     artifact_path: Path,
+    graph_diff: GraphDiffResult | None = None,
 ) -> tuple[Path, Path]:
     """Write comparison.json and comparison.md to artifact_path/reports/.
 
@@ -60,12 +62,17 @@ def write_comparison_reports(
         "naive_limitations": naive.limitations,
         "guided_limitations": guided.limitations,
     }
+    if graph_diff is not None:
+        data["graph_diff"] = graph_diff.to_dict()
     json_text = json.dumps(data, indent=2, default=str)
     json_path = reports_dir / "comparison.json"
     json_path.write_text(json_text, encoding="utf-8")
 
     md_path = reports_dir / "comparison.md"
-    md_path.write_text(_build_markdown(naive, guided, metrics, json_text), encoding="utf-8")
+    md_path.write_text(
+        _build_markdown(naive, guided, metrics, json_text, graph_diff),
+        encoding="utf-8",
+    )
     return json_path, md_path
 
 
@@ -74,6 +81,7 @@ def _build_markdown(
     guided: InvestigationResult,
     m: SignedMetrics,
     json_text: str,
+    graph_diff: GraphDiffResult | None = None,
 ) -> str:
     """Compose the Markdown comparison report."""
     ev_class = naive.evidence_class or "fixture"
@@ -111,6 +119,26 @@ def _build_markdown(
         "",
         *(f"- {lim}" for lim in (naive.limitations + guided.limitations + m.limitations)),
         "",
+        *(_graph_diff_section(graph_diff)),
+        "",
         f"*Report SHA-256: `{sha}`*",
     ]
     return "\n".join(lines) + "\n"
+
+
+def _graph_diff_section(graph_diff: GraphDiffResult | None) -> list[str]:
+    if graph_diff is None:
+        return []
+    lines = [
+        "## Graph Diff",
+        "",
+        f"Status: `{graph_diff.status.value}`",
+    ]
+    if graph_diff.error_detail:
+        lines.append(f"Detail: {graph_diff.error_detail}")
+    lines.extend([
+        f"Entities classified: {len(graph_diff.entity_changes)}",
+        f"Relationships classified: {len(graph_diff.relationship_changes)}",
+        f"Communities classified: {len(graph_diff.community_changes)}",
+    ])
+    return lines

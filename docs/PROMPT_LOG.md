@@ -639,7 +639,7 @@ tests/unit/services/analysis/
 **Validation**: Confirmed that the Phase 8 final-checklist NFR-3 item is unchecked in both mirrored documents.
 ---
 
-### Prompt 41 — Plan Documentation Alignment: Remove Undefined Types
+### Prompt 49 — Plan Documentation Alignment: Remove Undefined Types
 
 **Prompt**: "go over section 3 of the plan, and tell me what items have missing or inconsistent with actual implementation signatures defined and why" → "go for it" → "Add what was done to the prompt log"
 
@@ -692,6 +692,138 @@ tests/unit/services/analysis/
 
 ---
 
+---
+
+### Prompt 50 — Remaining-Task Contract Definition
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only task; no production code)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Define full contracts, dependency plans, and implementation plans for the 6 remaining open tasks (T4.19, T5.03, T4.20, T6.05, T6.09, T8.13) in a single documentation-only commit. Lock contracts before implementation begins.
+
+**Context supplied**: Full task specification including 7 mandatory corrections (dependency graph, T6.05 redefinition as closure, FR-6.4, FR-8.x, graph/scoring semantics, stale PLAN corrections, wiki regeneration).
+
+**Key decisions**:
+- T6.05 status set to "In Progress" (not "Not Started") — core OrphanDetector implementation exists via T7.07; closure work remains
+- T4.19 GraphReader established as canonical graph read boundary (ADR-007)
+- Parity fingerprint defined for experimental comparison (ADR-008)
+- Self-grade scores evidence-derived with mandatory gate caps (ADR-009)
+- Execution order locked: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+- T8.13 implemented last because it evaluates the finalized architecture
+
+**Files changed** (23 files, 1724 insertions, 208 deletions):
+- `docs/PRD.md` — FR-6.4, FR-7.7, FR-8.1–FR-8.4 added; FR-7.5/7.6 marked implemented
+- `docs/PRD_comparison_experiment.md` — ParityFingerprint, InstrumentedCallResult, controlled/treatment classification
+- `docs/PRD_graph_guided_investigation.md` — GraphReader as canonical boundary, degree vs. BFS distinction
+- `docs/PRD_extension_analysis.md` — T6.05 In Progress, T6.05→FR-7.5→T7.07 traceability, EXT-3 weakness detector
+- `docs/PRD_artifact_provenance.md` — planned artifact paths for T6.05/T6.09/T8.13
+- `docs/PRD_self_grade.md` — **new file** — full self-grade contract
+- `docs/PLAN.md` — task dependency graph, ADR-007/008/009, stale paths corrected, planned SDK ops
+- `docs/TODO.md` — full contracts for 6 tasks, dependency Mermaid, statistics
+- `docs/EVIDENCE_MATRIX.md` — T6.05 core vs. closure distinction
+- `docs/SELF_ASSESSMENT.md` — remaining tasks table, contract-only branch note
+- `docs/PROMPT_LOG.md` (this document) — revision history entry
+- Generated wikis regenerated and verified in sync
+
+**Verification**: ruff 0 violations; validate_repo 19 checks passed; check_docs_sync clean; pre-commit (mypy + pytest ≥85%) passed.
+
+**Limitations**: Static keyless validation only. No CI run on remote. Some header metadata inconsistencies found in subsequent review (corrected in Prompt 51).
+
+**Actual outcome**: Branch feat/remaining-task-completion created and pushed. Commit 8ef07ad. 23 files changed, 1724 insertions, 208 deletions. Documentation-only — no production code.
+
+---
+
+### Prompt 51 — Reconcile Graph-Model and Remaining-Task Contracts
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only corrective commit)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Apply 12 corrective documentation fixes identified in review of commit 8ef07ad before T4.19 implementation begins.
+
+**Context supplied**: Detailed 12-item review finding covering: (P0) missing graph model enrichment prerequisite; (P1) mutable GraphReader signatures; (P1) shallow WeaknessFinding; (P1) FR-7.5 status contradiction; (P1) stale header metadata; (P1) incomplete mandatory gate cap policy; (P1) incomplete prompt-log entry; (P1) optional vs. mandatory GraphReader migration for OrphanDetector; (P2) stale naïve-runner wording and TODO TOC; (P2) absolute filesystem wording; (P2/P3) misplaced self_grade_config_hash; (P2) T6.05 README wording.
+
+**Key decisions**:
+- T4.19a enrichment step documented as explicit prerequisite to T4.19 (Entity.id + label; Relationship.key/confidence/weight/source_anchor)
+- GraphReader return types changed to immutable (tuple, Mapping) throughout PLAN and TODO
+- WeaknessFinding replaced with EvidenceAnchor + RelationshipKey + WeaknessFinding using tuple fields
+- Unknown node in GraphReader: `node()` returns None, `edges_of()` returns empty tuple (decided, not deferred)
+- OrphanDetector internal delegation to GraphReader is mandatory post-T4.19; public API remains GraphData-accepting for compatibility
+- `self_grade_config_hash` moved to SelfGradeReport.provenance.config_hash; not a comparison-run manifest field
+- Mandatory gate ERROR/BLOCKED → assessment becomes INCOMPLETE; cap applied same as FAIL
+- Filesystem wording: "no unbounded or undisclosed discovery" replaces absolute prohibition
+- `graph_data: GraphData | None` explicitly documented with fallback behavior
+
+**Files changed**:
+- `docs/PLAN.md` — T4.19a enrichment prerequisite; immutable GraphReader signatures; WeaknessDetector consumes GraphReader; header v1.12
+- `docs/TODO.md` — T4.19a block; immutable GraphReader/WeaknessFinding contracts; EvidenceAnchor/RelationshipKey models; TOC links for T6.05/T6.09; OrphanDetector delegation wording; header v1.26
+- `docs/PRD_self_grade.md` — Mandatory Gate Cap Policy section (ERROR/BLOCKED/SKIPPED rules); header v1.1
+- `docs/PRD_graph_guided_investigation.md` — bounded filesystem wording; GraphData|None input; header v1.2
+- `docs/PRD_artifact_provenance.md` — self_grade_config_hash moved to SG provenance section; header v1.3
+- `docs/PRD.md` — FR-7.5 status "Partially Implemented"; header v1.03
+- `docs/PRD_extension_analysis.md` — version header added; date synced; header v1.2
+- `docs/PRD_comparison_experiment.md` — version header confirmed v1.1; date synced
+- `docs/EVIDENCE_MATRIX.md` — header v1.04 synced
+- `docs/SELF_ASSESSMENT.md` — header v1.04 synced
+- `docs/PROMPT_LOG.md` — full entries for Prompts 46 and 47 (this entry)
+- Generated wikis regenerated and verified
+
+**Verification**: ruff 0 violations; validate_repo passed; check_docs_sync clean; pre-commit passed.
+
+**Limitations**: Static keyless validation only. No CI run on remote.
+
+**Actual outcome**: Single documentation-only commit on feat/remaining-task-completion. All 12 corrective items addressed.
+
+### Prompt 52 — Finalize Remaining-Task Documentation Consistency
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only task; no production code)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Final documentation-consistency pass before production implementation of T4.19a/T4.19/T5.03/T4.20/T6.05/T6.09/T8.13 begins. Remove every remaining contradiction or ambiguity in the planned implementation contracts.
+
+**Context**: Branch `feat/remaining-task-completion` contained commits 8ef07ad (Prompt 50) and ec82461 (Prompt 51). A post-review audit identified four known defects and one bounded repository-wide consistency sweep required before implementation starts.
+
+**Exact corrections made**:
+
+1. **Prompt-log numbering**: Renamed duplicate `### Prompt 41` → `### Prompt 49`, `### Prompt 46` → `### Prompt 50`, `### Prompt 47` → `### Prompt 51`; updated all revision-history references to corrected numbers (v1.25 "Prompt 41" → "Prompt 49", v1.26 "Prompt 42" → "Prompt 49 session", v1.29 "Prompt 45" → "Prompt 50", v1.30 "Prompt 46" → "Prompt 50", v1.31 "Prompt 46 and Prompt 47" → "Prompts 50 and 51"); fixed revision-history ordering (1.31, 1.30, 1.29 → 1.29, 1.30, 1.31); corrected internal cross-reference in Prompt 50 body ("corrected in Prompt 47" → "corrected in Prompt 51").
+
+2. **Document version and parent reference sync**: `docs/PRD.md` header updated 1.02 → 1.03 to match latest revision entry; PRD revision history re-ordered (1.03 was listed before 1.02); `docs/PLAN.md` parent PRD reference updated v1.02 → v1.03, version incremented 1.12 → 1.13, revision history ordering fixed (1.12 before 1.11 → 1.11 then 1.12), entry 1.13 added; `docs/TODO.md` parent PRD reference updated v1.02 → v1.03, PLAN reference updated v1.12 → v1.13, version incremented 1.26 → 1.27, revision history ordering fixed (1.26 before 1.25 → 1.25 then 1.26), entry 1.27 added; `docs/PRD_comparison_experiment.md` merged duplicate 1.1 revision entries into one, header updated 1.1 → 1.2 (latest); `docs/PRD_self_grade.md` header updated 1.1 → 1.2, revision history ordering fixed (1.1 before 1.0 → 1.0 then 1.1), entry 1.2 added; `docs/PRD_extension_analysis.md` version updated 1.2 → 1.3, revision history ordering fixed (1.0, 1.2, 1.1 → 1.0, 1.1, 1.2), entry 1.3 added.
+
+3. **Self-grade scoring contract**: Fixed `Score Calculation` block — changed "if any mandatory gate is FAIL" to cover all mandatory non-PASS statuses (FAIL, ERROR, BLOCKED, required SKIPPED); added `optional SKIPPED omitted from denominator` to earned-points rule; changed "or raw_score if no gate failed" to "or raw_score when every mandatory gate passes"; added 7 new planned test cases covering ERROR cap + INCOMPLETE, BLOCKED cap + INCOMPLETE, required SKIPPED as BLOCKED, optional SKIPPED denominator exclusion, multiple caps selecting lowest, and all PASS uncapped; fixed Acceptance Criteria wording from "Mandatory gate failure" to "Any mandatory non-PASS status".
+
+4. **OrphanReport current vs. target schema**: Added explicit "Current (T7.07) Implementation Schema" section (mutable lists, string anchor, traversal-order component IDs) and "Target (T6.05) Closure Schema" section (immutable frozen dataclasses: `EvidenceAnchor`, `OrphanNodeView`, `WeakComponentView`, `OrphanReport` using tuples); documented compatibility/migration rule (public SDK shape preserved; T6.05 adapts existing result into one canonical immutable DTO; no second parser path; no competing public schema); expanded T6.05 Acceptance Criteria with stable IDs, typed anchors, immutable DTOs, deterministic ordering, GraphReader delegation, backward compatibility, migration tests.
+
+5. **Consistency sweep**: `NaiveRunner` description in `README.md` updated — "full-corpus reading" replaced with "context selected without graph-derived prioritization" to match bounded implementation; ran targeted rg checks — no stale `T6\.05.*Not Started`, `6 genuinely unimplemented` (in non-historical context), `diff_gen\.py`, or `impact_reporter\.py` matches in current-state sections.
+
+**Files modified**:
+- `docs/PROMPT_LOG.md` (this document)
+- `docs/PRD.md`
+- `docs/PRD_comparison_experiment.md`
+- `docs/PRD_self_grade.md`
+- `docs/PRD_extension_analysis.md`
+- `docs/PLAN.md`
+- `docs/TODO.md`
+- `README.md`
+- Generated wikis regenerated via `uv run python scripts/generate_doc_wikis.py`
+
+**Validation**: ruff 0 violations; validate_repo passed; check_docs_sync clean; prompt headings unique; all parent references current.
+
+**Limitations**: Static keyless validation only. No live provider CI run. Wiki regeneration outputs not manually verified line-by-line.
+
+**Actual outcome**: Single documentation-only commit on feat/remaining-task-completion. Branch ready for T4.19a/T4.19 implementation.
+
+**Commit hash**: 3f2f610
+
+---
+
+---
+
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -719,7 +851,78 @@ tests/unit/services/analysis/
 | 1.22 | 2026-06-20 | Added Prompt 46 — FR-6 comparison service: naive runner, graph-guided runner, metrics calculator, report narrative, and SDK comparison wiring. |
 | 1.23 | 2026-06-20 | Added Prompt 47 — stale documentation reconciliation for the completed T4.07 AgentState and T5.02 CLI entry-point tasks. |
 | 1.24 | 2026-06-20 | Added Prompt 48 — reverted mistaken Phase 8 checklist updates in TODO and todo-wiki, leaving Phase 8 pending for final verification. |
-| 1.25 | 2026-06-20 | Added Prompt 41 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
-| 1.26 | 2026-06-20 | Added Prompt 42 — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
+| 1.25 | 2026-06-20 | Added Prompt 49 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
+| 1.26 | 2026-06-20 | Added Prompt 49 session — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.27 | 2026-06-20 | Added Prompt 43 — Phase 6-8 recovery and finalization audit: preserved interrupted work, verified recovered commits, added mypy as a dev dependency, expanded generated wiki synchronization, added evidence matrix/self-assessment/blocked-operation/assets docs, and corrected T8.12 to pending until clean-clone verification is actually recorded. |
 | 1.28 | 2026-06-20 | Added Prompt 44 — Clean-clone verification: created an isolated worktree, ran dependency sync, keyless import, Ruff, mypy, pytest with coverage, docs sync, and repository validation; recorded results in `reports/clean_clone_verification.md`. |
+| 1.29 | 2026-06-21 | Added Prompt 50 — Remaining-task contract definition (feat/remaining-task-completion): define full contracts for T4.19 GraphReader, T5.03 parity helpers, T4.20 weakness detector, T6.05 orphan closure, T6.09 graph-diff, T8.13 self-grade; add ADR-007/ADR-008/ADR-009 and task dependency graph to PLAN; add FR-6.4/FR-7.7/FR-8.1–FR-8.4 to PRD; create PRD_self_grade.md; documentation-only commit. Claude 4.6 Sonnet, 2026-06-21. |
+| 1.30 | 2026-06-21 | Added Prompt 50 entry with full context, decisions, files changed, verification, limitations, outcome.
+| 1.31 | 2026-06-21 | Added full Prompts 50 and 51 entries (corrective commit); previous v1.29 entry was only a revision-history line. Traceability: [TODO T4.19, T4.20, T5.03, T6.05, T6.09, T8.13].
+| 1.32 | 2026-06-21 | Added Prompt 52 — Final remaining-task documentation consistency pass: fix prompt-log numbering (Prompts 49/50/51), sync document versions and parent references, fix self-grade scoring contract (non-PASS semantics), add OrphanReport current vs. target schema distinction, consistency sweep. Commit 3f2f610.
+
+---
+
+### Prompt 53 — Wave 1 Implementation: T4.19a, T4.19, T5.03
+
+**Date**: 2026-06-21
+**Model**: Claude Sonnet 4.6
+**Effort**: low
+**Branch**: `feat/remaining-task-completion`
+**Base SHA**: `1d18198`
+
+**Objective**: Implement Wave 1 of the remaining-task plan: T4.19a (canonical graph-model and parser enrichment), T4.19 (typed GraphReader facade), T5.03 (agent workflow parity helpers). Two isolated worktrees, two parallel implementation agents, sequential integration.
+
+**Worktrees / branches**:
+- Track A: `../ex04-wave1-t419` / `impl/t4.19-graph-reader`
+- Track B: `../ex04-wave1-t503` / `impl/t5.03-parity`
+
+**Key design decisions**:
+
+*Track A*:
+- `Entity.name` and `Entity.id` kept as separate fields; `id`/`source_id`/`target_id`/`rel_type` added as property aliases for backward compatibility
+- `ConfidenceState.UNKNOWN` is the default for absent confidence — never silently upgraded to EXTRACTED
+- `EdgeDirection.BOTH` is the canonical name per TODO contract
+- All public GraphReader collections returned as tuples or `MappingProxyType`
+- Degree counts both directions; self-loops contribute 2 to the owning node
+- Consumer migration (OrphanDetector, PatchImpact) deferred to T6.05 per TODO assignment
+
+*Track B*:
+- `ContextBundle` / `ContextStrategy` / `SourceRef` / `ContextProvenance` as frozen dataclasses
+- `PromptBuilder` with single canonical system prompt and user template; both modes use same instance
+- `ComparisonCallService` centralizes provider call, token conversion, budget update, trace recording
+- `ControlledConfig` + `compute_parity_fingerprint()` — deterministic SHA-256 of sorted canonical JSON
+- `assert_parity()` raises `ParityError` before any provider call on mismatch
+- Context strategy/content excluded from fingerprint (it is the treatment variable)
+
+**Track A commits** (cherry-picked to integration branch):
+- `b078da9` — `[T4.19a] Enrich canonical graph models and parser`
+- `5011543` — `[T4.19] Add typed GraphReader facade and indexes`
+
+**Track B commits** (cherry-picked to integration branch):
+- `25b1c2d` — `[T5.03] Centralize comparison calls and telemetry`
+- `d63d13f` — `[T5.03] Enforce prompt and controlled-configuration parity`
+
+**Files added**:
+- `src/ex04/shared/types_graph_enums.py`
+- `src/ex04/services/graph/_parser_helpers.py`
+- `src/ex04/services/graph/reader.py`
+- `src/ex04/services/comparison/context_bundle.py`
+- `src/ex04/services/comparison/call_service.py`
+- `src/ex04/services/comparison/prompt_builder.py`
+- `src/ex04/services/comparison/parity.py`
+- `tests/unit/services/graph/test_graph_models.py` (71 tests)
+- `tests/unit/services/graph/test_reader.py` (52 tests)
+- `tests/unit/services/comparison/test_call_service.py`
+- `tests/unit/services/comparison/test_context_bundle.py`
+- `tests/unit/services/comparison/test_prompt_builder.py`
+- `tests/unit/services/comparison/test_parity.py`
+
+**Verification**: 659 tests / 96.51% coverage / ruff 0 violations / mypy clean / validate_repo PASSED / pre-commit PASSED
+
+**Limitations**:
+- Consumer migration (OrphanDetector, PatchImpact internal GraphReader delegation) deferred to T6.05 per canonical TODO assignment
+- `assert_parity()` available but not yet wired into the comparison service orchestration layer (available for caller to invoke)
+- T4.20, T6.05 closure, T6.09, T8.13 NOT implemented
+
+**Integration outcome**: All 4 commits cherry-picked linearly onto `feat/remaining-task-completion`. Full suite green.
+| 1.33 | 2026-06-21 | Added Prompt 53 — Wave 1 implementation: T4.19a graph model enrichment, T4.19 GraphReader facade, T5.03 comparison parity helpers. 659 tests / 96.51% coverage. Commits b078da9, 5011543, 25b1c2d, d63d13f. |

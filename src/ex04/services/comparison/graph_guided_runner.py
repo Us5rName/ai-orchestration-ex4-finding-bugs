@@ -5,11 +5,18 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from ex04.providers.interface import Message
-from ex04.services.comparison._output_parser import JSON_SCHEMA, parse_json_response
+from ex04.services.comparison._output_parser import parse_json_response
 from ex04.services.comparison.anchors import validate_evidence_anchors
-from ex04.services.comparison.budget import BudgetLedger
+from ex04.services.comparison.budget import BudgetLedger, estimate_context_tokens
+from ex04.services.comparison.call_service import ComparisonCallService
+from ex04.services.comparison.context_bundle import (
+    ContextBundle,
+    ContextProvenance,
+    ContextStrategy,
+    SourceRef,
+)
 from ex04.services.comparison.graph_context_ops import graph_context, vault_context
+from ex04.services.comparison.prompt_builder import ComparisonPromptInput, PromptBuilder
 from ex04.services.comparison.trace import TraceRecorder
 from ex04.shared.gatekeeper import GatekeeperInterface
 from ex04.shared.types import GraphData
@@ -17,9 +24,36 @@ from ex04.shared.types_evidence import StructuredEvidence
 from ex04.shared.types_request import ComparisonRequest
 from ex04.shared.types_results import InvestigationResult
 
+_prompt_builder = PromptBuilder()
+
 
 def _legacy_request(bug_report: str, provider: str) -> ComparisonRequest:
     return ComparisonRequest(bug_report=bug_report, provider=provider, run_id="legacy-graph")
+
+
+def _build_graph_bundle(
+    graph_text: str, vault_text: str, evidence: list[StructuredEvidence]
+) -> ContextBundle:
+    """Build ContextBundle from only actually-serialized evidence sources (H4)."""
+    combined = f"{graph_text}\n\n{vault_text}" if vault_text else graph_text
+    seen: set[str] = set()
+    refs: list[SourceRef] = []
+    for ev in evidence:
+        if ev.graph_node and ev.sent_to_model:
+            key = f"node:{ev.graph_node}"
+            if key not in seen:
+                seen.add(key)
+                refs.append(SourceRef(path=ev.source_file or ev.graph_node, kind="node", label=ev.graph_node))
+        elif ev.vault_note and ev.sent_to_model:
+            key = f"vault:{ev.vault_note}"
+            if key not in seen:
+                seen.add(key)
+                refs.append(SourceRef(path=ev.vault_note, kind="vault_note"))
+    ref_tuple = tuple(refs)
+    prov = ContextProvenance(strategy=ContextStrategy.GRAPH_GUIDED,
+                             token_count=estimate_context_tokens(combined), source_count=len(ref_tuple))
+    return ContextBundle(content=combined, strategy=ContextStrategy.GRAPH_GUIDED,
+                         source_refs=ref_tuple, provenance=prov)
 
 
 class GraphGuidedRunner:
@@ -28,6 +62,7 @@ class GraphGuidedRunner:
     def __init__(self, gatekeeper: GatekeeperInterface, provider: str = "openai") -> None:
         self.gatekeeper = gatekeeper
         self.provider = provider
+        self._call_service = ComparisonCallService(gatekeeper)
 
     def run(
         self,
@@ -44,16 +79,12 @@ class GraphGuidedRunner:
         ledger = budget or BudgetLedger.from_request(req)
         recorder = trace or TraceRecorder(req.run_id or "graph")
         started = time.perf_counter()
-        graph_text, evidence, limitations = graph_context(
-            graph_data,
-            req.bug_report,
-            ledger,
-            recorder,
-        )
+        graph_text, evidence, limitations = graph_context(graph_data, req.bug_report, ledger, recorder)
         vault_text, vault_ev, vault_lims = vault_context(vault_path, ledger, recorder)
         evidence.extend(vault_ev)
         limitations.extend(vault_lims)
-        response = self._call_provider(req, graph_text, vault_text, ledger, recorder)
+        bundle = _build_graph_bundle(graph_text, vault_text, list(evidence))
+        response = self._call_provider(req, bundle, ledger, recorder)
         status, parsed = parse_json_response(response.text)
         if parsed and req.target_snapshot_path:
             anchors, anchor_lims = validate_evidence_anchors(
@@ -92,30 +123,16 @@ class GraphGuidedRunner:
             target_commit=req.target_commit,
         )
 
-    def _call_provider(
-        self,
-        req: ComparisonRequest,
-        graph_text: str,
-        vault_text: str,
-        ledger: BudgetLedger,
-        trace: TraceRecorder,
-    ):
-        ledger.check(models=1, iterations=1)
-        content = (
-            f"{req.system_prompt}\nBug:\n{req.bug_report}\n\n"
-            f"{graph_text}\n\n{vault_text}\n\n{JSON_SCHEMA}"
-        )
-        messages: list[Message] = [{"role": "user", "content": content}]
-        response = self.gatekeeper.send(req.provider, messages)
-        ledger.record(models=1, iterations=1)
-        trace.record("provider_call", ledger, provider=req.provider, model=req.model)
-        return response
+    def _call_provider(self, req: ComparisonRequest, bundle: ContextBundle,
+                       ledger: BudgetLedger, trace: TraceRecorder):
+        inp = ComparisonPromptInput(system_prompt=req.system_prompt,
+                                    bug_report=req.bug_report, context_bundle=bundle)
+        return self._call_service.execute(
+            _prompt_builder.build_messages(inp), req.provider, req.model, ledger, trace
+        ).response
 
     @staticmethod
-    def _mark_referenced(
-        parsed: dict[str, object] | None,
-        evidence: list[StructuredEvidence],
-    ) -> None:
+    def _mark_referenced(parsed: dict[str, object] | None, evidence: list[StructuredEvidence]) -> None:
         if not parsed:
             return
         diagnosed = set(_string_items(parsed.get("suspected_files", [])))

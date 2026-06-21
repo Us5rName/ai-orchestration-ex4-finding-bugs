@@ -6,6 +6,53 @@
 
 Each module is an **independent building block** with a well-defined interface. **No module imports another module's concrete implementation** — all inter-module dependencies flow through `*Interface` abstract classes. This enables **fully parallel development**: every team member works against a stable contract while the actual implementation is built in parallel.
 
+### Task Dependency Policy
+
+Tasks are **independently verifiable and parallel by default**, except where explicit task-level dependencies are documented below.
+
+**Explicit task-level dependencies for the six remaining open tasks:**
+
+```
+T4.02 GraphParser (Done)
+        ↓
+T4.19a Graph Model/Parser Enrichment (prerequisite sub-step of T4.19)
+   — extend Entity with stable `id`, `label`, community, metadata
+   — extend Relationship with `key`, `confidence`, `confidence_score`,
+     `weight`, `source_anchor`, metadata
+   — update GraphParser to preserve all fields; single parser path
+        ↓
+T4.19 GraphReader (builds read-only facade over enriched GraphParser output)
+   ┌────┴─────────────┐
+   ↓                  ↓
+T4.20              T6.09
+WeaknessDetector   Graph Diff Report
+(consumes          (operates on
+GraphReader)       GraphReader/GraphData)
+
+T5.03 Parity Helpers (independent; implemented early so final
+        ↓             comparison evidence uses fair call paths)
+final controlled-comparison evidence
+
+T7.07 OrphanDetector (Done)
+        ↓
+T6.05 closure (report persistence, README, evidence mapping)
+       After T4.19: reuse GraphReader where appropriate
+
+T4.19 + T5.03 + T4.20 + T6.05 + T6.09
+        ↓
+T8.13 Self-Grade Service
+```
+
+**Execution order for remaining tasks:**
+1. T4.19 (T4.19a first) — Graph model/parser enrichment, then GraphReader facade (enables T4.20, T6.09, and T6.05 GraphReader integration)
+2. T5.03 — Parity Helpers (early, so all comparison evidence is fair)
+3. T4.20 — WeaknessDetector
+4. T6.05 — Orphan Detection closure
+5. T6.09 — Full Graph-Diff Comparison Report
+6. T8.13 — Self-Grade Service (last: evaluates the finalized architecture)
+
+**T8.13 is implemented last** because its rubric and checks must evaluate the finalized architecture, reports, gates, and evidence — not an intermediate state.
+
 **Contract-First Rule**: For every service `XService`, an `XServiceInterface` ABC is defined **before** implementation begins. Other modules depend only on the interface. At runtime, the SDK injects the concrete implementation.
 
 ### 3.1 Module Dependency Graph (Runtime)
@@ -228,6 +275,9 @@ class Ex04SDK:
     def reverse_engineer(self, target_path: str) -> str: ...
     def detect_orphans(self, graph_data: GraphData, output_dir: Path) -> OrphanReport: ...
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
+    # Planned operations (not yet implemented):
+    def detect_weaknesses(self, graph_data: GraphData) -> list[WeaknessFinding]: ...  # T4.20
+    def self_grade(self, rubric_config_path: Path, output_dir: Path) -> GradeReport: ...  # T8.13
 ```
 
 `from_config()` is the concrete wiring point: it builds the Phase 4 service facades
@@ -277,13 +327,47 @@ class GraphAnalyzer:
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
 
 # reader.py (planned)
+# T4.19a prerequisite: Entity must carry stable `id` + `label`; Relationship must carry
+# `key`, `confidence`, `confidence_score`, `weight`, `source_anchor`. GraphParser must
+# be extended to preserve these fields before GraphReader can honour all contracts.
+class EdgeDirection(str, Enum):
+    OUTGOING = "outgoing"
+    INCOMING = "incoming"
+    BOTH = "both"
+
 class GraphReader:
-    """Read-only typed query facade over parsed graph data."""
-    def node(self, node_id: str) -> Entity: ...
-    def all_nodes(self) -> list[Entity]: ...
-    def edges_of(self, node_id: str) -> list[Relationship]: ...
-    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
-    def communities(self) -> dict[str, list[Entity]]: ...
+    """Read-only typed query facade over parsed graph data. [ADR-007]
+
+    Prerequisite (T4.19a): entity model must expose stable `id` distinct from display
+    `label`; relationship model must expose `key`, `confidence`, `confidence_score`,
+    `weight`, `source_anchor`. See T4.19a enrichment step in TODO.md.
+    """
+    def __init__(self, graph_data: GraphData) -> None: ...
+
+    @classmethod
+    def from_path(cls, graph_path: Path) -> "GraphReader": ...
+    # Delegates to GraphParser — no second raw-JSON parsing path.
+
+    def node(self, node_id: str) -> Entity | None: ...
+    # Returns None for unknown node IDs — never raises.
+
+    def all_nodes(self) -> tuple[Entity, ...]: ...
+    # Deterministic ordering by stable entity ID.
+
+    def edges_of(
+        self,
+        node_id: str,
+        *,
+        direction: EdgeDirection = EdgeDirection.BOTH,
+    ) -> tuple[Relationship, ...]: ...
+    # Preserves direction, type, and parallel relationships.
+    # Returns empty tuple for unknown node IDs — never raises.
+
+    def top_n_by_degree(self, n: int) -> tuple[tuple[Entity, int], ...]: ...
+    # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
+
+    def communities(self) -> Mapping[str, tuple[Entity, ...]]: ...
+    # Key: community name/ID. Entities within each community in stable order.
 ```
 
 ### 3.4 Vault Service — Obsidian Management
@@ -442,8 +526,11 @@ def token_record(...) -> TokenMetrics: ...
 | `reverse_engineer.py` | Extract architectural and OOP schemas from code/graph |
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
-| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
-| `weakness_detector.py` | Planned multi-signal weakness detector over graph and source evidence |
+| `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5, T7.07 Done; T6.05 closure pending) |
+| `patch_impact.py` | Patch-impact BFS traversal (FR-7.6, T7.08 Done) |
+| `patch_impact_bfs.py` | BFS helper for patch-impact traversal |
+| `patch_impact_types.py` | Typed models for impact analysis |
+| `weakness_detector/` | **Planned (T4.20)** — multi-signal weakness detector package; consumes `GraphReader` (FR-7.7) |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -472,10 +559,13 @@ class OrphanDetector:
     def generate_stub(self, entity: Entity) -> str: ...
     def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
 
-# weakness_detector.py (planned)
+# weakness_detector/ package (planned — T4.20)
+# WeaknessDetector consumes GraphReader (not raw GraphData directly).
+# EvidenceAnchor and RelationshipKey are fully typed immutable dataclasses.
+# WeaknessFinding uses tuple fields to enforce deep immutability.
 class WeaknessDetector:
-    """Run deterministic graph/source weakness signals and rank findings."""
-    def detect(self, graph_data: GraphData) -> list[WeaknessFinding]: ...
+    """Run deterministic graph/source weakness signals and rank findings. [FR-7.7]"""
+    def detect(self, reader: "GraphReader") -> "WeaknessReport": ...
 ```
 
 ### 3.7 Comparison Service — Token Savings Proof
@@ -491,11 +581,11 @@ class WeaknessDetector:
 | File | Responsibility |
 |---|---|
 | `interface.py` | **Contract** — `ComparisonServiceInterface` ABC (defined FIRST) |
-| `naive_runner.py` | Execute naive approach (read all raw files, no focus) |
+| `naive_runner.py` | Execute naive approach (bounded navigation over source files, no graph guidance) |
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
-| `graph_diff.py` | Planned pre/post graph snapshot diff for comparison reports |
+| `graph_diff/` | **Implemented (T6.09)** — pre/post graph snapshot diff package; operates on shared `GraphData` without raw JSON parsing |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -505,7 +595,7 @@ class WeaknessDetector:
 
 ```python
 class NaiveRunner:
-    """Run naive baseline: dump all code, no graph guidance."""
+    """Run naive baseline: bounded navigation over source files, no graph guidance."""
     def run(self, bug_report: str, source_files: list[Path]) -> RunMetrics: ...
 
 class GraphGuidedRunner:
@@ -520,9 +610,12 @@ class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
 
-# graph_diff.py (planned)
-def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
-def render_graph_diff(diff: GraphDiff) -> str: ...
+# graph_diff/ package (implemented — T6.09)
+# Import boundary: src/ex04/services/comparison/graph_diff/
+# Modules: __init__.py, models.py, canonicalize.py, differ.py, community_matcher.py, renderer.py
+# Operates on shared GraphData — does not load raw JSON independently
+def diff_graphs(pre: GraphData | None, post: GraphData | None) -> GraphDiffResult: ...
+def render_graph_diff(diff: GraphDiffResult, output_dir: Path) -> GraphDiffArtifacts: ...
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
@@ -740,21 +833,43 @@ class GraphData:
 | Attribute | Value |
 |---|---|
 | **Path** | `src/ex04/services/self_grade/` |
-| **Responsibility** | Assemble structural checks, configured gates, and rubric scoring |
-| **PRD Mapping** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Responsibility** | Assemble structural checks, configured gates, and evidence-derived rubric scoring |
+| **PRD Mapping** | [PRD §5.8 FR-8.1–FR-8.4], [PRD-SG] |
+| **Status** | Planned — T8.13 |
 
 **Planned sub-modules**:
 
 | File | Responsibility |
 |---|---|
-| `models.py` | Typed check result and grade report dataclasses |
-| `checks.py` | Deterministic structural checks |
-| `grader.py` | Gate orchestration and rubric score calculation |
+| `models.py` | Typed check result (`CheckResult`, `GradeReport`) and status enum (`PASS`, `FAIL`, `ERROR`, `SKIPPED`, `BLOCKED`) |
+| `config.py` | Load and validate rubric and gate configuration from JSON |
+| `runner.py` | `GateRunnerInterface` ABC and `SubprocessGateRunner` concrete implementation |
+| `grader.py` | Gate orchestration; evidence-derived score calculation; mandatory-gate cap application |
+| `renderer.py` | Render canonical JSON report to Markdown |
 
 ```python
 class SelfGradeService:
-    """Run configured self-assessment gates and return a typed grade report."""
-    def grade(self) -> GradeReport: ...
+    """Run configured self-assessment gates and return a typed grade report.
+
+    Configuration defines max_points and policies — never pre-awarded scores.
+    Score calculation: check results → earned points → raw score → mandatory cap → final score.
+    """
+    def __init__(self, config: RubricConfig, gate_runner: GateRunnerInterface) -> None: ...
+    def grade(self, working_dir: Path | None = None) -> GradeReport: ...
+
+class GateRunnerInterface(ABC):
+    """Injectable gate executor — subprocess in production, mock in tests."""
+    @abstractmethod
+    def run(self, command: list[str], timeout: int, working_dir: Path) -> GateRunResult: ...
+```
+
+**Planned SDK exposure:**
+```python
+Ex04SDK.self_grade(
+    rubric_config_path: Path,
+    output_dir: Path,
+    gate_runner: GateRunnerInterface | None = None,
+) -> GradeReport
 ```
 
 ---

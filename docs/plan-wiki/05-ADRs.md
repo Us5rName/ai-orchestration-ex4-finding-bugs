@@ -70,4 +70,40 @@
 | **Rationale** | No runtime dependency on Obsidian software. The vault is readable by Obsidian when opened, but our system only needs to create and read Markdown files. Simpler, more portable, and fully testable. |
 | **Consequences** | Cannot use Obsidian's graph view API or plugin ecosystem. Navigation is done by parsing Markdown links, not querying an Obsidian API. |
 
+### ADR-007: GraphReader as Canonical Graph Read/Query Boundary
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted — implemented (T4.19a + T4.19 Done, commits b078da9 & 5011543) |
+| **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Context** | Multiple consumers (graph analysis, weakness detection, orphan analysis, patch-impact analysis, graph-guided context construction, graph diff) each independently query graph data. Without a shared facade, each consumer rebuilds degree maps, adjacency indexes, and community groupings — duplicating computation and creating divergent behavior. |
+| **Decision** | `GraphReader` is the canonical typed read-only boundary over parsed `GraphData`. All consumers must use `GraphReader` rather than rebuilding graph indexes independently. `GraphReader` accepts an existing `GraphData` directly, or a path-based constructor that delegates parsing to `GraphParser`. |
+| **Rationale** | Centralizes index construction; eliminates redundant computation; ensures deterministic ordering and tie-breaking across all consumers; prevents a second raw-JSON graph parsing path. |
+| **Consequences** | Every graph consumer must be updated to use `GraphReader` rather than accessing `GraphData` directly. `GraphReader` must preserve relationship direction, type, and parallel relationships. The existing `Entity` and `Relationship` types must be enriched (T4.19a) to carry stable IDs, confidence, weight, and source anchor before GraphReader can provide full contracts. |
+| **Rejected alternatives** | (a) Each consumer builds its own indexes — rejected because of duplication and divergent behavior. (b) `GraphAnalyzer` as the query boundary — rejected because `GraphAnalyzer` performs higher-level analysis; a typed read boundary is a separate concern. |
+
+### ADR-008: Experimental Parity Isolates Context Acquisition as Controlled Treatment
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted |
+| **PRD Reference** | [PRD §5.6 FR-6.4], [PRD-CE §Controlled vs. Treatment] |
+| **Context** | The comparison experiment must be scientifically defensible. Both modes must be identical in every respect except the variable being measured. Without explicit parity enforcement, subtle differences in provider configuration, retry policy, or telemetry conversion can contaminate results. |
+| **Decision** | The context-acquisition strategy (and its resulting `ContextBundle`) is the sole intentional experimental treatment. All other execution parameters are controlled via a shared `InstrumentedCallService` and a deterministic `ParityFingerprint`. Comparison execution rejects mismatched fingerprints before provider calls. |
+| **Rationale** | Makes token savings attributable only to the context strategy — not to differences in prompts, retry behavior, or telemetry recording. Enables falsifiability of the token-efficiency claim. |
+| **Consequences** | Both modes must share the same `ApiGatekeeper` boundary, retry policy, budget ledger, trace event factory, correctness gate, and artifact schema. The parity fingerprint must be checked before provider calls. |
+| **Rejected alternatives** | Claim parity merely because both paths call the same provider — rejected because subtle differences in system instructions, generation parameters, or retry behavior invalidate the comparison. |
+
+### ADR-009: Self-Grade Scores Are Evidence-Derived and Subject to Mandatory Caps
+
+| Field | Value |
+|---|---|
+| **Status** | Accepted |
+| **PRD Reference** | [PRD §5.8 FR-8.2, FR-8.3], [PRD-SG §Score Calculation] |
+| **Context** | A self-grade service could either (a) use pre-configured earned scores, or (b) derive scores from actual check results at run time. Option (a) allows a grade to remain high even when mandatory gates fail. |
+| **Decision** | Rubric configuration defines maximum points and policies only — never pre-awarded earned scores. Earned points are computed from PASS/FAIL check results at run time. Mandatory-gate failures apply a score cap that reduces the final score below the raw rubric score. |
+| **Rationale** | Makes the grade truthful and reproducible. A failing mandatory gate (e.g., correctness check) should visibly reduce the grade. Pre-configured scores are static; they cannot reflect the actual state of the repository. |
+| **Consequences** | Configuration must be validated to reject `earned_points` or `awarded_points` fields. The score calculation pipeline is: check results → earned points → raw score → mandatory cap → final score. |
+| **Rejected alternatives** | Pre-configured earned scores — explicitly rejected because the grade can remain high even when mandatory gates fail, making the self-assessment meaningless. |
+
 ---

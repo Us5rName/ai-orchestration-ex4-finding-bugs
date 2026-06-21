@@ -250,19 +250,90 @@ grep -c "##" README.md  # Should have multiple sections
 |---|---|
 | **Status** | Not Started |
 | **Priority** | P0 |
-| **PRD Reference** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Execution Order** | 6th and final of 6 remaining tasks (depends on finalized architecture) |
+| **PLAN Reference** | [PLAN §3.10 Self-Grade Service], [PLAN ADR-009] |
+| **PRD Reference** | [PRD §5.8 FR-8.1–FR-8.4], [PRD-SG] |
+| **Depends On** | All other remaining tasks: T4.19, T5.03, T4.20, T6.05, T6.09 (service grades the finalized architecture) |
 | **Estimate** | 90 min |
 
-**Goal**: Add a reproducible self-grade service that assembles structural checks, quality gates, and a rubric score into one typed report.
+**Purpose**: Implement a reproducible, evidence-derived self-assessment service. Configuration defines maximum points and policies only — never pre-awarded earned scores. Score is derived from actual check results. Mandatory-gate failures cap the final score.
 
-**Definition of Done**:
+**T8.13 is implemented last** because its rubric and checks must evaluate the finalized architecture, reports, gates, and evidence — not an intermediate state.
 
-- [ ] Add `services/self_grade/` with typed check result and grade report models
-- [ ] Load rubric and gate commands from configuration
-- [ ] Run structural checks without provider credentials
-- [ ] Support injectable gate runner for tests and subprocess runner for production
-- [ ] Expose `Ex04SDK.self_grade()` and optional CLI command
-- [ ] Unit tests cover grade math, passing/failing checks, missing config, and injected gate runner behavior
+**Planned package**: `src/ex04/services/self_grade/`
+
+```
+__init__.py
+models.py      — CheckResult, GradeReport, CheckStatus enum (PASS/FAIL/ERROR/SKIPPED/BLOCKED)
+config.py      — load and validate rubric configuration (validates no earned_points field)
+runner.py      — GateRunnerInterface ABC + SubprocessGateRunner
+grader.py      — gate orchestration + evidence-derived score calculation + mandatory cap
+renderer.py    — render canonical JSON to Markdown
+```
+
+**Score calculation (mandatory)**:
+```
+check results → earned rubric points → raw score → mandatory-gate cap → final score
+```
+
+**Example (illustrative policy, not generated evidence)**:
+```
+Raw rubric score: 94
+Correctness gate: FAIL
+Mandatory cap: 59
+Final score: 59
+```
+
+**Status types**:
+| Status | Meaning |
+|---|---|
+| PASS | Check executed and met pass condition |
+| FAIL | Check executed and did not meet pass condition |
+| ERROR | Infrastructure/execution error (not a check failure) |
+| SKIPPED | Not run due to missing prerequisite |
+| BLOCKED | Cannot run because a prerequisite gate failed |
+
+**Required provenance fields in every report**: commit SHA, dirty-worktree state, rubric version, config hash, tool versions, commands executed, durations, timestamps, evidence paths.
+
+**Implementation subtasks**:
+1. Create `models.py` with `CheckResult`, `GradeReport`, `CheckStatus`.
+2. Create `config.py` to load rubric JSON; validate that no `earned_points` field exists.
+3. Create `runner.py` with `GateRunnerInterface` and `SubprocessGateRunner`.
+4. Create `grader.py` with score pipeline: results → earned points → raw → cap → final.
+5. Create `renderer.py` to render JSON to Markdown.
+6. Write `self_grade.json` as canonical; `self_grade.md` derived from it.
+7. Add `Ex04SDK.self_grade()`.
+8. Add optional thin CLI command (delegates entirely to SDK).
+
+**Tests required** (`tests/unit/services/self_grade/`):
+- Grade math: various PASS/FAIL combinations → correct raw score.
+- Mandatory cap: gate FAIL → cap applied correctly.
+- Multiple gates fail → lowest cap applied.
+- FAIL vs. ERROR distinction: command-not-found → ERROR.
+- Timeout → ERROR status, duration recorded.
+- BLOCKED propagation when prerequisite gate fails.
+- All provenance fields present in output.
+- JSON canonical; Markdown derived from JSON.
+- Injectable gate runner in tests.
+- Config validation rejects `earned_points` field.
+
+**Non-goals**:
+- Do not add business logic to the CLI.
+- Do not grade an intermediate architecture state.
+- Do not use pre-configured earned scores.
+
+**Definition of Done** (T8.13 is Done only when):
+- [ ] Rubric and gates are configuration-driven.
+- [ ] Earned scores are derived from check results.
+- [ ] Mandatory caps are applied correctly.
+- [ ] Timeouts, missing commands, failures, blocked checks, and execution errors are distinct.
+- [ ] Gate runner is injectable.
+- [ ] JSON is canonical and Markdown is rendered from it.
+- [ ] Provenance is complete.
+- [ ] SDK exposure exists.
+- [ ] Optional CLI remains thin.
+- [ ] Unit and integration tests pass.
+- [ ] The service grades the finalized repository.
 
 **Independent Verification**:
 

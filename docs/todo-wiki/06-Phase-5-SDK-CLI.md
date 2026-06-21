@@ -71,26 +71,72 @@ uv run python -m ex04 --help
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
-| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service] |
-| **PRD Reference** | [PRD FR-4.1], [PRD FR-6.1] |
+| **Execution Order** | 2nd of 6 remaining tasks (independent of T4.19; implemented early for fair comparison evidence) |
+| **PLAN Reference** | [PLAN §3.5 Agent Service], [PLAN §3.7 Comparison Service], [PLAN ADR-008] |
+| **PRD Reference** | [PRD §5.6 FR-6.4], [PRD-CE §Controlled vs. Treatment] |
+| **Note** | T5.03 does NOT depend on T4.19, but is deliberately implemented early so final comparison evidence is not produced through duplicated or unfair call paths. |
 | **Estimate** | 60 min |
 
-**Goal**: Centralize shared node call and token-recording behavior so graph-guided and naive workflows differ by context strategy, not instrumentation.
+**Purpose**: Ensure both comparison modes use the same provider-call path, telemetry, budget, trace, gate, and artifact schema. Only the context-acquisition strategy may intentionally differ. Satisfies [PRD FR-6.4] Experimental Parity.
 
-**Definition of Done**:
+**Planned files**:
+- `src/ex04/services/comparison/call_service.py` — `InstrumentedCallService` (shared provider call)
+- `src/ex04/services/comparison/prompt_builder.py` — canonical prompt envelope
+- `src/ex04/services/comparison/parity.py` — `ParityFingerprint` and pre-call validation
 
-- [ ] Add shared helper for Gatekeeper-backed node calls
-- [ ] Add shared helper for converting provider responses into token records
-- [ ] Ensure graph-guided and naive paths use the same call/record helpers
-- [ ] Preserve existing workflow state fields and retry behavior
-- [ ] Unit tests verify parity of token accounting and node message shape across both paths
+**Key contract**:
+
+```python
+@dataclass(frozen=True, slots=True)
+class InstrumentedCallResult:
+    response: ProviderResponse
+    token_record: TokenRecord
+    trace_event: ProviderTraceEvent
+
+@dataclass(frozen=True, slots=True)
+class ParityFingerprint:
+    provider: str
+    model: str
+    generation_params_hash: str
+    system_prompt_version: str
+    prompt_envelope_version: str
+    response_schema_version: str
+    retry_policy_hash: str
+    budget_policy_hash: str
+    correctness_gate_version: str
+```
+
+**Shared (controlled)**: provider, model, generation params, system instructions, prompt envelope, response schema, gatekeeper, retry policy, token-record conversion, budget ledger, trace event, correctness gate, artifact schema, failure representation.
+
+**Different (treatment)**: context-acquisition strategy and resulting `ContextBundle`.
+
+**Implementation subtasks**:
+1. Create `call_service.py` with `InstrumentedCallService` returning atomic `InstrumentedCallResult`.
+2. Create `prompt_builder.py` with versioned canonical prompt envelope.
+3. Create `parity.py` with `ParityFingerprint` and mismatch rejection.
+4. Update `NaiveRunner` and `GraphGuidedRunner` to delegate to `InstrumentedCallService`.
+5. Preserve existing retry/state/observability semantics.
+
+**Tests required**:
+- Parity fingerprint matches for identical configuration.
+- Fingerprint mismatch raises `ParityMismatchError` before any provider call.
+- `InstrumentedCallResult` always contains all three fields.
+- Both runners produce structurally identical `RunMetrics` for identical provider responses.
+
+**Definition of Done** (T5.03 is Done only when):
+- [ ] Both modes use the same call, prompt-envelope, telemetry, tracing, budget, parser, correctness, and artifact paths.
+- [ ] Context acquisition is the only intentional treatment.
+- [ ] Parity fingerprint mismatches fail before provider calls.
+- [ ] Provider failures are represented identically.
+- [ ] Parity tests verify both structural and runtime delegation.
+- [ ] Existing retry/state/observability semantics remain intact.
 
 **Independent Verification**:
 
 ```bash
-uv run pytest tests/unit/services/agent tests/unit/services/comparison -v
+uv run pytest tests/unit/services/comparison/test_parity.py tests/unit/services/agent tests/unit/services/comparison -v
 ```
 
 ---

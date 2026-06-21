@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import replace
 from pathlib import Path
-from typing import overload  # noqa: I001
 
 from ex04.services.comparison.artifacts import persist_outcome
 from ex04.services.comparison.fairness import FairnessEnforcer
+from ex04.services.comparison.graph_diff.models import PostGraphStatus
 from ex04.services.comparison.graph_guided_runner import GraphGuidedRunner
 from ex04.services.comparison.interface import ComparisonServiceInterface
 from ex04.services.comparison.metrics import MetricsCalculator
 from ex04.services.comparison.naive_runner import NaiveRunner
 from ex04.services.comparison.report_gen import ReportGenerator
+from ex04.services.comparison.request_utils import strategy_request
 from ex04.services.comparison.result_metrics import result_to_run_metrics
 from ex04.services.comparison.signed_metrics import SignedMetricsCalculator
 from ex04.services.comparison.trace import TraceRecorder
@@ -37,22 +37,16 @@ class ComparisonService(ComparisonServiceInterface):
         self._reports = ReportGenerator()
         self.last_signed_metrics: SignedMetrics | None = None
 
-    @overload
-    def run_comparison(
-        self, request: str, source_files: Sequence[Path],
-        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
-    ) -> ComparisonReport: ...
-    @overload
-    def run_comparison(
-        self, request: ComparisonRequest, source_files: Sequence[Path],
-        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
-    ) -> ComparisonOutcome: ...
     def run_comparison(
         self,
         request: ComparisonRequest | str,
         source_files: Sequence[Path],
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
+        *,
+        post_graph: GraphData | None = None,
+        post_graph_status: PostGraphStatus | None = None,
+        post_graph_error: str = "",
     ) -> ComparisonOutcome | ComparisonReport:
         """Run both modes; legacy string input returns the old report type."""
         if isinstance(request, str):
@@ -65,7 +59,12 @@ class ComparisonService(ComparisonServiceInterface):
                 legacy, source_files, graph_data, vault_path, persist=False
             )
             return self._legacy_report(outcome)
-        return self._run_canonical(request, source_files, graph_data, vault_path)
+        return self._run_canonical(
+            request, source_files, graph_data, vault_path,
+            post_graph=post_graph,
+            post_graph_status=post_graph_status,
+            post_graph_error=post_graph_error,
+        )
 
     def run_naive_investigation(
         self,
@@ -74,7 +73,7 @@ class ComparisonService(ComparisonServiceInterface):
     ) -> InvestigationResult:
         """Public single-mode operation for SDK delegation."""
         request.validate()
-        return self._naive.run(_strategy_request(request, "naive"), source_files)
+        return self._naive.run(strategy_request(request, "naive"), source_files)
 
     def run_graph_investigation(
         self,
@@ -84,7 +83,7 @@ class ComparisonService(ComparisonServiceInterface):
     ) -> InvestigationResult:
         """Public graph-mode operation for SDK delegation."""
         request.validate()
-        return self._guided.run(_strategy_request(request, "graph"), graph_data, vault_path)
+        return self._guided.run(strategy_request(request, "graph"), graph_data, vault_path)
 
     def compute_metrics(
         self,
@@ -101,11 +100,14 @@ class ComparisonService(ComparisonServiceInterface):
         graph_data: GraphData | None,
         vault_path: Path | None,
         persist: bool = True,
+        post_graph: GraphData | None = None,
+        post_graph_status: PostGraphStatus | None = None,
+        post_graph_error: str = "",
     ) -> ComparisonOutcome:
         request.validate()
         config_hash = request.controlled_config_hash()
-        naive_req = _strategy_request(request, "naive", run_id=f"{request.run_id}-naive")
-        guided_req = _strategy_request(request, "graph", run_id=f"{request.run_id}-graph")
+        naive_req = strategy_request(request, "naive", run_id=f"{request.run_id}-naive")
+        guided_req = strategy_request(request, "graph", run_id=f"{request.run_id}-graph")
         self._enforcer.check(naive_req, guided_req)
         naive_trace = TraceRecorder(naive_req.run_id)
         guided_trace = TraceRecorder(guided_req.run_id)
@@ -125,25 +127,19 @@ class ComparisonService(ComparisonServiceInterface):
             limitations=naive.limitations + guided.limitations,
         )
         if persist:
-            return persist_outcome(outcome, request, naive_trace, guided_trace)
+            return persist_outcome(
+                outcome,
+                request,
+                naive_trace,
+                guided_trace,
+                graph_data,
+                post_graph,
+                post_graph_status,
+                post_graph_error,
+            )
         return outcome
 
     def _legacy_report(self, outcome: ComparisonOutcome) -> ComparisonReport:
         naive_rm = result_to_run_metrics(outcome.naive_result)
         guided_rm = result_to_run_metrics(outcome.guided_result)
         return self._reports.generate(self._metrics.compare(naive_rm, guided_rm))
-
-
-def _strategy_request(
-    request: ComparisonRequest,
-    mode: str,
-    *,
-    run_id: str | None = None,
-) -> ComparisonRequest:
-    """Return a request specialized for one comparison strategy."""
-    return replace(
-        request,
-        run_id=run_id or request.run_id,
-        mode=mode,
-        strategy_artifact_dir=mode,
-    )

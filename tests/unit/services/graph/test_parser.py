@@ -89,7 +89,10 @@ class TestGraphParserEdgeCases:
     def test_parse_supports_legacy_edges_key(self) -> None:
         """parse() still accepts the legacy top-level ``edges`` key."""
         path = _write_tmp(
-            {"nodes": [], "edges": [{"source": "a", "target": "b", "relation": "calls"}]}
+            {
+                "nodes": [{"id": "a"}, {"id": "b"}],
+                "edges": [{"source": "a", "target": "b", "relation": "calls"}],
+            }
         )
         try:
             result = GraphParser().parse(path)
