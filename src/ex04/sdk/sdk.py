@@ -1,12 +1,8 @@
-"""Single SDK entry point with dependency injection.
+"""Single SDK entry point with dependency injection (ADR-005).
 
-All business logic flows through this module. CLI, GUI, and REST layers
-delegate here — they never import internal domain services directly.
-
-The SDK depends only on the five service *interfaces* (ADR-005), so it can be
-constructed and tested with mocks without any concrete service implemented.
-``Ex04SDK.from_config`` is the single place that performs concrete wiring; see
-``docs/PHASE5_INTEGRATION.md`` for how Phase 4 plugs in.
+All business logic flows through this module. CLI and REST layers delegate
+here — they never import internal domain services directly. Extensions are
+in sdk/_extensions.py. Wiring is in sdk/_wiring.py.
 """
 
 from __future__ import annotations
@@ -16,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from ex04.sdk._comparison_inputs import discover_source_files, resolve_vault_dir
+from ex04.sdk._comparison_ops import ComparisonOpsMixin
+from ex04.sdk._extensions import ImpactReport, OrphanReport, analyze_patch_impact, detect_orphans
 from ex04.sdk._wiring import build_services
 from ex04.services.agent.interface import AgentServiceInterface
 from ex04.services.analysis.interface import AnalysisServiceInterface
@@ -27,13 +25,8 @@ from ex04.shared.types_metrics import ComparisonReport
 from ex04.shared.types_results import InvestigationResult, PipelineResult
 
 
-class Ex04SDK:
-    """Single entry point for all EX04 operations.
-
-    Orchestrates the graph, vault, agent, comparison, and analysis services.
-    Holds no business logic — every method delegates to exactly one service
-    (or composes a few for ``full_pipeline``).
-    """
+class Ex04SDK(ComparisonOpsMixin):
+    """Single entry point for all EX04 operations. Delegates to services."""
 
     def __init__(
         self,
@@ -103,23 +96,27 @@ class Ex04SDK:
         return self._analysis.identify_patterns(graph_data)
 
     def compare_target(self, target_path: str | Path, bug_report: str) -> ComparisonReport:
-        """Run a comparison for a target codebase without a full investigation.
-
-        Extracts the graph, builds the vault, discovers source files, and
-        runs both naive and graph-guided approaches.
-
-        Args:
-            target_path: Root directory of the target codebase.
-            bug_report: Description of the bug to investigate.
-
-        Returns:
-            ComparisonReport with side-by-side metrics.
-        """
+        """Extract graph, build vault, discover files, and run both comparison modes."""
         graph_path = self._graph.extract(str(target_path))
         graph_data = self._graph.parse(graph_path)
         vault_dir = resolve_vault_dir(self._vault.build(graph_data))
         source_files = discover_source_files(target_path, self._config)
         return self._comparison.run_comparison(bug_report, source_files, graph_data, vault_dir)
+
+    def detect_orphans(
+        self, graph_data: GraphData, min_connections: int = 0
+    ) -> OrphanReport:
+        """Detect orphan nodes and weakly connected components (EXT-1 / FR-7.5)."""
+        return detect_orphans(graph_data, min_connections)
+
+    def analyze_patch_impact(
+        self,
+        graph_data: GraphData,
+        changed_symbols: list[str],
+        max_depth: int = 3,
+    ) -> ImpactReport:
+        """Analyze transitive impact of a patch via BFS (EXT-2 / FR-7.6)."""
+        return analyze_patch_impact(graph_data, changed_symbols, max_depth)
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult:
         """Run the complete end-to-end pipeline into one aggregated result."""

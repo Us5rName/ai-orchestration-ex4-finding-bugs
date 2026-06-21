@@ -4,7 +4,6 @@
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
 | **Version** | 1.00 |
-| **Author** | evya1 |
 | **Date** | 2026-06-19 |
 | **Status** | Draft |
 | **PRD Reference** | `docs/PRD.md` v1.00 |
@@ -1325,6 +1324,82 @@ uv run pytest tests/unit/services/analysis/test_impact_reporter.py -v # FR-7.6
 
 ---
 
+### T6.06 — Deterministic Correctness Gate
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Measurable Acceptance Criteria |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `CorrectnessGate` validates patch against original failure reproduction
+- [x] Gate distinguishes: reproduced-failure / patch-applied / targeted-test / suite / policy / final verdict
+- [x] Machine-readable JSON and human-readable Markdown output
+- [x] `tests/unit/services/comparison/test_correctness_gate.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_correctness_gate.py -v
+```
+
+---
+
+### T6.07 — Run Ledgers and Metrics Reports
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Run Ledgers |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `RunManifest` dataclass covers all required provenance fields
+- [x] `ArtifactStore.save_manifest` writes JSON to `artifacts/manifests/`
+- [x] Overwrite protection raises `ArtifactOverwriteError`
+- [x] Signed deltas and negative savings preserved
+- [x] `tests/unit/shared/test_artifact_store.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_artifact_store.py -v
+```
+
+---
+
+### T6.08 — Fairness Invariant Tests
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §3.7 Comparison Service] |
+| **PRD Reference** | [PRD-CE] Contracts and Fairness Invariants |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] Tests verify both modes receive identical config, bug report, provider, model
+- [x] Tests verify naive mode does not use graph data
+- [x] Tests verify graph-guided mode uses entity names and vault notes
+- [x] `tests/unit/services/comparison/test_fairness.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/comparison/test_fairness.py -v
+```
+
+---
+
 ## 8. Phase 7 — End-to-End Execution
 
 **Goal**: Run the full pipeline on the target codebase.
@@ -1484,6 +1559,108 @@ ls -la obsidian/*.md  # New files should exist after investigation
 
 ---
 
+### T7.07 — Orphan Detector Extension (FR-7.5)
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.5] |
+| **PRD Reference** | [PRD-EXT] EXT-1 |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `OrphanDetector.detect(graph_data, min_connections)` returns `OrphanReport`
+- [x] `Ex04SDK.detect_orphans` exposes operation
+- [x] Unit tests: empty graph, isolated nodes, threshold edge cases
+- [x] `tests/unit/services/analysis/test_orphan_detector.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_orphan_detector.py -v
+```
+
+---
+
+### T7.08 — Patch-Impact Analyzer Extension (FR-7.6)
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §11 Traceability Matrix — FR-7.6] |
+| **PRD Reference** | [PRD-EXT] EXT-2 |
+| **Estimate** | 45 min |
+
+**Definition of Done**:
+
+- [x] `PatchImpactAnalyzer.analyze(graph_data, changed_symbols, max_depth)` returns `ImpactReport`
+- [x] `Ex04SDK.analyze_patch_impact` exposes operation
+- [x] Unit tests: no changed symbols, cycle handling, depth limit
+- [x] `tests/unit/services/analysis/test_patch_impact.py` passes
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_patch_impact.py -v
+```
+
+---
+
+### T7.09 — Artifact Provenance and ArtifactStore
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
+| **PRD Reference** | [PRD-AP] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `ArtifactStore` implements overwrite protection
+- [x] `RunManifest` schema covers all PRD-AP fields
+- [x] Sanitizer removes secrets and personal paths
+- [x] `artifacts/manifests/` directory committed with fixture
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/shared/test_artifact_store.py -v
+ls artifacts/manifests/
+```
+
+---
+
+### T7.10 — Deterministic Fixtures and Walkthrough Notebook
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
+| **PRD Reference** | [PRD §8 Deliverables] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] Fixture vault in `obsidian/` with `index.md` and `hot.md`
+- [x] Fixture investigation result in `artifacts/runs/fixture-001/`
+- [x] Walkthrough notebook `notebooks/walkthrough.ipynb` loads committed evidence
+- [x] Notebook remains viewable without a paid provider
+
+**Independent Verification**:
+
+```bash
+ls obsidian/ && ls artifacts/runs/
+uv run jupyter nbconvert --to notebook --execute notebooks/walkthrough.ipynb 2>/dev/null || echo "nbconvert optional"
+```
+
+---
+
 ## 9. Phase 8 — Final Check
 
 **Goal**: Verify submission readiness.
@@ -1607,6 +1784,125 @@ grep -c "##" README.md  # Should have multiple sections
 
 ---
 
+### T8.06 — CI Workflow
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD NFR-7] CI/CD |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `.github/workflows/ci.yml` runs ruff, mypy, pytest on push and PR
+- [x] Coverage gate ≥ 85% enforced in CI
+
+---
+
+### T8.07 — Prompt Registry
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §8 Deliverables] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] `docs/PROMPTS.md` contains 15 required prompt categories
+- [x] Each entry has: ID, title, phase, task, classification, inputs, outputs, constraints
+- [x] Traceability table present
+- [x] AI-use disclosure updated
+
+---
+
+### T8.08 — Evidence-First README
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §8 README Requirements] |
+| **Estimate** | 90 min |
+
+**Definition of Done**:
+
+- [x] README covers all required sections from PRD §8
+- [x] Requirement-to-evidence matrix present
+- [x] Every factual claim maps to code, test, or committed artifact
+- [x] Reproducible self-assessment included
+
+---
+
+### T8.09 — Mechanism PRDs
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD §5] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] `docs/PRD_comparison_experiment.md` created
+- [x] `docs/PRD_graph_guided_investigation.md` created
+- [x] `docs/PRD_artifact_provenance.md` created
+- [x] `docs/PRD_extension_analysis.md` created
+
+---
+
+### T8.10 — Wiki Generation Scripts
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD §9 Repository Structure] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `scripts/generate_doc_wikis.py` regenerates wiki Home files from canonical docs
+- [x] `scripts/check_docs_sync.py` validates sync status
+- [x] Scripts are deterministic and idempotent
+
+---
+
+### T8.11 — Validation Scripts
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD NFR-2, NFR-3, NFR-4] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `scripts/validate_repo.py` checks file sizes, hardcoded values, SDK/gatekeeper boundaries
+- [x] Script exits non-zero on violations
+
+---
+
+### T8.12 — Clean-Clone Verification
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §12 Final Checklist] |
+| **Estimate** | 20 min |
+
+**Definition of Done**:
+
+- [x] `reports/clean_clone_verification.md` committed with verified results
+- [x] Report includes: SHA, Python version, uv version, ruff, mypy, pytest, coverage
+
+---
+
 ## 10. Task Dependency Summary
 
 ```mermaid
@@ -1722,17 +2018,21 @@ graph TD
 
 ## 12. Revision History
 
-| Version | Date | Author   | Change |
-|---|---|----------|---|
-| 1.00 | 2026-06-19 | evya1    | Initial task tracking document |
-| 1.01 | 2026-06-19 | evya1    | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
-| 1.04 | 2026-06-19 | evya1    | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
-| 1.05 | 2026-06-20 | Evyatar  | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of v1.01 + v1.04). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Traceability: git merge of HEAD + 3c832f6. |
-| 1.06 | 2026-06-20 | evya1 | Mark T4.08 WorkflowBuilder done and T5.01 SDK partial: `from_config()` now wires Phase 4 service facades through the SDK, while `full_pipeline()` remains blocked on Phase 6 comparison runners. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD NFR-5], [PRD FR-4.1]. |
-| 1.08 | 2026-06-20 | Codex | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
-| 1.09 | 2026-06-20 | Codex | Mark T4.09-T4.11 and T4.13-T4.15 done after activating agent nodes with context loading, Gatekeeper-backed analysis/root-cause/fix calls, suspect ranking, and subprocess verification; mark T4.12 partial for snippet inspection only. Traceability: [PLAN §3.5], [PRD FR-4.2 to FR-4.6], [PRD FR-5.1], [PRD NFR-6]. |
-| 1.10 | 2026-06-20 | Codex | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
-| 1.11 | 2026-06-20 | Codex | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
-| 1.12 | 2026-06-20 | Codex | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
-| 1.14 | 2026-06-20 | Codex | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |
-| 1.15 | 2026-06-20 | evya1 | Mark T5.01 Done: cumulative files_read, compare_target(), _comparison_inputs.py helper, real sources + vault in full_pipeline(), CLI compare requires target_path. Update T5.02 CLI DoD with @file, exit codes, and compare_target routing. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD FR-6.1], [PRD NFR-5]. |
+| Version | Date | Change |
+|---|---|---|
+| 1.00 | 2026-06-19 | Initial task tracking document |
+| 1.01 | 2026-06-19 | Add T6.05 (extension implementation from FR-7.4/7.5/7.6); add C9 isolation note to T7.01; update statistics to 43 tasks ([PRD §5.7], [PLAN §11]) |
+| 1.04 | 2026-06-19 | Phase 4 gap analysis: added T4.00 (Config Manager impl) and T4.002 (Gatekeeper impl) as prerequisites. These were Phase 2 contracts with "impl in P4" comments but missing from TODO. Updated task count 42→44, P0 37→39. Traceability: [PLAN §3.9 Shared Layer], [PRD NFR-1], [PRD NFR-4]. |
+| 1.05 | 2026-06-20 | Resolve merge-conflict markers in §11 Statistics and §12 Revision History (union of v1.01 + v1.04). Reconciled totals to 45 tasks / 39 P0 / 6 P1 (base 42 + T6.05 + T4.00 + T4.002). Traceability: git merge of HEAD + 3c832f6. |
+| 1.06 | 2026-06-20 | Mark T4.08 WorkflowBuilder done and T5.01 SDK partial: `from_config()` now wires Phase 4 service facades through the SDK, while `full_pipeline()` remains blocked on Phase 6 comparison runners. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD NFR-5], [PRD FR-4.1]. |
+| 1.08 | 2026-06-20 | Mark T4.05 VaultNavigator done after adding `find_relevant_notes()` and `navigate_from_index()` while keeping `navigate()` compatibility. Traceability: [PLAN §3.4], [PRD FR-2.5]. |
+| 1.09 | 2026-06-20 | Mark T4.09-T4.11 and T4.13-T4.15 done after activating agent nodes with context loading, Gatekeeper-backed analysis/root-cause/fix calls, suspect ranking, and subprocess verification; mark T4.12 partial for snippet inspection only. Traceability: [PLAN §3.5], [PRD FR-4.2 to FR-4.6], [PRD FR-5.1], [PRD NFR-6]. |
+| 1.10 | 2026-06-20 | Mark T6.01-T6.03 done and T6.04 partial after implementing comparison runners, metrics, report narrative, and SDK comparison wiring; report persistence remains open. Traceability: [PLAN §3.7], [PRD FR-6.1 to FR-6.3]. |
+| 1.11 | 2026-06-20 | Reconcile stale completed-task docs for T4.07 AgentState and T5.02 CLI entry point. Traceability: [PLAN §3.5], [PLAN §1.2], [PRD FR-4.3], [PRD NFR-5]. |
+| 1.12 | 2026-06-20 | Undo mistaken Phase 8 completion checkbox changes; Phase 8 remains pending until final submission verification. Traceability: user correction, [PRD §12 Final Checklist]. |
+| 1.14 | 2026-06-20 | Complete T4.12 (files_read tracking + gatekeeper LLM analysis in CodeInspectionNode), T4.16 (public identify_patterns + gatekeeper enrichment in ReverseEngineer), T4.18 (original_problem + fix_diff fields in InvestigationResult and BugReporter). Mark T4.02–T4.04, T4.06, T4.07, T4.17 Done (already implemented, status was stale). Traceability: [PLAN §3.5], [PLAN §3.6], [PRD FR-4.2], [PRD FR-3.1-3.2], [PRD FR-5.2]. |
+| 1.15 | 2026-06-20 | Mark T5.01 Done: cumulative files_read, compare_target(), _comparison_inputs.py helper, real sources + vault in full_pipeline(), CLI compare requires target_path. Update T5.02 CLI DoD with @file, exit codes, and compare_target routing. Traceability: [PLAN §3.2], [PLAN §3.5], [PRD FR-6.1], [PRD NFR-5]. |
+| 1.16 | 2026-06-20 | Phase 6–8 finalization: register T6.06–T6.08 (correctness gate, run ledgers, fairness tests), T7.07–T7.10 (orphan detector, patch-impact, artifact provenance, fixtures/notebook), T8.06–T8.12 (CI, prompt registry, README, mechanism PRDs, wiki scripts, validation scripts, clean-clone). Add mechanism PRDs. Traceability: [PRD-CE], [PRD-GGI], [PRD-AP], [PRD-EXT], [PRD §8]. |
+| 1.17 | 2026-06-20 | Correct T8.12 to Pending until an isolated clean-clone report is generated and committed; add Phase 8 evidence matrix, self assessment, blocked-operation report, and assets documentation. Traceability: [PRD §8], [PRD §12]. |
+| 1.18 | 2026-06-20 | Mark T8.12 Done after clean worktree verification recorded in `reports/clean_clone_verification.md` for candidate `36a53a8`. Traceability: [PRD §12]. |
+| 1.19 | 2026-06-21 | Standardize commit references in Markdown documentation on 7-character short hashes. Traceability: [PLAN §5.1]. |

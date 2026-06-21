@@ -1,6 +1,7 @@
 """Result types — provider responses, suspects, investigations, pipelines.
 
 Defines the output structures returned by services and the SDK.
+InvestigationResult is the single canonical investigation result type.
 """
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from ex04.shared.types_evidence import StructuredEvidence
 from ex04.shared.types_metrics import ComparisonReport, TokenMetrics
 
 
@@ -54,20 +56,23 @@ class Suspect:
 
 @dataclass
 class InvestigationResult:
-    """Result of a full bug investigation by the agent.
+    """Single canonical result of a bug investigation run.
 
-    Attributes:
-        root_cause: Identified root cause description.
-        suspects: Ranked list of suspect locations.
-        proposed_fix: Suggested code fix.
-        fix_applied: Whether the fix was successfully applied.
-        test_results: Test execution results dict.
-        token_usage: Token metrics for the investigation.
-        original_problem: The original bug description provided by the user.
-        fix_diff: Unified diff of the applied change, when available.
-        files_read: Number of source files read during code inspection.
+    Core diagnosis (both modes): root_cause, suspects, proposed_fix,
+    fix_applied, test_results, token_usage, original_problem, fix_diff,
+    files_read.
+
+    Run-level tracking: run_id, mode, config_hash, target_commit;
+    parser_status ('not_run'|'parsed_ok'|'parse_failed'|'empty');
+    diagnosis_status ('unverified'|'grounded_candidate'|'rejected');
+    gate_status ('not_requested'|'not_run'|'passed'|'failed'|'blocked'|'inconclusive');
+    verification_status ('unverified'|'verified'|'rejected'|'blocked');
+    evidence list, limitations, telemetry_available, input/output_tokens,
+    bytes_read, tool_calls, model_calls, iterations, duration_seconds,
+    estimated_cost_usd, evidence_class, trace_path.
     """
 
+    # Core diagnosis
     root_cause: str = ""
     suspects: list[Suspect] = field(default_factory=list)
     proposed_fix: str = ""
@@ -77,6 +82,31 @@ class InvestigationResult:
     original_problem: str = ""
     fix_diff: str = ""
     files_read: int = 0
+    # Run-level tracking
+    run_id: str = ""
+    mode: str = ""
+    config_hash: str = ""
+    target_commit: str = "unknown"
+    parser_status: str = "not_run"
+    diagnosis_status: str = "unverified"
+    gate_status: str = "not_requested"
+    verification_status: str = "unverified"
+    evidence: list[StructuredEvidence] = field(default_factory=list)
+    limitations: list[str] = field(default_factory=list)
+    telemetry_available: bool = False
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    context_tokens: int = 0
+    bytes_read: int = 0
+    tool_calls: int = 0
+    model_calls: int = 0
+    iterations: int = 0
+    retries: int = 0
+    duration_seconds: float = 0.0
+    estimated_cost_usd: float | None = None
+    evidence_class: str = "fixture"
+    trace_path: str = ""
+    trace_hash: str = ""
 
 
 @dataclass

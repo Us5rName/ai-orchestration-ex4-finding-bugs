@@ -9,9 +9,11 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import uuid
 from pathlib import Path
 
 from ex04.sdk import Ex04SDK
+from ex04.shared.types_request import ComparisonRequest
 
 logger = logging.getLogger("ex04")
 
@@ -42,6 +44,15 @@ def _build_parser() -> argparse.ArgumentParser:
     p_pipeline.add_argument("target_path", help="Path to the target codebase.")
     p_pipeline.add_argument("bug_report", help="Bug description (or @path to a file).")
 
+    for cmd, hlp in (
+        ("investigate-naive", "Run naive (no-graph) investigation."),
+        ("investigate-graph", "Run graph-guided investigation."),
+    ):
+        p = sub.add_parser(cmd, help=hlp)
+        p.add_argument("bug_report", help="Bug description (or @path to a file).")
+        p.add_argument("--provider", default="openai", help="LLM provider.")
+        p.add_argument("--run-id", dest="run_id", default="", help="Unique run ID.")
+
     return parser
 
 
@@ -62,6 +73,16 @@ def _dispatch(args: argparse.Namespace, sdk: Ex04SDK) -> object:
         return sdk.compare_target(args.target_path, _read_report(args.bug_report))
     if args.command == "pipeline":
         return sdk.full_pipeline(args.target_path, _read_report(args.bug_report))
+    if args.command in ("investigate-naive", "investigate-graph"):
+        req = ComparisonRequest(
+            bug_report=_read_report(args.bug_report),
+            provider=args.provider,
+            run_id=args.run_id or uuid.uuid4().hex[:12],
+        )
+        req.validate()
+        if args.command == "investigate-naive":
+            return sdk.run_naive_investigation(req)
+        return sdk.run_graph_investigation(req)
     raise ValueError(f"Unknown command: {args.command}")  # pragma: no cover
 
 

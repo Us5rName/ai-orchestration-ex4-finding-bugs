@@ -21,3 +21,15 @@ def test_compare_handles_zero_baseline() -> None:
     metrics = MetricsCalculator().compare(RunMetrics(), RunMetrics(tokens_used=10))
 
     assert metrics.token_savings_pct == 0.0
+
+
+def test_negative_savings_not_clamped() -> None:
+    """When guided uses more tokens than naive, savings are negative (regression preserved)."""
+    metrics = MetricsCalculator().compare(
+        RunMetrics(tokens_used=100, files_read=5, iterations=2),
+        RunMetrics(tokens_used=150, files_read=8, iterations=3),
+    )
+
+    assert metrics.token_savings_pct < 0.0
+    assert metrics.file_read_savings_pct < 0.0
+    assert metrics.iteration_savings_pct < 0.0

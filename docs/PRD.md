@@ -6,7 +6,6 @@
 | **Version** | 1.00 |
 | **Course** | AI Orchestration, שנה 3 |
 | **Instructor** | ד"ר יורם סגל |
-| **Author** | evya1 |
 | **Date** | 2026-06-19 |
 | **Status** | Draft |
 
@@ -393,7 +392,7 @@ code/
 
 ## 12. Revision History
 
-| Version | Date | Author | Change |
-|---|---|---|---|
-| 1.00 | 2026-06-19 | evya1 | Initial PRD creation |
-| 1.01 | 2026-06-19 | evya1 | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |
+| Version | Date | Change |
+|---|---|---|
+| 1.00 | 2026-06-19 | Initial PRD creation |
+| 1.01 | 2026-06-19 | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |

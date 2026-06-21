@@ -16,9 +16,12 @@ Implementation: Phase 6 (T6.01–T6.03)
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
 
 from ex04.shared.types import ComparisonReport, GraphData
+from ex04.shared.types_experiment import ComparisonOutcome
+from ex04.shared.types_request import ComparisonRequest
 
 
 class ComparisonServiceInterface(ABC):
@@ -32,15 +35,15 @@ class ComparisonServiceInterface(ABC):
     @abstractmethod
     def run_comparison(
         self,
-        bug_report: str,
-        source_files: list[Path],
+        request: ComparisonRequest | str,
+        source_files: Sequence[Path],
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
-    ) -> ComparisonReport:
+    ) -> ComparisonOutcome | ComparisonReport:
         """Run naive and guided approaches and compare metrics.
 
         Args:
-            bug_report: Description of the bug to investigate.
+            request: Canonical comparison request or legacy bug-report string.
             source_files: List of source file paths for naive approach.
             graph_data: Optional graph data for guided approach.
             vault_path: Optional vault path for guided approach.

@@ -96,6 +96,7 @@ You MUST follow this sequence. Do not skip steps. (See skill: `project-setup`)
 - **Pre-Commit Logging**: Before every commit, document what was done in `docs/PROMPT_LOG.md` and update its `## Revision History` table.
 - **Git**: Meaningful commit messages, feature branches, and PR-based reviews.
 - **Commit Citations**: Every change in a commit must cite the relevant doc(s) it implements.
+- **Commit Hashes in Docs**: When referencing commits in Markdown documentation, always use the 7-character short hash.
 
 ## 7. Research & Analysis (See skill: `research-analysis`)
 - **Sensitivity Analysis**: Conduct systematic parameter exploration (OAT, variance-based).
