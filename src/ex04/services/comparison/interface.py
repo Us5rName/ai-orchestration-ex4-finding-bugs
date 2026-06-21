@@ -18,8 +18,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
-from typing import overload
 
+from ex04.services.comparison.graph_diff.models import PostGraphStatus
 from ex04.shared.types import ComparisonReport, GraphData
 from ex04.shared.types_experiment import ComparisonOutcome
 from ex04.shared.types_request import ComparisonRequest
@@ -33,16 +33,6 @@ class ComparisonServiceInterface(ABC):
     mock-based testing.
     """
 
-    @overload
-    def run_comparison(
-        self, request: str, source_files: Sequence[Path],
-        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
-    ) -> ComparisonReport: ...
-    @overload
-    def run_comparison(
-        self, request: ComparisonRequest, source_files: Sequence[Path],
-        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
-    ) -> ComparisonOutcome: ...
     @abstractmethod
     def run_comparison(
         self,
@@ -50,6 +40,10 @@ class ComparisonServiceInterface(ABC):
         source_files: Sequence[Path],
         graph_data: GraphData | None = None,
         vault_path: Path | None = None,
+        *,
+        post_graph: GraphData | None = None,
+        post_graph_status: PostGraphStatus | None = None,
+        post_graph_error: str = "",
     ) -> ComparisonOutcome | ComparisonReport:
         """Run naive and guided approaches and compare metrics.
 

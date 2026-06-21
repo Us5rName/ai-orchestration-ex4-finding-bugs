@@ -40,9 +40,12 @@ def run_phase7_comparison(
         max_tool_calls=30,
         token_budget=8000,
     )
-    return ComparisonService(Phase7Gatekeeper(), "phase7").run_comparison(
+    outcome = ComparisonService(Phase7Gatekeeper(), "phase7").run_comparison(
         request,
         source_files,
         graph_data,
         vault_path,
     )
+    if isinstance(outcome, ComparisonOutcome):
+        return outcome
+    raise TypeError("canonical comparison request returned legacy report")

@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-from dataclasses import asdict
 from pathlib import Path
 
 from ex04.services.comparison.graph_diff import diff_graphs, render_graph_diff
-from ex04.services.comparison.graph_diff.models import GraphDiffArtifacts
+from ex04.services.comparison.graph_diff.canonicalize import canonical_graph_hash
+from ex04.services.comparison.graph_diff.models import GraphDiffArtifacts, PostGraphStatus
 from ex04.services.comparison.report_gen import write_comparison_reports
 from ex04.services.comparison.trace import TraceRecorder
+from ex04.services.graph.interface import build_graph_reader
 from ex04.shared.artifact_store import ArtifactStore
 from ex04.shared.types import GraphData
 from ex04.shared.types_experiment import ComparisonOutcome, RunManifest
@@ -25,11 +24,22 @@ def persist_outcome(
     guided_trace: TraceRecorder,
     pre_graph: GraphData | None = None,
     post_graph: GraphData | None = None,
+    post_graph_status: PostGraphStatus | None = None,
+    post_graph_error: str = "",
 ) -> ComparisonOutcome:
     """Persist traces, manifests, and reports; update outcome paths."""
     root = Path(request.artifact_root)
     store = ArtifactStore(root)
-    graph_diff = diff_graphs(pre_graph, post_graph) if pre_graph is not None else None
+    graph_diff = (
+        diff_graphs(
+            pre_graph,
+            post_graph,
+            post_graph_status=post_graph_status,
+            post_graph_error=post_graph_error,
+        )
+        if pre_graph is not None
+        else None
+    )
     graph_artifacts = (
         render_graph_diff(graph_diff, root / "runs" / request.run_id)
         if graph_diff is not None
@@ -131,5 +141,4 @@ def _total_tokens(result: InvestigationResult) -> int | None:
 def _graph_hash(graph: GraphData | None) -> str:
     if graph is None:
         return ""
-    payload = json.dumps(asdict(graph), sort_keys=True, default=str)
-    return hashlib.sha256(payload.encode()).hexdigest()
+    return canonical_graph_hash(build_graph_reader(graph))
