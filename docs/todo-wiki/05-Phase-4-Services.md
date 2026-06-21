@@ -1,26 +1,14 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 5. Phase 4 — Services
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Implement all domain services and shared layer contracts deferred from Phase 2. Each service imports only `*Interface` contracts — never concrete implementations from other services. Real wiring happens through SDK at runtime ([ADR-005]).
 
-## Task Index
+> **Rationale for T4.00–T4.002**: `ConfigManagerInterface` and `GatekeeperInterface` were defined as contracts in Phase 2 ([PLAN §3.9]) with "impl in P4" comments. All domain services depend on these. Implemented here as prerequisites before any service work.
 
-| Task | Service | Link |
-|---|---|---|
-| T4.00–T4.002 | Shared Layer Implementations | See below |
-| T4.01–T4.03 | Graph Service | See below |
-| T4.04–T4.06 | Vault Service | See below |
-| T4.07–T4.15 | Agent Service | See below |
-| T4.16–T4.18 | Analysis Service | See below |
-
----
-
-### Shared Layer Implementations (T4.00–T4.002)
-
-> **Rationale**: `ConfigManagerInterface` and `GatekeeperInterface` were defined as contracts in Phase 2 ([PLAN §3.9]) with "impl in P4" comments. All domain services depend on these. Implemented here as prerequisites before any service work.
-
-#### T4.00 — Config Manager Implementation
+### T4.00 — Config Manager Implementation
 
 | Attribute | Value |
 |---|---|
@@ -47,7 +35,7 @@ uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config 
 
 ---
 
-#### T4.002 — Gatekeeper Implementation
+### T4.002 — Gatekeeper Implementation
 
 | Attribute | Value |
 |---|---|
@@ -78,9 +66,7 @@ uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gat
 
 ---
 
-### Graph Service (T4.01–T4.03)
-
-#### T4.01 — Graph Service: Runner
+### T4.01 — Graph Service: Runner
 
 | Attribute | Value |
 |---|---|
@@ -107,7 +93,7 @@ uv run pytest tests/unit/services/graph/test_runner.py -v --cov=ex04.services.gr
 
 ---
 
-#### T4.02 — Graph Service: Parser
+### T4.02 — Graph Service: Parser
 
 | Attribute | Value |
 |---|---|
@@ -133,7 +119,7 @@ uv run pytest tests/unit/services/graph/test_parser.py -v --cov=ex04.services.gr
 
 ---
 
-#### T4.03 — Graph Service: Analyzer
+### T4.03 — Graph Service: Analyzer
 
 | Attribute | Value |
 |---|---|
@@ -160,9 +146,35 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 
 ---
 
-### Vault Service (T4.04–T4.06)
+### T4.19 — Typed Graph Reader Facade
 
-#### T4.04 — Vault Service: Builder
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.3 Graph Service] |
+| **PRD Reference** | [PRD FR-1.1], [PRD FR-7.2] |
+| **Estimate** | 60 min |
+
+**Goal**: Add a read-only query facade over `GraphData` so graph consumers do not repeatedly rebuild degree maps, community groupings, or edge indexes.
+
+**Definition of Done**:
+
+- [ ] `GraphReader` accepts `GraphData` or a parsed `graph.json` path
+- [ ] Exposes typed `node()`, `all_nodes()`, `edges_of()`, `top_n_by_degree()`, and `communities()` queries
+- [ ] Precomputes/caches degree and adjacency indexes at construction time
+- [ ] Used by graph analyzer, extension analysis, and graph-guided context builders where appropriate
+- [ ] Unit tests cover missing nodes, edge-only nodes, isolated nodes, and ranking stability
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/graph/test_reader.py -v
+```
+
+---
+
+### T4.04 — Vault Service: Builder
 
 | Attribute | Value |
 |---|---|
@@ -190,7 +202,7 @@ uv run pytest tests/unit/services/vault/test_builder.py -v --cov=ex04.services.v
 
 ---
 
-#### T4.05 — Vault Service: Navigator
+### T4.05 — Vault Service: Navigator
 
 | Attribute | Value |
 |---|---|
@@ -216,7 +228,7 @@ uv run pytest tests/unit/services/vault/test_navigator.py -v --cov=ex04.services
 
 ---
 
-#### T4.06 — Vault Service: Note Manager
+### T4.06 — Vault Service: Note Manager
 
 | Attribute | Value |
 |---|---|
@@ -241,9 +253,7 @@ uv run pytest tests/unit/services/vault/test_note_manager.py -v --cov=ex04.servi
 
 ---
 
-### Agent Service (T4.07–T4.15)
-
-#### T4.07 — Agent Service: State Definition
+### T4.07 — Agent Service: State Definition
 
 | Attribute | Value |
 |---|---|
@@ -267,7 +277,7 @@ uv run python -c "from ex04.services.agent.state import AgentState, Suspect; pri
 
 ---
 
-#### T4.08 — Agent Service: Workflow Builder
+### T4.08 — Agent Service: Workflow Builder
 
 | Attribute | Value |
 |---|---|
@@ -295,7 +305,7 @@ uv run pytest tests/unit/services/agent/test_workflow.py -v --cov=ex04.services.
 
 ---
 
-#### T4.09 — Agent Service: Knowledge Load Node
+### T4.09 — Agent Service: Knowledge Load Node
 
 | Attribute | Value |
 |---|---|
@@ -319,7 +329,7 @@ uv run pytest tests/unit/services/agent/nodes/test_knowledge.py -v
 
 ---
 
-#### T4.10 — Agent Service: Bug Analysis Node
+### T4.10 — Agent Service: Bug Analysis Node
 
 | Attribute | Value |
 |---|---|
@@ -345,7 +355,7 @@ uv run pytest tests/unit/services/agent/nodes/test_analysis.py -v
 
 ---
 
-#### T4.11 — Agent Service: Suspect Ranking Node
+### T4.11 — Agent Service: Suspect Ranking Node
 
 | Attribute | Value |
 |---|---|
@@ -369,7 +379,7 @@ uv run pytest tests/unit/services/agent/nodes/test_suspect.py -v
 
 ---
 
-#### T4.12 — Agent Service: Code Inspection Node
+### T4.12 — Agent Service: Code Inspection Node
 
 | Attribute | Value |
 |---|---|
@@ -394,7 +404,7 @@ uv run pytest tests/unit/services/agent/nodes/test_inspect.py -v
 
 ---
 
-#### T4.13 — Agent Service: Root Cause Node
+### T4.13 — Agent Service: Root Cause Node
 
 | Attribute | Value |
 |---|---|
@@ -419,7 +429,7 @@ uv run pytest tests/unit/services/agent/nodes/test_rootcause.py -v
 
 ---
 
-#### T4.14 — Agent Service: Fix Generation Node
+### T4.14 — Agent Service: Fix Generation Node
 
 | Attribute | Value |
 |---|---|
@@ -446,7 +456,7 @@ uv run pytest tests/unit/services/agent/nodes/test_fix.py -v
 
 ---
 
-#### T4.15 — Agent Service: Verification Node
+### T4.15 — Agent Service: Verification Node
 
 | Attribute | Value |
 |---|---|
@@ -471,9 +481,7 @@ uv run pytest tests/unit/services/agent/nodes/test_verify.py -v
 
 ---
 
-### Analysis Service (T4.16–T4.18)
-
-#### T4.16 — Analysis Service: Reverse Engineer
+### T4.16 — Analysis Service: Reverse Engineer
 
 | Attribute | Value |
 |---|---|
@@ -498,7 +506,7 @@ uv run pytest tests/unit/services/analysis/test_reverse_engineer.py -v --cov=ex0
 
 ---
 
-#### T4.17 — Analysis Service: Diagram Generator
+### T4.17 — Analysis Service: Diagram Generator
 
 | Attribute | Value |
 |---|---|
@@ -522,7 +530,7 @@ uv run pytest tests/unit/services/analysis/test_diagram_gen.py -v
 
 ---
 
-#### T4.18 — Analysis Service: Bug Reporter
+### T4.18 — Analysis Service: Bug Reporter
 
 | Attribute | Value |
 |---|---|
@@ -546,4 +554,30 @@ uv run pytest tests/unit/services/analysis/test_bug_report.py -v
 
 ---
 
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §5.
+### T4.20 — Multi-Signal Weakness Detector
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P1 |
+| **PLAN Reference** | [PLAN §3.6 Analysis Service] |
+| **PRD Reference** | [PRD FR-7.5], [PRD-EXT] |
+| **Estimate** | 90 min |
+
+**Goal**: Extend the current orphan/ranking analysis into a dedicated weakness detector with typed findings and pure signal functions.
+
+**Definition of Done**:
+
+- [ ] Add `WeaknessFinding` type with tag, severity, evidence anchors, and source-validation fields
+- [ ] Add pure signal functions for high-degree nodes, isolated clusters, ambiguous/low-confidence edges, broken source paths, and semantic duplicates
+- [ ] Add `WeaknessDetector.detect(graph_data)` orchestration and deterministic ranking
+- [ ] Expose the detector through `Ex04SDK`
+- [ ] Unit tests cover each signal, ranking order, empty graph, and missing source anchors
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/analysis/test_weakness_detector.py -v
+```
+
+---

@@ -1,10 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 8. API Contract
 
-[← Back to Home](./Home.md) | [Prev: UML Activity Diagram](./07-UML-Activity-Diagram.md) | [Next: Configuration Schema →](./09-Configuration-Schema.md)
+[Back to Home](./Home.md)
 
----
-
-## 8.1 SDK Public API
+### 8.1 SDK Public API
 
 All external consumers interact exclusively through `Ex04SDK`:
 
@@ -12,17 +12,25 @@ All external consumers interact exclusively through `Ex04SDK`:
 # src/ex04/sdk/sdk.py
 
 class Ex04SDK:
-    """Single entry point for all EX04 operations."""
+    """
+    Single entry point for all EX04 operations.
+
+    Orchestrates graph extraction, vault building, agent investigation,
+    reverse engineering, and token comparison.
+
+    Usage:
+        sdk = Ex04SDK.from_config("config/setup.json")
+        result = sdk.full_pipeline("graph-home/.graphify/repos/andela/buggy-python")
+    """
 
     @classmethod
     def from_config(cls, config_path: str) -> "Ex04SDK": ...
-    # Reads config/setup.json; concrete wiring in sdk/_wiring.py.
 
     def run_graphify(self, target_path: str) -> GraphData: ...
-    # Extract + parse graph. [PRD FR-1.1]
+    """Run Grphify on target codebase. [PRD FR-1.1]"""
 
     def build_vault(self, graph_data: GraphData) -> dict[str, Path]: ...
-    # Build Obsidian vault notes. [PRD FR-2.1-2.4]
+    """Build Obsidian vault from graph data. [PRD FR-2.1-2.4]"""
 
     def investigate_bug(
         self,
@@ -30,7 +38,7 @@ class Ex04SDK:
         graph_path: Path | None = None,
         vault_path: Path | None = None,
     ) -> InvestigationResult: ...
-    # LangGraph debugging workflow. [PRD FR-4.1-4.6]
+    """Run LangGraph debugging workflow. [PRD FR-4.1-4.6]"""
 
     def run_comparison(
         self,
@@ -50,7 +58,7 @@ class Ex04SDK:
     # Validates target_path exists and is a directory. Used by CLI 'compare'.
 
     def reverse_engineer(self, target_path: str) -> str: ...
-    # Architectural docs from graph. [PRD FR-3.1-3.3]
+    # Extract architectural and OOP schemas. [PRD FR-3.1-3.3]
 
     def generate_report(self, investigation: InvestigationResult) -> str: ...
     # Structured Markdown bug report.
@@ -63,10 +71,9 @@ class Ex04SDK:
 
     def full_pipeline(self, target_path: str, bug_report: str) -> PipelineResult: ...
     # Complete pipeline: graphify → vault → investigate → compare (real sources) → report.
-    # Discovers real Python source files deterministically; passes vault dir to comparison.
 ```
 
-## 8.2 CLI Command Syntax
+### 8.2 CLI Command Syntax
 
 ```bash
 python -m ex04 [--config CONFIG] <command> [args]
@@ -88,7 +95,7 @@ python -m ex04 pipeline <target_path> "<bug_report>"
 
 Exit codes: 0 = success, 1 = unexpected error, 2 = file not found, 3 = not implemented.
 
-## 8.3 Provider Interface Contract
+### 8.3 Provider Interface Contract
 
 ```python
 # src/ex04/providers/interface.py
@@ -118,5 +125,3 @@ class ProviderResponse:
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: UML Activity Diagram](./07-UML-Activity-Diagram.md) | [Next: Configuration Schema →](./09-Configuration-Schema.md)

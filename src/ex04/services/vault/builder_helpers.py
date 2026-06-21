@@ -1,11 +1,4 @@
-"""Vault Builder helpers — markdown content generation utilities.
-
-Extracted from builder.py to keep the main module under 150 lines.
-Provides functions for generating entity notes, index, and hot area
-markdown content for Obsidian vaults.
-
-Implementation: **Phase 4** (T4.04, extracted)
-"""
+"""Vault Builder markdown rendering helpers."""
 
 from __future__ import annotations
 
@@ -15,32 +8,29 @@ from ex04.services.vault.sanitize import safe_name, yaml_double_quote
 from ex04.shared.types import Community, Entity, GraphData
 
 
+def _note_link(name: str, label: str | None = None) -> str:
+    text = label or name
+    return f"[[notes/{safe_name(name)}|{text}]]"
+
+
 def build_entity_content(
     entity: Entity,
     relations: dict[str, list[str]],
     entity_names: set[str],
 ) -> str:
-    """Build markdown content for a single entity note.
-
-    Args:
-        entity: The entity to write a note for.
-        relations: Map of entity names to related entity names.
-        entity_names: Set of all entity names for wikilink resolution.
-
-    Returns:
-        Markdown content string for the entity note.
-    """
-    lines: list[str] = []
-    lines.append("---")
-    lines.append(f"title: {yaml_double_quote(entity.name)}")
-    lines.append(f"tags: [entity, {entity.kind}]")
-    lines.append(f"date: {datetime.now().strftime('%Y-%m-%d')}")
-    lines.append("---")
-    lines.append("")
-    lines.append(f"# {entity.name}")
-    lines.append("")
-    lines.append("## Properties")
-    lines.append(f"- **Kind**: {entity.kind}")
+    """Build markdown content for a single entity note."""
+    lines = [
+        "---",
+        f"title: {yaml_double_quote(entity.name)}",
+        f"tags: [entity, {entity.kind}]",
+        f"date: {datetime.now().strftime('%Y-%m-%d')}",
+        "---",
+        "",
+        f"# {entity.name}",
+        "",
+        "## Properties",
+        f"- **Kind**: {entity.kind}",
+    ]
     if entity.file_path:
         lines.append(f"- **File**: {entity.file_path}")
     if entity.line_range != (0, 0):
@@ -50,95 +40,79 @@ def build_entity_content(
 
     related = relations.get(entity.name, [])
     if related:
-        lines.append("## Related")
-        for target in related:
-            if target in entity_names:
-                lines.append(f"- [[{safe_name(target)}]]")
-        lines.append("")
+        lines.extend(["## Related", *(_related_links(related, entity_names)), ""])
 
     return "\n".join(lines)
 
 
+def _related_links(related: list[str], entity_names: set[str]) -> list[str]:
+    return [f"- [[{safe_name(target)}]]" for target in related if target in entity_names]
+
+
 def build_index_content(graph_data: GraphData) -> str:
-    """Build markdown content for the vault index.md.
-
-    Args:
-        graph_data: Graph data for generating navigation.
-
-    Returns:
-        Markdown content string for the index.
-    """
-    lines: list[str] = []
-    lines.append("# Graph Index")
-    lines.append("")
-    lines.append("Auto-generated from graph analysis.")
-    lines.append("")
-
-    lines.append("## Entities")
-    for entity in graph_data.entities:
-        lines.append(f"- [[notes/{safe_name(entity.name)}|{entity.name}]] ({entity.kind})")
-    lines.append("")
+    """Build markdown content for the vault index.md."""
+    lines = [
+        "# Graph Index",
+        "",
+        "Auto-generated from graph analysis.",
+        "",
+        "## Entities",
+        *(f"- {_note_link(entity.name)} ({entity.kind})" for entity in graph_data.entities),
+        "",
+    ]
 
     if graph_data.relationships:
-        lines.append("## Relationships")
-        for rel in graph_data.relationships:
-            lines.append(f"- {rel.source} --[{rel.type}]--> {rel.target}")
-        lines.append("")
+        rel_lines = [
+            f"- {rel.source} --[{rel.type}]--> {rel.target}"
+            for rel in graph_data.relationships
+        ]
+        lines.extend(
+            [
+                "## Relationships",
+                *rel_lines,
+                "",
+            ]
+        )
 
     if graph_data.communities:
-        lines.append("## Communities")
-        for comm in graph_data.communities:
-            lines.extend(_build_community_section(comm))
-        lines.append("")
+        community_lines = [
+            line
+            for comm in graph_data.communities
+            for line in _build_community_section(comm)
+        ]
+        lines.extend(["## Communities", *community_lines, ""])
 
     return "\n".join(lines)
 
 
 def _build_community_section(comm: Community) -> list[str]:
-    """Build markdown lines for a single community section.
-
-    Args:
-        comm: The community to render.
-
-    Returns:
-        List of markdown lines for this community.
-    """
-    lines: list[str] = []
-    lines.append(f"### {comm.name}")
-    for ent in comm.entities:
-        lines.append(f"- [[notes/{safe_name(ent)}|{ent}]]")
-    lines.append("")
-    return lines
+    """Build markdown lines for a single community section."""
+    return [f"### {comm.name}", *[f"- {_note_link(ent)}" for ent in comm.entities], ""]
 
 
 def build_hot_content(graph_data: GraphData) -> str:
-    """Build markdown content for the vault hot.md.
-
-    Args:
-        graph_data: Graph data for generating hot area content.
-
-    Returns:
-        Markdown content string for the hot area.
-    """
-    lines: list[str] = []
-    lines.append("# Hot Area")
-    lines.append("")
-    lines.append("Auto-generated bug focus area.")
-    lines.append("")
+    """Build markdown content for the vault hot.md."""
+    lines = ["# Hot Area", "", "Auto-generated bug focus area.", ""]
 
     if graph_data.communities:
         largest = max(graph_data.communities, key=lambda c: c.size)
-        lines.append(f"## Primary Focus: {largest.name}")
-        lines.append("Entities in this community:")
-        for ent in largest.entities:
-            lines.append(f"- [[notes/{safe_name(ent)}|{ent}]]")
-        lines.append("")
+        lines.extend(
+            [
+                f"## Primary Focus: {largest.name}",
+                "Entities in this community:",
+                *[f"- {_note_link(ent)}" for ent in largest.entities],
+                "",
+            ]
+        )
 
     file_entities = [e for e in graph_data.entities if e.kind == "file"]
     if file_entities:
-        lines.append("## Source Files")
-        for ent in file_entities:
-            lines.append(f"- [[notes/{safe_name(ent.name)}|{ent.name}]]")
-        lines.append("")
+        lines.extend(
+            [
+                "## Source Files",
+                *(f"- {_note_link(entity.name)}" for entity in file_entities),
+                "",
+            ]
+        )
 
     return "\n".join(lines)

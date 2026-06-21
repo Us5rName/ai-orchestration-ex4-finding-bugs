@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ex04.shared.graph_ops import connected_components, degree_map
 from ex04.shared.types import GraphData
 
 
@@ -74,29 +75,19 @@ class OrphanDetector:
                 threshold_used=min_connections,
             )
 
-        degree: dict[str, int] = {}
-        for rel in graph_data.relationships:
-            degree[rel.source] = degree.get(rel.source, 0) + 1
-            degree[rel.target] = degree.get(rel.target, 0) + 1
+        degree = degree_map(graph_data.relationships)
 
-        orphans: list[OrphanNode] = []
-        for entity in graph_data.entities:
-            conn = degree.get(entity.name, 0)
-            if conn <= min_connections:
-                anchor = (
-                    f"{entity.file_path}:{entity.line_range[0]}-{entity.line_range[1]}"
-                    if entity.file_path
-                    else "unknown"
-                )
-                orphans.append(
-                    OrphanNode(
-                        name=entity.name,
-                        kind=entity.kind,
-                        file_path=entity.file_path,
-                        connection_count=conn,
-                        source_anchor=anchor,
-                    )
-                )
+        orphans = [
+            OrphanNode(
+                name=entity.name,
+                kind=entity.kind,
+                file_path=entity.file_path,
+                connection_count=conn,
+                source_anchor=_source_anchor(entity.file_path, entity.line_range),
+            )
+            for entity in graph_data.entities
+            if (conn := degree.get(entity.name, 0)) <= min_connections
+        ]
 
         weak = self._find_weak_components(graph_data)
         report = OrphanReport(
@@ -115,31 +106,17 @@ class OrphanDetector:
 
     def _find_weak_components(self, graph_data: GraphData) -> list[WeakComponent]:
         """BFS connected-component detection (undirected)."""
-        adjacency: dict[str, set[str]] = {}
-        all_nodes = {e.name for e in graph_data.entities}
-        for rel in graph_data.relationships:
-            adjacency.setdefault(rel.source, set()).add(rel.target)
-            adjacency.setdefault(rel.target, set()).add(rel.source)
-            all_nodes.update([rel.source, rel.target])
+        return [
+            WeakComponent(component_id, members, len(members))
+            for component_id, members in enumerate(
+                connected_components(graph_data.entities, graph_data.relationships),
+                start=1,
+            )
+            if len(members) <= self._WEAK_COMPONENT_MAX_SIZE
+        ]
 
-        visited: set[str] = set()
-        components: list[WeakComponent] = []
-        cid = 0
-        for node in sorted(all_nodes):
-            if node in visited:
-                continue
-            cid += 1
-            members: list[str] = []
-            queue = [node]
-            while queue:
-                cur = queue.pop(0)
-                if cur in visited:
-                    continue
-                visited.add(cur)
-                members.append(cur)
-                for nb in sorted(adjacency.get(cur, set())):
-                    if nb not in visited:
-                        queue.append(nb)
-            if len(members) <= self._WEAK_COMPONENT_MAX_SIZE:
-                components.append(WeakComponent(cid, members, len(members)))
-        return components
+
+def _source_anchor(file_path: str, line_range: tuple[int, int]) -> str:
+    if not file_path:
+        return "unknown"
+    return f"{file_path}:{line_range[0]}-{line_range[1]}"

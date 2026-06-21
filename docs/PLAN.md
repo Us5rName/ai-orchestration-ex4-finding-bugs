@@ -541,6 +541,7 @@ Phase 6-deferred `ComparisonService` facade from `config/setup.json`.
 | `runner.py` | Execute Grphify CLI on target codebase |
 | `parser.py` | Parse `graph.json` into structured `GraphData` objects |
 | `analyzer.py` | Compute centrality, community detection, God Node identification |
+| `reader.py` | Planned read-only typed query facade over parsed `GraphData` |
 
 **Input**: Target codebase path (`str`), Grphify configuration (`dict`).
 
@@ -565,6 +566,15 @@ class GraphAnalyzer:
     def find_god_nodes(self, graph: GraphData, min_degree: int = 2) -> list[str]: ...
     def rank_by_centrality(self, graph: GraphData, ref_node: str) -> list[tuple[str, float]]: ...
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
+
+# reader.py (planned)
+class GraphReader:
+    """Read-only typed query facade over parsed graph data."""
+    def node(self, node_id: str) -> Entity: ...
+    def all_nodes(self) -> list[Entity]: ...
+    def edges_of(self, node_id: str) -> list[Relationship]: ...
+    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    def communities(self) -> dict[str, list[Entity]]: ...
 ```
 
 ### 3.4 Vault Service — Obsidian Management
@@ -633,6 +643,7 @@ class NoteManager:
 | `nodes/rootcause.py` | Root Cause node — determine exact bug origin |
 | `nodes/fix.py` | Fix Generation node — propose and apply code fix |
 | `nodes/verify.py` | Verification node — run tests to confirm fix |
+| `nodes/common.py` | Shared node helpers for context parsing and planned call/record parity |
 | `state.py` | Define the LangGraph state schema |
 
 **Input**: Bug report (`str`), graph data (`GraphData`), vault path (`Path`).
@@ -700,6 +711,10 @@ class FixGenerationNode:
 class VerificationNode:
     """Run tests to confirm fix, increment iteration counter."""
     def __call__(self, state: AgentState) -> AgentState: ...
+
+# nodes/common.py (planned extension)
+def call_with_gatekeeper(...) -> ProviderResponse: ...
+def token_record(...) -> TokenMetrics: ...
 ```
 
 ### 3.6 Analysis Service — Reverse Engineering & Bug Reporting
@@ -719,6 +734,7 @@ class VerificationNode:
 | `diagram_gen.py` | Generate Mermaid diagrams (block diagram, OOP schema) |
 | `bug_report.py` | Generate structured bug analysis reports |
 | `orphan_detector.py` | Find graph entities with no incoming edges; generate doc stubs (FR-7.5) |
+| `weakness_detector.py` | Planned multi-signal weakness detector over graph and source evidence |
 
 **Input**: Graph data, code snippets, investigation results.
 
@@ -746,6 +762,11 @@ class OrphanDetector:
     def find_orphans(self, graph: GraphData) -> list[Entity]: ...
     def generate_stub(self, entity: Entity) -> str: ...
     def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
+
+# weakness_detector.py (planned)
+class WeaknessDetector:
+    """Run deterministic graph/source weakness signals and rank findings."""
+    def detect(self, graph_data: GraphData) -> list[WeaknessFinding]: ...
 ```
 
 ### 3.7 Comparison Service — Token Savings Proof
@@ -765,6 +786,7 @@ class OrphanDetector:
 | `graph_guided_runner.py` | Execute graph-guided approach (via vault + graph) |
 | `metrics.py` | Calculate token savings, file reads, iteration counts |
 | `report_gen.py` | Generate comparison report with tables and charts |
+| `graph_diff.py` | Planned pre/post graph snapshot diff for comparison reports |
 
 **Input**: Bug report, target codebase path, graph data, vault path.
 
@@ -788,6 +810,10 @@ class MetricsCalculator:
 class ReportGenerator:
     """Generate comparison report."""
     def generate(self, metrics: ComparisonMetrics) -> str: ...
+
+# graph_diff.py (planned)
+def diff_graphs(pre: GraphData, post: GraphData) -> GraphDiff: ...
+def render_graph_diff(diff: GraphDiff) -> str: ...
 ```
 
 ### 3.8 Provider Layer — Provider-Agnostic LLM Abstraction
@@ -861,6 +887,7 @@ class ProviderFactory:
 | `types.py` | Re-exports all shared types from sub-modules |
 | `types_metrics.py` | TokenMetrics, RunMetrics, ComparisonMetrics, ComparisonReport |
 | `types_results.py` | ProviderResponse, Suspect, InvestigationResult, PipelineResult |
+| `graph_ops.py` | Shared degree and connected-component primitives |
 
 ```python
 # gatekeeper.py
@@ -995,6 +1022,30 @@ class GraphData:
     entities: list[Entity] = field(default_factory=list)
     relationships: list[Relationship] = field(default_factory=list)
     communities: list[Community] = field(default_factory=list)
+```
+
+---
+
+### 3.10 Self-Grade Service — Reproducible Quality Gate
+
+| Attribute | Value |
+|---|---|
+| **Path** | `src/ex04/services/self_grade/` |
+| **Responsibility** | Assemble structural checks, configured gates, and rubric scoring |
+| **PRD Mapping** | [PRD §12 Final Checklist], [PRD NFR-7] |
+
+**Planned sub-modules**:
+
+| File | Responsibility |
+|---|---|
+| `models.py` | Typed check result and grade report dataclasses |
+| `checks.py` | Deterministic structural checks |
+| `grader.py` | Gate orchestration and rubric score calculation |
+
+```python
+class SelfGradeService:
+    """Run configured self-assessment gates and return a typed grade report."""
+    def grade(self) -> GradeReport: ...
 ```
 
 ---
@@ -1672,7 +1723,42 @@ Maps every PRD requirement to its architectural location:
 
 ---
 
-## 12. Revision History
+## 12. Repair Inventory (Phase 6–8 Architectural Repairs)
+
+Stable repair task IDs for post-submission truthfulness repairs to the comparison-service
+architecture. Source: `/plan` session 2026-06-21 ([ASSIGNMENT.md §Deliverables]).
+
+| Task ID | Architecture Area | Design Change | Source File |
+|---|---|---|---|
+| P6-R01 | Experiment Contracts | Add `ComparisonRequest` with target identity, budgets, patch/gate/artifact config | `shared/types_request.py` (new) |
+| P6-R02 | Experiment Contracts | Add `StructuredEvidence` + `InvestigationRunRecord` for typed evidence trail | `shared/types_investigation.py` (new) |
+| P6-R03 | Comparison Service | Replace `NaiveRunner` full-corpus dump with bounded navigation (budget enforcement) | `comparison/naive_runner.py` |
+| P6-R04 | Comparison Service | Replace degree-only ranking with multi-signal (bug-report terms + degree + path + type); extract `ranking.py` | `comparison/ranking.py` (new), `comparison/graph_guided_runner.py` |
+| P6-R05 | Comparison Service | Add `FairnessEnforcer` pre-call invariant check + config hash; wire into `ComparisonService` | `comparison/fairness.py` (new), `comparison/service.py` |
+| P6-R06 | Metrics | Remove `max(0.0, ...)` clamp in `MetricsCalculator`; wire `SignedMetricsCalculator` as active path | `comparison/metrics.py`, `comparison/service.py` |
+| P7-R01 | Correctness Gate | Implement real `_check_prohibited_files`, `_check_tests_not_deleted`, `_check_assertions_not_weakened` (remove defaulted-True policy fields) | `comparison/correctness_gate.py` |
+| P7-R02 | Configuration | Add versioned `config/pricing.json`; wire cost lookup into `ComparisonService` | `config/pricing.json` (new) |
+| P7-R03 | Manifests | Add `shared_config_hash`, `strategy_hash`, schema/pricing/repo_commit version fields to `RunManifest` | `shared/types_experiment.py` |
+| P8-R01 | CI | Use SHA-pinned Node 24-compatible actions (`actions/checkout` v5.0.0, `astral-sh/setup-uv` v8.2.0); add mypy step; make docs-sync fatal | `.github/workflows/ci.yml` |
+| P8-R02 | Validation | Add manifest↔run linkage, provenance key check, direct-provider-import boundary, wiki-dir presence checks | `scripts/validate_repo.py` |
+| P8-R03 | Documentation | Add stable repair task IDs to TODO/PLAN before implementation | `docs/TODO.md`, `docs/PLAN.md` |
+| P6-R10 | Contract | Complete and validate the canonical comparison request/result contract | `src/ex04/shared/types_request.py`, `src/ex04/shared/types_results.py` |
+| P6-R11 | Budgets/Trace | Add shared cumulative budget ledger and immutable investigation trace recorder | `src/ex04/services/comparison/budget.py`, `src/ex04/services/comparison/trace.py` |
+| P6-R12 | Runners | Migrate naive and graph-guided runners to the canonical bounded request/result path | `src/ex04/services/comparison/naive_runner.py`, `src/ex04/services/comparison/graph_guided_runner.py` |
+| P6-R13 | Orchestration | Rebuild production comparison orchestration and pre-call fairness enforcement | `src/ex04/services/comparison/service.py`, `src/ex04/services/comparison/fairness.py` |
+| P6-R14 | SDK/CLI | Repair SDK and CLI delegation boundaries so public services own orchestration | `src/ex04/sdk/`, `src/ex04/__main__.py` |
+| P7-R06 | Correctness Gate | Complete deterministic gate execution, policies, reports, and verdict semantics | `src/ex04/services/comparison/correctness_gate.py`, `src/ex04/services/comparison/gate_*` |
+| P7-R07 | Artifacts/Reports | Integrate signed metrics, manifests, immutable artifacts, and production reports | `src/ex04/services/comparison/report_gen.py`, `src/ex04/shared/artifact_store.py` |
+| P8-R10 | Regression/CI | Add production-path regression tests, validators, and CI action repairs | `tests/`, `scripts/validate_repo.py`, `.github/workflows/ci.yml` |
+| P8-R11 | Documentation/Verification | Reconcile canonical documentation, run clean-clone verification, and update PR evidence | `docs/`, `README.md`, verification reports |
+| P8-R04 | Documentation | Update README test count, evidence matrix rows, PROMPTS.md disclosure | `README.md`, `docs/EVIDENCE_MATRIX.md`, `docs/PROMPTS.md` |
+| P8-R05 | Provenance | Pin real target commit, compute deterministic snapshot hash, run Graphify | `artifacts/pre_fix/provenance.json` |
+
+**ADR Note**: All P6-R changes preserve existing public interfaces (`ExperimentConfig`, `RunMetrics`, `ComparisonReport`) for backward compatibility. New types are additive ([ADR-005 SDK-First Design]).
+
+---
+
+## 13. Revision History
 
 | Version | Date | Change |
 |---|---|---|
@@ -1684,3 +1770,7 @@ Maps every PRD requirement to its architectural location:
 | 1.05 | 2026-06-20 | Add concrete service facade files to §3.2 and §10 project structure, and document `Ex04SDK.from_config()` as the runtime wiring point for Phase 4 facades with Comparison deferred to Phase 6. Traceability: [PRD NFR-5], [PLAN §3.1 Contract-First Rule], [PLAN §3.2 SDK Module]. |
 | 1.06 | 2026-06-20 | Phase 4/5 integration: document compare_target(), generate_report(), identify_patterns(); add _comparison_inputs.py helper; document cumulative files_read and fix_diff in AgentState; add architecture boundary rules table; update CLI command syntax in §8; update AnalysisServiceInterface.identify_patterns(). Traceability: [PRD FR-6.1], [PLAN §3.2 SDK Module], [PLAN §3.5 Agent Service]. |
 | 1.07 | 2026-06-20 | Add OrphanDetector (FR-7.5) API: `orphan_detector.py` to Analysis Service (§3.6), `OrphanReport` dataclass (§3.9), `detect_orphans()` to Ex04SDK (§3.2, §8.1), OrphanDetector class to OOP Schema (§6) (Traceability: [PRD FR-7.5], [TODO T6.05]) |
+| 1.09 | 2026-06-21 | Register P6-R10 through P8-R11 production-path repairs for the final controlled-experiment implementation. |
+| 1.08 | 2026-06-21 | Add §12 Repair Inventory with 14 stable P6-R/P7-R/P8-R task IDs covering post-submission architectural repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
+| 1.10 | 2026-06-21 | Add planned architecture entries for typed graph reader, weakness detector, agent workflow parity helpers, graph-diff reporting, shared graph operations, and self-grade service. |
+| 1.10 | 2026-06-21 | Reconcile production comparison semantics: canonical request, shared budgets/traces, grounded-candidate vs verified status, full config hashes, strict correctness-gate verdicts, and immutable report/manifest layout. |

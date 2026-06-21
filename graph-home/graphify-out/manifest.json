@@ -1,0 +1,22 @@
+{
+  "__init__.py": {
+    "mtime": 1782036893.0339046,
+    "ast_hash": "2ba9b967f14be16cd8c8cbe57a7f5c4e",
+    "semantic_hash": "2ba9b967f14be16cd8c8cbe57a7f5c4e"
+  },
+  "foobar.py": {
+    "mtime": 1782036893.0345774,
+    "ast_hash": "4ba81f0f9c1d54444e41e389eb5d05fd",
+    "semantic_hash": "4ba81f0f9c1d54444e41e389eb5d05fd"
+  },
+  "io.py": {
+    "mtime": 1782036893.0345774,
+    "ast_hash": "997faa3939651fcc76fc01df87e25db5",
+    "semantic_hash": "997faa3939651fcc76fc01df87e25db5"
+  },
+  "loop.py": {
+    "mtime": 1782036893.0345774,
+    "ast_hash": "2f835a45e5d93cf4e0d0fa737c1f9b5a",
+    "semantic_hash": "2f835a45e5d93cf4e0d0fa737c1f9b5a"
+  }
+}

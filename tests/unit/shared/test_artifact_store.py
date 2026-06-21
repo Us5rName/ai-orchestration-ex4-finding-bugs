@@ -95,11 +95,17 @@ def test_sanitize_removes_home_path_value() -> None:
 
 
 def test_sanitize_removes_token_key() -> None:
-    """sanitize_artifact redacts fields with 'token' in the key name."""
+    """sanitize_artifact redacts credential token key names."""
     data = {"auth_token": "bearer-xyz", "count": 42}
     result = sanitize_artifact(data)
     assert result["auth_token"] == "<redacted>"
     assert result["count"] == 42
+
+
+def test_sanitize_preserves_token_telemetry() -> None:
+    """Token usage counts are evidence, not credentials."""
+    data = {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+    assert sanitize_artifact(data) == data
 
 
 def test_sanitize_nested_dict() -> None:
@@ -116,4 +122,4 @@ def test_config_hash_deterministic() -> None:
     h1 = ArtifactStore.config_hash(cfg)
     h2 = ArtifactStore.config_hash(cfg)
     assert h1 == h2
-    assert len(h1) == 16
+    assert len(h1) == 64

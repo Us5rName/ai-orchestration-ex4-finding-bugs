@@ -1,26 +1,16 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 4. Phase 3 — Provider Layer
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Provider-agnostic LLM abstraction. Fully testable with mocks — no real API calls needed for unit tests.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T3.01 — Implement Provider Interface | See below |
-| T3.02 — Implement OpenAI Provider | See below |
-| T3.03 — Implement Anthropic Provider | See below |
-| T3.04 — Implement Provider Factory | See below |
-| T3.05 — Provider Layer `__init__.py` | See below |
-
----
 
 ### T3.01 — Implement Provider Interface
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — interface.py], [ADR-002] |
 | **PRD Reference** | [PRD §1.3] no vendor lock-in |
@@ -45,7 +35,7 @@ uv run python -c "from ex04.providers.interface import ProviderInterface, Provid
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — openai_provider.py] |
 | **Estimate** | 60 min |
@@ -72,7 +62,7 @@ uv run pytest tests/unit/providers/test_openai_provider.py -v --cov=ex04.provide
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — anthropic_provider.py] |
 | **Estimate** | 60 min |
@@ -99,7 +89,7 @@ uv run pytest tests/unit/providers/test_anthropic_provider.py -v --cov=ex04.prov
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — factory.py] |
 | **Estimate** | 30 min |
@@ -125,7 +115,7 @@ uv run pytest tests/unit/providers/test_factory.py -v --cov=ex04.providers.facto
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer] |
 | **Estimate** | 5 min |
@@ -137,5 +127,3 @@ uv run python -c "from ex04.providers import ProviderInterface, ProviderFactory;
 ```
 
 ---
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §4.

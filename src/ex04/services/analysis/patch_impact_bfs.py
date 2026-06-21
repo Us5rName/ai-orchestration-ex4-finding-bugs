@@ -5,35 +5,38 @@ Extracted to keep patch_impact.py within the 150-line limit.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
+
 from ex04.services.analysis.patch_impact_types import ImpactedNode
+from ex04.shared.types import Entity, Relationship
 
 
-def build_reverse_edges(relationships: list[object]) -> dict[str, list[str]]:
-    """Build reverse-dependency map: target → list of sources."""
+def build_reverse_edges(relationships: Sequence[Relationship]) -> dict[str, list[str]]:
+    """Build reverse-dependency map: target -> list of sources."""
     rev: dict[str, list[str]] = {}
     for rel in relationships:
-        rev.setdefault(rel.target, []).append(rel.source)  # type: ignore[attr-defined]
+        rev.setdefault(rel.target, []).append(rel.source)
     return rev
 
 
 def bfs_impact(
     start: str,
     rev: dict[str, list[str]],
-    entity_map: dict[str, object],
+    entity_map: Mapping[str, Entity],
     max_depth: int,
     direct: list[ImpactedNode],
     transitive: list[ImpactedNode],
     all_paths: list[list[str]],
 ) -> None:
     """BFS from start through reverse edges, collecting impact nodes."""
-    from ex04.shared.types import Entity
-
     visited = {start}
     queue: list[tuple[str, int, list[str]]] = [(start, 0, [start])]
     while queue:
         node, depth, path = queue.pop(0)
         for dependent in rev.get(node, []):
             if dependent in visited:
+                continue
+            if depth + 1 > max_depth:
                 continue
             visited.add(dependent)
             new_path = path + [dependent]

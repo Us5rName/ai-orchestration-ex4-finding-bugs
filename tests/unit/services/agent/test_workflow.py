@@ -6,7 +6,8 @@ configures the control flow edges including the retry loop.
 
 from unittest.mock import patch
 
-from ex04.services.agent.workflow import WorkflowBuilder
+from ex04.services.agent.deps import NodeDeps
+from ex04.services.agent.workflow import NODE_SEQUENCE, WorkflowBuilder, build_nodes
 
 
 class TestWorkflowBuilderBuild:
@@ -28,6 +29,10 @@ class TestWorkflowBuilderBuild:
             add_nodes_calls = mock_sg.return_value.add_node.call_count
             # 7 nodes: knowledge, analysis, suspect, inspect, rootcause, fix, verify
             assert add_nodes_calls == 7
+
+    def test_build_nodes_preserves_workflow_order(self) -> None:
+        """Node factory returns the same ordered workflow sequence."""
+        assert tuple(build_nodes(NodeDeps()).keys()) == NODE_SEQUENCE
 
     def test_build_adds_all_edges(self) -> None:
         """Test that build() adds all control flow edges."""

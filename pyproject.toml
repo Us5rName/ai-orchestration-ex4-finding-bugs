@@ -25,11 +25,19 @@ dev = [
     "ruff>=0.4.0",
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
+    "mypy>=2.1.0",
+    "matplotlib>=3.11.0",
+    "nbformat>=5.10.4",
+    "pre-commit>=4.6.0",
 ]
 
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+exclude = [
+    "artifacts/runs/*/target",
+    "graph-home/.graphify/repos",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]

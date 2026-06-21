@@ -69,7 +69,10 @@ def test_comparison_service_runs_both_modes(tmp_path: Path) -> None:
     assert "| Tokens |" in report.narrative
 
 
-def test_canonical_comparison_uses_distinct_fair_requests(tmp_path: Path) -> None:
+def test_canonical_comparison_uses_distinct_fair_requests(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
     source = tmp_path / "app.py"
     source.write_text("def bug(): pass\n", encoding="utf-8")
     graph = GraphData(entities=[Entity("bug", "function", "app.py", (1, 1))])

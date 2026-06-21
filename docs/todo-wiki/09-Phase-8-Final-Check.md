@@ -1,20 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 9. Phase 8 — Final Check
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Verify submission readiness.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T8.01 — Run Full Test Suite | See below |
-| T8.02 — Run Ruff Lint Check | See below |
-| T8.03 — Verify File Length Limits | See below |
-| T8.04 — Update README.md | See below |
-| T8.05 — Final Checklist | See below |
-
----
 
 ### T8.01 — Run Full Test Suite
 
@@ -43,7 +33,7 @@ uv run pytest --cov=ex04 --cov-report=term-missing --cov-report=html:coverage_ht
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-2] zero Ruff violations |
 | **Estimate** | 5 min |
@@ -64,7 +54,7 @@ uv run ruff check .
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-3] no file > 150 lines |
 | **Estimate** | 5 min |
@@ -82,7 +72,7 @@ find src -name "*.py" -exec wc -l {} \; | awk '$1 > 150 {print}'
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §8 README Requirements] |
 | **Estimate** | 60 min |
@@ -115,7 +105,7 @@ grep -c "##" README.md  # Should have multiple sections
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §12 Final Checklist] |
 | **Estimate** | 30 min |
@@ -135,4 +125,149 @@ grep -c "##" README.md  # Should have multiple sections
 
 ---
 
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §9.
+### T8.06 — CI Workflow
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD NFR-7] CI/CD |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `.github/workflows/ci.yml` runs ruff, mypy, pytest on push and PR
+- [x] Coverage gate ≥ 85% enforced in CI
+
+---
+
+### T8.07 — Prompt Registry
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §8 Deliverables] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] `docs/PROMPTS.md` contains 15 required prompt categories
+- [x] Each entry has: ID, title, phase, task, classification, inputs, outputs, constraints
+- [x] Traceability table present
+- [x] AI-use disclosure updated
+
+---
+
+### T8.08 — Evidence-First README
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §8 README Requirements] |
+| **Estimate** | 90 min |
+
+**Definition of Done**:
+
+- [x] README covers all required sections from PRD §8
+- [x] Requirement-to-evidence matrix present
+- [x] Every factual claim maps to code, test, or committed artifact
+- [x] Reproducible self-assessment included
+
+---
+
+### T8.09 — Mechanism PRDs
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD §5] |
+| **Estimate** | 60 min |
+
+**Definition of Done**:
+
+- [x] `docs/PRD_comparison_experiment.md` created
+- [x] `docs/PRD_graph_guided_investigation.md` created
+- [x] `docs/PRD_artifact_provenance.md` created
+- [x] `docs/PRD_extension_analysis.md` created
+
+---
+
+### T8.10 — Wiki Generation Scripts
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD §9 Repository Structure] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `scripts/generate_doc_wikis.py` regenerates wiki Home files from canonical docs
+- [x] `scripts/check_docs_sync.py` validates sync status
+- [x] Scripts are deterministic and idempotent
+
+---
+
+### T8.11 — Validation Scripts
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P1 |
+| **PRD Reference** | [PRD NFR-2, NFR-3, NFR-4] |
+| **Estimate** | 30 min |
+
+**Definition of Done**:
+
+- [x] `scripts/validate_repo.py` checks file sizes, hardcoded values, SDK/gatekeeper boundaries
+- [x] Script exits non-zero on violations
+
+---
+
+### T8.12 — Clean-Clone Verification
+
+| Attribute | Value |
+|---|---|
+| **Status** | Done |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §12 Final Checklist] |
+| **Estimate** | 20 min |
+
+**Definition of Done**:
+
+- [x] `reports/clean_clone_verification.md` committed with verified results
+- [x] Report includes: SHA, Python version, uv version, ruff, mypy, pytest, coverage
+
+---
+
+### T8.13 — Self-Grade Service
+
+| Attribute | Value |
+|---|---|
+| **Status** | Not Started |
+| **Priority** | P0 |
+| **PRD Reference** | [PRD §12 Final Checklist], [PRD NFR-7] |
+| **Estimate** | 90 min |
+
+**Goal**: Add a reproducible self-grade service that assembles structural checks, quality gates, and a rubric score into one typed report.
+
+**Definition of Done**:
+
+- [ ] Add `services/self_grade/` with typed check result and grade report models
+- [ ] Load rubric and gate commands from configuration
+- [ ] Run structural checks without provider credentials
+- [ ] Support injectable gate runner for tests and subprocess runner for production
+- [ ] Expose `Ex04SDK.self_grade()` and optional CLI command
+- [ ] Unit tests cover grade math, passing/failing checks, missing config, and injected gate runner behavior
+
+**Independent Verification**:
+
+```bash
+uv run pytest tests/unit/services/self_grade tests/unit/sdk/test_sdk.py -v
+```
+
+---

@@ -18,6 +18,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from pathlib import Path
+from typing import overload
 
 from ex04.shared.types import ComparisonReport, GraphData
 from ex04.shared.types_experiment import ComparisonOutcome
@@ -32,6 +33,16 @@ class ComparisonServiceInterface(ABC):
     mock-based testing.
     """
 
+    @overload
+    def run_comparison(
+        self, request: str, source_files: Sequence[Path],
+        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
+    ) -> ComparisonReport: ...
+    @overload
+    def run_comparison(
+        self, request: ComparisonRequest, source_files: Sequence[Path],
+        graph_data: GraphData | None = ..., vault_path: Path | None = ...,
+    ) -> ComparisonOutcome: ...
     @abstractmethod
     def run_comparison(
         self,

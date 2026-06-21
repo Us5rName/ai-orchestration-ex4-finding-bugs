@@ -1,0 +1,21 @@
+{
+  "evidence_class": "fixture",
+  "target_repo": "andela/buggy-python",
+  "target_identifier": "andela/buggy-python",
+  "target_commit": "887009334e17556880f62d58315f96c2b305aa05",
+  "commit_hash": "887009334e17556880f62d58315f96c2b305aa05",
+  "bug_introducing_commit": "d16606db6edf5688fb6deb0d312b10c6724bd1a3",
+  "snapshot_hash": "31243921d913c0b3bbd6e9cb51d7d3738312f5858ee94c9a02edff4b927f4343",
+  "acquisition_date": "2026-06-21",
+  "license": "No LICENSE file found in repository — public GitHub repository available at https://github.com/andela/buggy-python under its stated terms",
+  "excluded_paths": [".git", "__pycache__", "*.pyc", "node_modules"],
+  "generated_paths": ["snippets/graphify-out/graph.json", "snippets/graphify-out/.graphify_analysis.json"],
+  "selected_bug": "ImportError: cannot import name 'lambda_array' from 'snippets' — the snippets/__init__.py has all imports commented out except foo(). Additional bugs exist in loop.py (for i in 10 instead of range(10), dict instead of list, push vs append) and io.py (data(key) instead of data[key], sun() instead of sum(), length() instead of len(), !== instead of !=, loan.attribute instead of loan[attribute]).",
+  "reproduction_command": "python3 main.py",
+  "reproduction_output": "ImportError: cannot import name 'lambda_array' from 'snippets' (exit code 1)",
+  "graphify_command": "python -m graphify extract snippets",
+  "graphify_status": "SUCCESS — 6 code files extracted, 13 nodes, 11 edges, 3 communities (code-only corpus, no API key required)",
+  "graphify_graph_path": "artifacts/pre_fix/graphify-out/graph.json",
+  "vault_status": "FIXTURE — obsidian/ contains representative fixture notes, not live extraction output",
+  "note": "target_commit is the HEAD commit (8870093 Update README.md). The bugs were written in d16606db (write buggy code). Snapshot hash computed from all non-.git files via: find . -not -path '*/.git/*' -type f | sort | xargs sha256sum | sha256sum."
+}

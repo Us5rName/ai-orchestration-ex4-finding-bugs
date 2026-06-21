@@ -34,7 +34,7 @@ Out of scope: LLM provider billing details, Graphify internals, vault note forma
 | `source_files` | `list[Path]` | Discoverable Python files in target snapshot |
 | `graph_data` | `GraphData \| None` | Parsed Graphify output |
 | `vault_path` | `Path \| None` | Root of generated Obsidian vault |
-| `config` | `dict` | Shared experiment parameters (see below) |
+| `request` | `ComparisonRequest` | Canonical validated experiment contract |
 
 ---
 
@@ -42,9 +42,9 @@ Out of scope: LLM provider billing details, Graphify internals, vault note forma
 
 | Output | Type | Description |
 |---|---|---|
-| `ComparisonReport` | dataclass | Side-by-side metrics + narrative |
+| `ComparisonOutcome` | dataclass | Naive result, graph result, signed metrics, manifests, reports |
 | Run manifest JSON | file | Machine-readable ledger per run |
-| Comparison Markdown | file | Human-readable `reports/token_comparison.md` |
+| Comparison Markdown | file | Human-readable `artifacts/runs/<run-id>/reports/comparison.md` |
 
 ---
 
@@ -60,6 +60,7 @@ Both modes **must share** (validated at runtime and in tests):
 - Correctness gate logic
 - Output parser and result schema
 - Manifest schema
+- Full SHA-256 controlled configuration hash
 
 **Naive mode must not** use: graph rankings, vault notes, graph relationships, or graph-selected anchors.
 
@@ -73,6 +74,8 @@ Both modes **must share** (validated at runtime and in tests):
 - Token counts come from provider response metadata only; they are never estimated.
 - Unavailable telemetry fields are represented as `null` — never fabricated.
 - Negative savings (regression) are reported as-is; never clamped to zero.
+- Parsed structured output with valid anchors is only a `grounded_candidate`.
+- A diagnosis is `verified` only when the deterministic correctness gate passes.
 
 ---
 
@@ -97,10 +100,10 @@ Both modes **must share** (validated at runtime and in tests):
 
 ## Measurable Acceptance Criteria
 
-- [ ] `ComparisonService.run_comparison` returns a validated `ComparisonReport`.
+- [ ] `ComparisonService.run_comparison` returns a validated `ComparisonOutcome`.
 - [ ] Both modes accept identical configuration and bug report.
 - [ ] Fairness invariants are tested in `tests/unit/services/comparison/test_fairness.py`.
-- [ ] Reports saved to `reports/token_comparison.md`.
+- [ ] Reports saved to `artifacts/runs/<run-id>/reports/comparison.{json,md}`.
 - [ ] Run manifest saved to `artifacts/manifests/`.
 - [ ] Negative savings are preserved in the report.
 
@@ -119,13 +122,13 @@ Both modes **must share** (validated at runtime and in tests):
 
 - Unit tests: fairness-invariant validation, metrics edge cases (zero denominators, negatives).
 - Integration tests: end-to-end with mock provider confirming identical config injection.
-- Deterministic fixture tests: `ComparisonReport` round-trips through JSON serialization.
+- Deterministic fixture tests: `ComparisonOutcome` and reports round-trip through JSON serialization.
 
 ---
 
 ## Evidence Requirements
 
-- `reports/token_comparison.md` committed after first real or fixture-based run.
+- `artifacts/runs/<run-id>/reports/comparison.md` produced after a real or fixture-based run.
 - `artifacts/manifests/` contains at least one valid manifest JSON.
 - `tests/unit/services/comparison/test_fairness.py` passes with 0 failures.
 
@@ -136,3 +139,4 @@ Both modes **must share** (validated at runtime and in tests):
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 6 finalization |
+| 1.1 | 2026-06-21 | Align with `ComparisonRequest`/`ComparisonOutcome`, grounded/verified semantics, and run-scoped reports. |

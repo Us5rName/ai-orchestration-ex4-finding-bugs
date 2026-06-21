@@ -1,10 +1,10 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 2. C4 Model
 
-[← Back to Home](./Home.md) | [Prev: Architecture Overview](./01-Architecture-Overview.md) | [Next: Module Design →](./03-Module-Design.md)
+[Back to Home](./Home.md)
 
----
-
-## 2.1 C4 Context Diagram
+### 2.1 C4 Context Diagram
 
 Shows the system in relation to external actors and systems.
 
@@ -28,7 +28,7 @@ graph TD
 
 **Justification**: [PRD §4.1 In Scope] defines the system as analyzing `andela/buggy-python`, building Grphify graphs, managing Obsidian vaults, and calling LLM APIs. [PRD §1.3 Technology Choices] lists all five external systems.
 
-## 2.2 C4 Container Diagram
+### 2.2 C4 Container Diagram
 
 Shows the high-level containers and technology stack.
 
@@ -76,7 +76,7 @@ graph TD
 
 **Justification**: Each container maps to a functional requirement group: [PRD §5.1 FR-1] → Graph Service, [PRD §5.2 FR-2] → Vault Service, [PRD §5.4 FR-4] → Agent Service, [PRD §5.6 FR-6] → Comparison Service.
 
-## 2.3 C4 Component Diagram
+### 2.3 C4 Component Diagram
 
 Shows the internal components of the EX04 application.
 
@@ -176,5 +176,3 @@ graph TD
 **Justification**: Component decomposition follows [PRD §5.4 FR-4] for the LangGraph workflow with 7 nodes. The naive vs. graph-guided comparison aligns with [PRD §5.6 FR-6.1 to FR-6.3].
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: Architecture Overview](./01-Architecture-Overview.md) | [Next: Module Design →](./03-Module-Design.md)

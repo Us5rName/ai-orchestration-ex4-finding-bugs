@@ -1,8 +1,8 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 7. UML Activity Diagram — Main Investigation Flow
 
-[← Back to Home](./Home.md) | [Prev: OOP Schema](./06-OOP-Schema.md) | [Next: API Contract →](./08-API-Contract.md)
-
----
+[Back to Home](./Home.md)
 
 ```mermaid
 flowchart TD
@@ -35,5 +35,3 @@ flowchart TD
 ```
 
 ---
-
-**Navigation**: [← Back to Home](./Home.md) | [Prev: OOP Schema](./06-OOP-Schema.md) | [Next: API Contract →](./08-API-Contract.md)

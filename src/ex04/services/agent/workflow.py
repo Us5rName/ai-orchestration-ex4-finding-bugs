@@ -1,31 +1,21 @@
-"""Agent Workflow — assembles LangGraph state machine for debugging.
-
-Builds a LangGraph StateGraph with 7 nodes implementing the bug
-investigation pipeline: knowledge → analysis → suspect → inspect →
-rootcause → fix → verify, with a retry loop from verify back to suspect.
-
-## Contract (AgentServiceInterface)
-
-| Method | Input | Output | Phase |
-|---|---|---|---|
-| `build()` | — | StateGraph | P4 |
-
-Implementation: **Phase 4** (T4.08)
-"""
+"""Agent Workflow — assembles the LangGraph debugging state machine."""
 
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from ex04.services.agent.nodes.analysis import BugAnalysisNode
-from ex04.services.agent.nodes.fix import FixGenerationNode
-from ex04.services.agent.nodes.inspect import CodeInspectionNode
+from ex04.services.agent.deps import NodeDeps
+from ex04.services.agent.nodes.analysis import build_analysis_node
+from ex04.services.agent.nodes.fix import build_fix_node
+from ex04.services.agent.nodes.inspect import build_inspect_node
 from ex04.services.agent.nodes.knowledge import KnowledgeLoadNode
-from ex04.services.agent.nodes.rootcause import RootCauseNode
+from ex04.services.agent.nodes.rootcause import build_rootcause_node
 from ex04.services.agent.nodes.suspect import SuspectRankingNode
 from ex04.services.agent.nodes.verify import VerificationNode
 from ex04.services.agent.state import AgentState
@@ -36,17 +26,39 @@ logger = logging.getLogger(__name__)
 # Fallback when the caller does not supply config.agent.max_iterations.
 _DEFAULT_MAX_ITERATIONS = 5
 
+NODE_SEQUENCE = ("knowledge", "analysis", "suspect", "inspect", "rootcause", "fix", "verify")
+
+
+def build_nodes(deps: NodeDeps) -> dict[str, Any]:  # dict[str, Any]: LangGraph's add_node overloads require _Node[T], not plain Callable
+    """Build workflow nodes from the shared dependency bundle."""
+    return {
+        "knowledge": KnowledgeLoadNode(
+            context_limit=deps.context_limit,
+            target_path=deps.target_path,
+        ),
+        "analysis": build_analysis_node(deps),
+        "suspect": SuspectRankingNode(max_suspects=deps.max_suspects),
+        "inspect": build_inspect_node(deps),
+        "rootcause": build_rootcause_node(deps),
+        "fix": build_fix_node(deps),
+        "verify": VerificationNode(command=deps.test_command, cwd=deps.target_path),
+    }
+
+
+def add_linear_edges(graph: StateGraph, sequence: tuple[str, ...] = NODE_SEQUENCE) -> None:
+    """Register START and linear workflow edges."""
+    graph.add_edge(START, sequence[0])
+    for source, target in zip(sequence, sequence[1:], strict=False):
+        graph.add_edge(source, target)
+
+
+def add_retry_edge(graph: StateGraph, route: Callable[[AgentState], str]) -> None:
+    """Register the verify retry edge."""
+    graph.add_conditional_edges("verify", route, {"retry": "suspect", "pass": END})
+
 
 class WorkflowBuilder:
-    """Assembles the LangGraph debugging workflow.
-
-    Registers all 7 investigation nodes and configures the control flow:
-    a linear pipeline with a conditional retry loop from verify back to
-    suspect when tests fail, bounded by ``max_iterations``.
-
-    Attributes:
-        max_iterations: Cap on verify→suspect retries before forcing END.
-    """
+    """Assembles the linear workflow and bounded verify retry loop."""
 
     def __init__(
         self,
@@ -56,6 +68,7 @@ class WorkflowBuilder:
         context_limit: int = 8000,
         gatekeeper: GatekeeperInterface | None = None,
         provider: str = "openai",
+        test_command: list[str] | None = None,
     ) -> None:
         """Initialize with a retry cap.
 
@@ -69,43 +82,24 @@ class WorkflowBuilder:
         self.context_limit = context_limit
         self.gatekeeper = gatekeeper
         self.provider = provider
+        self.test_command = test_command or ["uv", "run", "pytest", "-q"]
+        self.deps = NodeDeps(
+            gatekeeper=gatekeeper,
+            provider=provider,
+            target_path=self.target_path,
+            context_limit=context_limit,
+            max_suspects=max_suspects,
+            test_command=self.test_command,
+        )
 
     def build(self) -> CompiledStateGraph:
-        """Build and compile the LangGraph debugging workflow.
-
-        Creates a StateGraph with AgentState, registers all 7 nodes,
-        configures linear edges and the retry loop, then compiles
-        the graph for execution.
-
-        Returns:
-            Compiled graph ready for execution.
-        """
+        """Build and compile the LangGraph debugging workflow."""
         graph = StateGraph(AgentState)
 
-        # Register all 7 nodes
-        graph.add_node("knowledge", KnowledgeLoadNode(context_limit=self.context_limit))
-        graph.add_node("analysis", BugAnalysisNode(self.gatekeeper, self.provider))
-        graph.add_node("suspect", SuspectRankingNode(max_suspects=self.max_suspects))
-        graph.add_node("inspect", CodeInspectionNode(self.target_path, self.gatekeeper, self.provider))
-        graph.add_node("rootcause", RootCauseNode(self.gatekeeper, self.provider))
-        graph.add_node("fix", FixGenerationNode(self.target_path, self.gatekeeper, self.provider))
-        graph.add_node("verify", VerificationNode(cwd=self.target_path))
-
-        # Linear control flow
-        graph.add_edge(START, "knowledge")
-        graph.add_edge("knowledge", "analysis")
-        graph.add_edge("analysis", "suspect")
-        graph.add_edge("suspect", "inspect")
-        graph.add_edge("inspect", "rootcause")
-        graph.add_edge("rootcause", "fix")
-        graph.add_edge("fix", "verify")
-
-        # Conditional retry: verify → suspect (if tests fail) or END
-        graph.add_conditional_edges(
-            "verify",
-            self._verify_route,
-            {"retry": "suspect", "pass": END},
-        )
+        for name, node in build_nodes(self.deps).items():
+            graph.add_node(name, node)
+        add_linear_edges(graph)
+        add_retry_edge(graph, self._verify_route)
 
         compiled = graph.compile()
         logger.info(
@@ -114,19 +108,7 @@ class WorkflowBuilder:
         return compiled
 
     def _verify_route(self, state: AgentState) -> str:
-        """Determine next step after verification.
-
-        Routes to 'suspect' to retry when tests still fail and the retry
-        budget is not exhausted; otherwise routes to END. Bounding by
-        ``max_iterations`` prevents an unbounded loop (and the resulting
-        LangGraph GraphRecursionError) when a fix never passes.
-
-        Args:
-            state: Current agent state with test_results and iterations.
-
-        Returns:
-            'retry' to loop back to suspect, or 'pass' to end.
-        """
+        """Route to retry while tests fail and the retry budget remains."""
         failed = state.get("test_results", {}).get("failed", 0)
         iterations = state.get("iterations", 0)
 

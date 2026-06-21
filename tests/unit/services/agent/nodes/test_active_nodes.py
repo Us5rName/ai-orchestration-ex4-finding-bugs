@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 from ex04.services.agent.nodes.analysis import BugAnalysisNode
 from ex04.services.agent.nodes.fix import FixGenerationNode
+from ex04.services.agent.nodes.inspect import CodeInspectionNode
 from ex04.services.agent.nodes.knowledge import KnowledgeLoadNode
 from ex04.services.agent.nodes.rootcause import RootCauseNode
 from ex04.services.agent.nodes.suspect import SuspectRankingNode
@@ -64,6 +66,33 @@ def test_bug_analysis_calls_gatekeeper_and_populates_suspects() -> None:
         Suspect("app.py", 10, 12, 1.0, "Likely issue in app.py:10-12 because payment fails")
     ]
     assert result["token_usage"].total_tokens == 12
+
+
+def test_llm_nodes_use_shared_call_helper(tmp_path: Path) -> None:
+    """LLM-backed nodes all route provider calls through common.call_llm."""
+    source = tmp_path / "app.py"
+    source.write_text("value = old_name\n", encoding="utf-8")
+    suspect = Suspect("app.py", 1, 1, 1.0, "reason")
+
+    calls: list[str] = []
+
+    def fake_call_llm(deps, state, node_name, prompt):  # type: ignore[no-untyped-def]
+        calls.append(node_name)
+        text = {
+            "analysis": "app.py:1-1",
+            "inspect": "looks suspicious",
+            "rootcause": "bad name",
+            "fix": "FILE:\napp.py\nFIND:\nold_name\nREPLACE:\nnew_name",
+        }[node_name]
+        return ProviderResponse(text=text, input_tokens=1, output_tokens=1, provider="fake")
+
+    with patch("ex04.services.agent.nodes.common.call_llm", fake_call_llm):
+        BugAnalysisNode(provider="fake")({"bug_report": "bug"})
+        CodeInspectionNode(tmp_path, provider="fake")({"suspects": [suspect]})
+        RootCauseNode(provider="fake")({"inspected_code": "code"})
+        FixGenerationNode(tmp_path, provider="fake")({"root_cause": "cause"})
+
+    assert calls == ["analysis", "inspect", "rootcause", "fix"]
 
 
 def test_suspect_ranking_orders_and_limits() -> None:

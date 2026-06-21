@@ -9,8 +9,9 @@ Implementation: **Phase 4** (T4.09)
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
-from ex04.services.agent.nodes.common import read_path_context
+from ex04.services.agent.nodes.common import read_path_context, read_source_context
 from ex04.services.agent.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -26,9 +27,10 @@ class KnowledgeLoadNode:
         None — stateless node.
     """
 
-    def __init__(self, context_limit: int = 8000) -> None:
+    def __init__(self, context_limit: int = 8000, target_path: Path | str = ".") -> None:
         """Initialize with a maximum context character budget."""
         self.context_limit = context_limit
+        self.target_path = Path(target_path)
 
     def __call__(self, state: AgentState) -> AgentState:
         """Load context into state.
@@ -40,6 +42,13 @@ class KnowledgeLoadNode:
             State with graph_context and vault_context populated.
         """
         logger.info("KnowledgeLoadNode: loading context")
+        if state.get("mode") == "naive":
+            source_context = read_source_context(
+                state.get("source_context", str(self.target_path)),
+                self.context_limit,
+            )
+            return {**state, "source_context": source_context}
+
         graph_context = read_path_context(state.get("graph_context", ""), self.context_limit)
         vault_context = read_path_context(state.get("vault_context", ""), self.context_limit)
         return {**state, "graph_context": graph_context, "vault_context": vault_context}

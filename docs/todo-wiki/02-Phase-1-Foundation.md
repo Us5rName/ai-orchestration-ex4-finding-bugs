@@ -1,27 +1,16 @@
+<!-- GENERATED FROM CANONICAL DOCUMENTATION - DO NOT EDIT DIRECTLY -->
+
 # 2. Phase 1 — Foundation
 
-[← Back to Home](./Home.md)
+[Back to Home](./Home.md)
 
 **Goal**: Establish project structure, configuration, and tooling. No business logic yet — pure infrastructure.
-
-## Tasks
-
-| Task | Link |
-|---|---|
-| T1.01 — Create Project Directory Structure | See below |
-| T1.02 — Create Configuration Files | See below |
-| T1.03 — Configure `pyproject.toml` | See below |
-| T1.04 — Create Base Data Types | See below |
-| T1.05 — Define All Service Interfaces (Contract Layer) | See below |
-| T1.06 — Create Mock Implementations for All Services | See below |
-
----
 
 ### T1.01 — Create Project Directory Structure
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §10 Project Structure] |
 | **PRD Reference** | [PRD §9 Recommended Repository Structure] |
@@ -46,7 +35,7 @@ find src/ex04 -type f -name "*.py" | sort
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §9 Configuration Schema] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding |
@@ -73,7 +62,7 @@ python3 -c "import json; json.load(open('config/rate_limits.json'))"
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §9 Configuration Schema] |
 | **PRD Reference** | [PRD NFR-8] uv only, [PRD NFR-2] zero Ruff |
@@ -100,7 +89,7 @@ uv run pytest --version
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — types.py] |
 | **PRD Reference** | [PRD NFR-7] docstrings |
@@ -117,7 +106,6 @@ uv run pytest --version
   - `Suspect`
   - `InvestigationResult`
   - `ComparisonReport`
-  - `PipelineResult`
 - [ ] Every class has full docstring with I/O contract
 - [ ] All types use `dataclass` or `TypedDict`
 
@@ -134,7 +122,7 @@ uv run python -c "from ex04.shared.types import TokenMetrics, GraphData, RunMetr
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.1.1 Service Interfaces], [ADR-005] |
 | **PRD Reference** | [PRD §5 Functional Requirements — contracts] |
@@ -171,7 +159,7 @@ print('All interfaces importable — parallel work can begin')
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [ADR-005 Contract-First Parallel Development] |
 | **Estimate** | 60 min |
@@ -197,65 +185,3 @@ uv run pytest tests/unit/test_mocks.py -v
 ```
 
 ---
-
-## Contract → Implementation Mapping
-
-Phase 1 defines all **contracts** (ABCs + data types). Concrete implementations live in the phases where the contracts are consumed. This is by design — it enables parallel development ([ADR-005]).
-
-### Service Interfaces (T1.05)
-
-| Interface File | Contract | Actual Implementation | Phase |
-|---|---|---|---|
-| `services/graph/interface.py` | `GraphServiceInterface` | GraphRunner, GraphParser, GraphAnalyzer | **Phase 4** (T4.01–T4.03) |
-| `services/vault/interface.py` | `VaultServiceInterface` | VaultBuilder, VaultNavigator, NoteManager | **Phase 4** (T4.04–T4.06) |
-| `services/agent/interface.py` | `AgentServiceInterface` | WorkflowBuilder + 7 nodes (knowledge → verify) | **Phase 4** (T4.07–T4.15) |
-| `services/analysis/interface.py` | `AnalysisServiceInterface` | ReverseEngineer, DiagramGenerator, BugReporter | **Phase 4** (T4.16–T4.18) |
-| `services/comparison/interface.py` | `ComparisonServiceInterface` | NaiveRunner, GraphGuidedRunner, MetricsCalculator | **Phase 6** (T6.01–T6.03) |
-
-### Provider Interface (T1.05)
-
-| Interface File | Contract | Actual Implementation | Phase |
-|---|---|---|---|
-| `providers/interface.py` | `ProviderInterface` | OpenAIProvider, AnthropicProvider, ProviderFactory | **Phase 3** (T3.01–T3.04) |
-
-### Shared Types (T1.04)
-
-| Type File | Types | Implemented? |
-|---|---|---|
-| `shared/types.py` | Entity, Relationship, Community, GraphData | ✅ Phase 2 (T2.02) |
-| `shared/types_metrics.py` | TokenMetrics, RunMetrics, ComparisonMetrics, ComparisonReport | ✅ Phase 2 (T2.02) |
-| `shared/types_results.py` | ProviderResponse, Suspect, InvestigationResult, PipelineResult | ✅ Phase 2 (T2.02) |
-
-### Shared Contracts (Phase 2)
-
-| Contract File | Interface | Actual Implementation | Phase |
-|---|---|---|---|
-| `shared/config.py` | `ConfigManagerInterface` | ConfigManager (JSON loader) | **Phase 4** (services need config) |
-| `shared/gatekeeper.py` | `GatekeeperInterface` | APIGatekeeper (rate limiting, queue, retry) | **Phase 4** (agent nodes call gatekeeper) |
-| `shared/token_tracker.py` | `TokenTrackerInterface` | TokenTracker (thread-safe recording) | **Phase 6** (comparison needs token tracking) |
-
----
-
-## Why Coverage Is Below 85% Right Now
-
-The global `--cov-fail-under=85` threshold fails because Phase 1/2 only covers the shared layer. The uncovered files are **contract-only stubs** — they exist to enable parallel development but are not yet implemented. Below is the exact mapping of each uncovered file to the phase that will implement it:
-
-| Uncovered File | Contract | Implemented In | Phase |
-|---|---|---|---|
-| `providers/interface.py` | `ProviderInterface` | OpenAIProvider, AnthropicProvider, ProviderFactory | **Phase 3** (T3.01–T3.04) |
-| `services/graph/interface.py` | `GraphServiceInterface` | GraphRunner, GraphParser, GraphAnalyzer | **Phase 4** (T4.01–T4.03) |
-| `services/vault/interface.py` | `VaultServiceInterface` | VaultBuilder, VaultNavigator, NoteManager | **Phase 4** (T4.04–T4.06) |
-| `services/agent/interface.py` | `AgentServiceInterface` | WorkflowBuilder + 7 nodes | **Phase 4** (T4.07–T4.15) |
-| `services/analysis/interface.py` | `AnalysisServiceInterface` | ReverseEngineer, DiagramGenerator, BugReporter | **Phase 4** (T4.16–T4.18) |
-| `services/comparison/interface.py` | `ComparisonServiceInterface` | NaiveRunner, GraphGuidedRunner, MetricsCalculator | **Phase 6** (T6.01–T6.03) |
-
-**Total uncovered**: 64 lines across 6 files. All are ABCs with no concrete implementations yet.
-
-**Expected coverage progression**:
-- After Phase 3: ~75% (covers `providers/interface.py`)
-- After Phase 4: ~90% (covers 4 service interfaces)
-- After Phase 6: ~95% (covers `services/comparison/interface.py`)
-
----
-
-**Source**: Extracted from [`docs/TODO.md`](../TODO.md) §2.
