@@ -271,7 +271,7 @@ print('All interfaces importable — parallel work can begin')
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [ADR-005 Contract-First Parallel Development] |
 | **Estimate** | 60 min |
@@ -1533,11 +1533,11 @@ uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/servi
 
 **Definition of Done**:
 
-- [ ] Grphify runs on `graph-home/.graphify/repos/andela/buggy-python`
-- [ ] `graph.json` produced in `graph-home/graphify-out/`
-- [ ] `GRAPH_REPORT.md` produced
-- [ ] Graph data validated (non-empty entities and relationships)
-- [ ] **Note (C9)**: If BugsInPy was chosen instead of `andela/buggy-python`, verify the target codebase is cloned inside an isolated virtualenv or Docker container before running Grphify ([PRD C9])
+- [x] Grphify runs on `graph-home/.graphify/repos/andela/buggy-python/snippets`
+- [x] `graph.json` produced in `graph-home/graphify-out/`
+- [x] `GRAPH_REPORT.md` produced
+- [x] Graph data validated (13 entities, 11 relationships, 3 communities)
+- [x] **Note (C9)**: `andela/buggy-python` is the selected target; BugsInPy isolation is not applicable.
 
 **Independent Verification**:
 

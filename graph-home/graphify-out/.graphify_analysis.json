@@ -1,0 +1,55 @@
+{
+  "communities": {
+    "0": [
+      "snippets_io",
+      "snippets_io_average_paid_loans",
+      "snippets_io_calculate_paid_loans",
+      "snippets_io_calculate_unpaid_loans",
+      "snippets_io_rationale_1",
+      "snippets_io_read_file"
+    ],
+    "1": [
+      "snippets_foobar",
+      "snippets_foobar_foo",
+      "snippets_foobar_rationale_1",
+      "snippets_init"
+    ],
+    "2": [
+      "snippets_loop",
+      "snippets_loop_lambda_array",
+      "snippets_loop_rationale_1"
+    ]
+  },
+  "cohesion": {
+    "0": 0.3333333333333333,
+    "1": 0.6666666666666666,
+    "2": 0.6666666666666666
+  },
+  "gods": [
+    {
+      "id": "snippets_foobar_foo",
+      "label": "foo()",
+      "degree": 2
+    },
+    {
+      "id": "snippets_foobar_rationale_1",
+      "label": "The purpose of this snippet is to test your knowledge of default arguments for f",
+      "degree": 1
+    },
+    {
+      "id": "snippets_io_rationale_1",
+      "label": "Simple python script to read a json file of loan then add perform some calculati",
+      "degree": 1
+    },
+    {
+      "id": "snippets_loop_rationale_1",
+      "label": "Simple array of lambda functions that is used to calculate the addition of a num",
+      "degree": 1
+    }
+  ],
+  "surprises": [],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
