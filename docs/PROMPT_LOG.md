@@ -265,7 +265,7 @@
 
 **Prompt**: "Check whether the issues identified in the reinspection report still exist and determine which ones require immediate attention. Then, commit the P0/P1 work on a dedicated branch and continue fixing all remaining issues. Update and synchronize the documentation wherever necessary."
 
-**Context**: An external reinspection report (vs. commit `aafd5eb`) flagged 8 problems. Verified each against current `master` (`1d6c186`) **and against the installed Graphify package** by generating a real `graph.json` to anchor the schema.
+**Context**: An external reinspection report flagged 8 problems. Verified each against the current `master` branch **and against the installed Graphify package** by generating a real `graph.json` to anchor the schema.
 
 **Findings (ground-truth)**:
 
@@ -433,16 +433,16 @@ tests/unit/services/analysis/
 
 **Implementation** (8 commits, all ≤300 lines, dry-run verified):
 
-| # | Commit | Files | Lines | Description |
-|---|---|---|---|---|
-| 1 | `9f81003` | builder.py + builder_helpers.py | 253 | T4.04 VaultBuilder implementation |
-| 2 | `fabeffa` | test_builder_core.py + test_builder_content.py | 183 | VaultBuilder tests (10 tests) |
-| 3 | `3ef6541` | navigator.py + test_navigator.py | 244 | T4.05 VaultNavigator |
-| 4 | `6494559` | note_manager.py | 150 | T4.06 NoteManager implementation |
-| 5 | `3d34c3c` | test_note_manager_create.py + test_note_manager_update.py | 181 | NoteManager tests (12 tests) |
-| 6 | `e9c58da` | reverse_engineer.py | 136 | T4.16 ReverseEngineer implementation |
-| 7 | `873d482` | reverse_engineer_helpers.py + reverse_engineer_text.py | 169 | ReverseEngineer helpers |
-| 8 | `9d43531` | test_reverse_engineer_core.py + test_reverse_engineer_diagrams.py | 195 | ReverseEngineer tests (12 tests) |
+| # | Files | Lines | Description |
+|---|---|---|---|
+| 1 | builder.py + builder_helpers.py | 253 | T4.04 VaultBuilder implementation |
+| 2 | test_builder_core.py + test_builder_content.py | 183 | VaultBuilder tests (10 tests) |
+| 3 | navigator.py + test_navigator.py | 244 | T4.05 VaultNavigator |
+| 4 | note_manager.py | 150 | T4.06 NoteManager implementation |
+| 5 | test_note_manager_create.py + test_note_manager_update.py | 181 | NoteManager tests (12 tests) |
+| 6 | reverse_engineer.py | 136 | T4.16 ReverseEngineer implementation |
+| 7 | reverse_engineer_helpers.py + reverse_engineer_text.py | 169 | ReverseEngineer helpers |
+| 8 | test_reverse_engineer_core.py + test_reverse_engineer_diagrams.py | 195 | ReverseEngineer tests (12 tests) |
 
 **Total new code**: ~1,411 lines across 13 files
 **Total new tests**: 34 (10 + 12 + 12)
@@ -722,4 +722,4 @@ tests/unit/services/analysis/
 | 1.25 | 2026-06-20 | Added Prompt 41 — Plan-doc alignment: removed 9 undefined types (Config, GraphResult, VaultResult, EngineeringResult, Node, Note, Pattern, QueueItem, Entry) from PLAN.md and plan-wiki; replaced with actual types from implementation (GraphData, dict[str, Path], str, list[str], dict); fixed all SDK, VaultBuilder, VaultNavigator, GraphAnalyzer, ReverseEngineer, WorkflowBuilder, GraphRunner, APIGatekeeper, ConfigManager signatures across §3.2/3.3/3.4/3.6/4.1/6/8.1 and all matching wiki pages. |
 | 1.26 | 2026-06-20 | Added Prompt 42 — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.27 | 2026-06-20 | Added Prompt 43 — Phase 6-8 recovery and finalization audit: preserved interrupted work, verified recovered commits, added mypy as a dev dependency, expanded generated wiki synchronization, added evidence matrix/self-assessment/blocked-operation/assets docs, and corrected T8.12 to pending until clean-clone verification is actually recorded. |
-| 1.28 | 2026-06-20 | Added Prompt 44 — Clean-clone verification: created `/tmp/ex04-clean-clone-verify` for candidate `36a53a8`, ran dependency sync, keyless import, Ruff, mypy, pytest with coverage, docs sync, and repository validation; recorded results in `reports/clean_clone_verification.md`. |
+| 1.28 | 2026-06-20 | Added Prompt 44 — Clean-clone verification: created an isolated worktree, ran dependency sync, keyless import, Ruff, mypy, pytest with coverage, docs sync, and repository validation; recorded results in `reports/clean_clone_verification.md`. |
