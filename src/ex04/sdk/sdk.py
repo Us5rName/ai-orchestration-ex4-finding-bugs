@@ -77,9 +77,12 @@ class Ex04SDK(ComparisonOpsMixin):
         vault_path: Path | None = None,
     ) -> ComparisonReport:
         """Compare naive vs. graph-guided investigation approaches."""
-        return self._comparison.run_comparison(
+        result = self._comparison.run_comparison(
             bug_report, source_files, graph_data, vault_path
         )
+        if not isinstance(result, ComparisonReport):
+            raise TypeError("legacy comparison call returned canonical outcome")
+        return result
 
     def reverse_engineer(self, target_path: str) -> str:
         """Reverse-engineer architecture docs from the target codebase."""
@@ -101,7 +104,10 @@ class Ex04SDK(ComparisonOpsMixin):
         graph_data = self._graph.parse(graph_path)
         vault_dir = resolve_vault_dir(self._vault.build(graph_data))
         source_files = discover_source_files(target_path, self._config)
-        return self._comparison.run_comparison(bug_report, source_files, graph_data, vault_dir)
+        result = self._comparison.run_comparison(bug_report, source_files, graph_data, vault_dir)
+        if not isinstance(result, ComparisonReport):
+            raise TypeError("legacy comparison call returned canonical outcome")
+        return result
 
     def detect_orphans(
         self, graph_data: GraphData, min_connections: int = 0
@@ -129,6 +135,8 @@ class Ex04SDK(ComparisonOpsMixin):
         comparison = self._comparison.run_comparison(
             bug_report, source_files, graph_data, vault_dir
         )
+        if not isinstance(comparison, ComparisonReport):
+            raise TypeError("legacy comparison call returned canonical outcome")
         engineering = self._analysis.reverse_engineer(graph_data)
         bug_report_md = self._analysis.report(investigation)
         return PipelineResult(
