@@ -1525,7 +1525,7 @@ uv run pytest tests/unit/services/comparison/test_graph_diff.py tests/unit/servi
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
 | **PRD Reference** | [PRD G1] |
@@ -1552,7 +1552,7 @@ ls -la graph-home/graphify-out/graph.json
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
 | **PRD Reference** | [PRD G2] |
@@ -1578,7 +1578,7 @@ grep -c '\[\[' obsidian/index.md  # Should be > 0 (has wikilinks)
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §4.1 End-to-End Workflow] |
 | **PRD Reference** | [PRD G4-G5] |
@@ -1605,7 +1605,7 @@ cat reports/bug_analysis.md
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §4.2 Comparison Workflow] |
 | **PRD Reference** | [PRD G6] |
@@ -1631,7 +1631,7 @@ find artifacts/runs -path "*/reports/comparison.md" -print
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.6 Analysis Service] |
 | **PRD Reference** | [PRD G3] |
@@ -1656,7 +1656,7 @@ grep -c 'mermaid' reports/*.md
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.4 Vault Service] |
 | **PRD Reference** | [PRD FR-5.3] before/after knowledge level |
