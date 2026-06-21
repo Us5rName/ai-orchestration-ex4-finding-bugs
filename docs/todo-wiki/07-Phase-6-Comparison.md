@@ -87,7 +87,7 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — report_gen.py] |
 | **PRD Reference** | [PRD FR-6.3] |

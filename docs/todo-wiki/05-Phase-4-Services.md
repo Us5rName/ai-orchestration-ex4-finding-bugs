@@ -12,7 +12,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
 | **PRD Reference** | [PRD NFR-4] configuration externalization |
@@ -39,7 +39,7 @@ uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config 
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
 | **PRD Reference** | [PRD NFR-1] API call management |
@@ -70,7 +70,7 @@ uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gat
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — runner.py] |
 | **PRD Reference** | [PRD FR-1.1] |

@@ -155,7 +155,7 @@ uv run pytest tests/unit/shared/test_token_tracker.py -v --cov=ex04.shared.token
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer] |
 | **Estimate** | 5 min |

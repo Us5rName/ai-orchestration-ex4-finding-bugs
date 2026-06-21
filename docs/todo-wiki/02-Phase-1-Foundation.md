@@ -35,7 +35,7 @@ find src/ex04 -type f -name "*.py" | sort
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §9 Configuration Schema] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding |

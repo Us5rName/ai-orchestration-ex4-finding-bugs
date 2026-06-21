@@ -26,3 +26,4 @@
 | 1.20 | 2026-06-21 | Add §12 Repair Inventory with stable P6-R/P7-R/P8-R task IDs covering 14 post-submission truthfulness repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
 | 1.22 | 2026-06-21 | Mark P6-R10 through P8-R10 complete after local Ruff, mypy, validator, docs-sync, and pytest verification; keep P8-R11 incomplete until clean-clone and PR evidence are recorded. |
 | 1.23 | 2026-06-21 | Add pending follow-up tasks for typed graph reader, multi-signal weakness detector, agent workflow parity helpers, graph-diff comparison reporting, and self-grade service. |
+| 1.24 | 2026-06-21 | Full documentation sync: mark T1.02, T2.06, T3.01–T3.05, T4.00, T4.002, T4.01, T6.04, T8.01–T8.05 Done (implemented but status stale); mark P8-R11 Complete; update Statistics to 74 total / 68 Done / 6 open (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13). Traceability: [PRD §8], [PLAN §3], implementation verified in src/. |

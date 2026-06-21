@@ -10,7 +10,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD KPI: ≥ 85% coverage] |
 | **Estimate** | 15 min |
@@ -33,7 +33,7 @@ uv run pytest --cov=ex04 --cov-report=term-missing --cov-report=html:coverage_ht
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-2] zero Ruff violations |
 | **Estimate** | 5 min |
@@ -54,7 +54,7 @@ uv run ruff check .
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-3] no file > 150 lines |
 | **Estimate** | 5 min |
@@ -72,7 +72,7 @@ find src -name "*.py" -exec wc -l {} \; | awk '$1 > 150 {print}'
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §8 README Requirements] |
 | **Estimate** | 60 min |
@@ -105,7 +105,7 @@ grep -c "##" README.md  # Should have multiple sections
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §12 Final Checklist] |
 | **Estimate** | 30 min |

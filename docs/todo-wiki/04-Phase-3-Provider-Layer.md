@@ -10,7 +10,7 @@
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — interface.py], [ADR-002] |
 | **PRD Reference** | [PRD §1.3] no vendor lock-in |
@@ -35,7 +35,7 @@ uv run python -c "from ex04.providers.interface import ProviderInterface, Provid
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — openai_provider.py] |
 | **Estimate** | 60 min |
@@ -62,7 +62,7 @@ uv run pytest tests/unit/providers/test_openai_provider.py -v --cov=ex04.provide
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — anthropic_provider.py] |
 | **Estimate** | 60 min |
@@ -89,7 +89,7 @@ uv run pytest tests/unit/providers/test_anthropic_provider.py -v --cov=ex04.prov
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — factory.py] |
 | **Estimate** | 30 min |
@@ -115,7 +115,7 @@ uv run pytest tests/unit/providers/test_factory.py -v --cov=ex04.providers.facto
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer] |
 | **Estimate** | 5 min |

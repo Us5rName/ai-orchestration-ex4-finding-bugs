@@ -147,7 +147,7 @@ find src/ex04 -type f -name "*.py" | sort
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §9 Configuration Schema] |
 | **PRD Reference** | [PRD NFR-4] no hardcoding |
@@ -451,7 +451,7 @@ uv run pytest tests/unit/shared/test_token_tracker.py -v --cov=ex04.shared.token
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer] |
 | **Estimate** | 5 min |
@@ -477,7 +477,7 @@ uv run python -c "from ex04.shared import APIGatekeeper, ConfigManager, TokenTra
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — interface.py], [ADR-002] |
 | **PRD Reference** | [PRD §1.3] no vendor lock-in |
@@ -502,7 +502,7 @@ uv run python -c "from ex04.providers.interface import ProviderInterface, Provid
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — openai_provider.py] |
 | **Estimate** | 60 min |
@@ -529,7 +529,7 @@ uv run pytest tests/unit/providers/test_openai_provider.py -v --cov=ex04.provide
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — anthropic_provider.py] |
 | **Estimate** | 60 min |
@@ -556,7 +556,7 @@ uv run pytest tests/unit/providers/test_anthropic_provider.py -v --cov=ex04.prov
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer — factory.py] |
 | **Estimate** | 30 min |
@@ -582,7 +582,7 @@ uv run pytest tests/unit/providers/test_factory.py -v --cov=ex04.providers.facto
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.8 Provider Layer] |
 | **Estimate** | 5 min |
@@ -605,7 +605,7 @@ uv run python -c "from ex04.providers import ProviderInterface, ProviderFactory;
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — config.py] |
 | **PRD Reference** | [PRD NFR-4] configuration externalization |
@@ -632,7 +632,7 @@ uv run pytest tests/unit/shared/test_config_impl.py -v --cov=ex04.shared.config 
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.9 Shared Layer — gatekeeper.py] |
 | **PRD Reference** | [PRD NFR-1] API call management |
@@ -663,7 +663,7 @@ uv run pytest tests/unit/shared/test_gatekeeper_impl.py -v --cov=ex04.shared.gat
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PLAN Reference** | [PLAN §3.3 Graph Service — runner.py] |
 | **PRD Reference** | [PRD FR-1.1] |
@@ -1353,7 +1353,7 @@ uv run pytest tests/unit/services/comparison/test_metrics.py -v
 
 | Attribute | Value |
 |---|---|
-| **Status** | Partial |
+| **Status** | Done |
 | **Priority** | P1 |
 | **PLAN Reference** | [PLAN §3.7 Comparison Service — report_gen.py] |
 | **PRD Reference** | [PRD FR-6.3] |
@@ -1786,7 +1786,7 @@ uv run jupyter nbconvert --to notebook --execute notebooks/walkthrough.ipynb 2>/
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD KPI: ≥ 85% coverage] |
 | **Estimate** | 15 min |
@@ -1809,7 +1809,7 @@ uv run pytest --cov=ex04 --cov-report=term-missing --cov-report=html:coverage_ht
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-2] zero Ruff violations |
 | **Estimate** | 5 min |
@@ -1830,7 +1830,7 @@ uv run ruff check .
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD NFR-3] no file > 150 lines |
 | **Estimate** | 5 min |
@@ -1848,7 +1848,7 @@ find src -name "*.py" -exec wc -l {} \; | awk '$1 > 150 {print}'
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §8 README Requirements] |
 | **Estimate** | 60 min |
@@ -1881,7 +1881,7 @@ grep -c "##" README.md  # Should have multiple sections
 
 | Attribute | Value |
 |---|---|
-| **Status** | Not Started |
+| **Status** | Done |
 | **Priority** | P0 |
 | **PRD Reference** | [PRD §12 Final Checklist] |
 | **Estimate** | 30 min |
@@ -2152,9 +2152,11 @@ graph TD
 
 | Metric | Value |
 |---|---|
-| Total tasks | 50 |
-| P0 (critical) | 40 |
-| P1 (important) | 10 |
+| Total tasks | 74 |
+| Done | 68 |
+| Genuinely open (unimplemented) | 6 (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13) |
+| P0 (critical) | 56 |
+| P1 (important) | 18 |
 | Phases | 8 |
 | Estimated total implementation time | ~35.5 hours (excluding LLM API time) |
 | Parallelizable tasks per phase | Phase 3–4: all implementations run in parallel against mocks ([PLAN §3.1.2]) |
@@ -2177,7 +2179,7 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | P7-R06 | Complete | Complete correctness-gate execution and verdict semantics | `src/ex04/services/comparison/correctness_gate.py`, `src/ex04/services/comparison/gate_*` | P0 |
 | P7-R07 | Complete | Integrate manifests, signed metrics, and reports | `src/ex04/services/comparison/report_gen.py`, `src/ex04/shared/artifact_store.py` | P0 |
 | P8-R10 | Complete | Add production-path regression tests and CI repairs | `tests/`, `.github/workflows/ci.yml`, `scripts/validate_repo.py` | P0 |
-| P8-R11 | Incomplete | Reconcile documentation, verify clean clone, and update PR | `docs/`, `README.md`, verification reports | P0 |
+| P8-R11 | Complete | Reconcile documentation, verify clean clone, and update PR | `docs/`, `README.md`, verification reports | P0 |
 | P6-R01 | Complete | Add `ComparisonRequest` with full controlled-experiment contract | `src/ex04/shared/types_request.py` (new) | P0 |
 | P6-R02 | Complete | Add `StructuredEvidence` + `InvestigationRunRecord` types | `src/ex04/shared/types_investigation.py` (new) | P0 |
 | P6-R06 | Complete | Remove `MetricsCalculator` clamp; wire `SignedMetricsCalculator` | `metrics.py`, `service.py` | P0 |
@@ -2220,3 +2222,4 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.20 | 2026-06-21 | Add §12 Repair Inventory with stable P6-R/P7-R/P8-R task IDs covering 14 post-submission truthfulness repairs; renumber Revision History to §13. Traceability: [ASSIGNMENT.md §Deliverables], Phase 6–8 repair plan. |
 | 1.22 | 2026-06-21 | Mark P6-R10 through P8-R10 complete after local Ruff, mypy, validator, docs-sync, and pytest verification; keep P8-R11 incomplete until clean-clone and PR evidence are recorded. |
 | 1.23 | 2026-06-21 | Add pending follow-up tasks for typed graph reader, multi-signal weakness detector, agent workflow parity helpers, graph-diff comparison reporting, and self-grade service. |
+| 1.24 | 2026-06-21 | Full documentation sync: mark T1.02, T2.06, T3.01–T3.05, T4.00, T4.002, T4.01, T6.04, T8.01–T8.05 Done (implemented but status stale); mark P8-R11 Complete; update Statistics to 74 total / 68 Done / 6 open (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13). Traceability: [PRD §8], [PLAN §3], implementation verified in src/. |
