@@ -1,0 +1,31 @@
+{
+  "evidence_class": "deterministic",
+  "config_hash": "024432ab30111c7489bfa58bf41a9e8ca24e0ebf8a80fc9347c1aa192dd558ac",
+  "naive_run_id": "phase7-comparison-naive",
+  "guided_run_id": "phase7-comparison-graph",
+  "naive_parser_status": "parsed_ok",
+  "guided_parser_status": "parsed_ok",
+  "naive_gate_status": "not_requested",
+  "guided_gate_status": "not_requested",
+  "signed_metrics": {
+    "naive_tokens": 662,
+    "guided_tokens": 222,
+    "token_delta": -440,
+    "token_savings_pct": 66.46525679758308,
+    "naive_files": 1,
+    "guided_files": 2,
+    "file_delta": 1,
+    "file_savings_pct": -100.0,
+    "naive_iterations": 1,
+    "guided_iterations": 1,
+    "iteration_delta": 0,
+    "naive_duration": 0.0007255608215928078,
+    "guided_duration": 0.0009288014844059944,
+    "duration_delta": 0.00020324066281318665,
+    "naive_correct": true,
+    "guided_correct": true,
+    "limitations": []
+  },
+  "naive_limitations": [],
+  "guided_limitations": []
+}

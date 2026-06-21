@@ -1,0 +1,62 @@
+{
+  "root_cause": "foo() stores state in a mutable default argument. The default list is shared between calls, so the second call returns two values.",
+  "suspects": [
+    {
+      "file_path": "snippets/foobar.py",
+      "line_start": 8,
+      "line_end": 10,
+      "score": 1.0,
+      "reason": "The mutable default list is in snippets/foobar.py:8-10; foo() appends to the same list across calls."
+    }
+  ],
+  "proposed_fix": "FILE:\nsnippets/foobar.py\nFIND:\ndef foo(bar=[]):\n    bar.append(\"baz\")\n    return bar\nREPLACE:\ndef foo(bar=None):\n    if bar is None:\n        bar = []\n    bar.append(\"baz\")\n    return bar",
+  "fix_applied": true,
+  "test_results": {
+    "command": [
+      "uv",
+      "run",
+      "python",
+      "-c",
+      "from snippets.foobar import foo; assert foo() == ['baz']; assert foo() == ['baz']"
+    ],
+    "returncode": 0,
+    "passed": true,
+    "failed": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "token_usage": {
+    "input_tokens": 1464,
+    "output_tokens": 80,
+    "total_tokens": 1544,
+    "provider": "phase7",
+    "model": "phase7-deterministic"
+  },
+  "original_problem": "Calling snippets.foobar.foo() twice should return ['baz'] each time, but the second call keeps state from the first call.",
+  "fix_diff": "--- artifacts/runs/phase7-investigation/target/snippets/foobar.py:before\n+++ artifacts/runs/phase7-investigation/target/snippets/foobar.py:after\n@@ -5,6 +5,8 @@\n \"\"\"\n \n \n-def foo(bar=[]):\n+def foo(bar=None):\n+    if bar is None:\n+        bar = []\n     bar.append(\"baz\")\n     return bar\n",
+  "files_read": 1,
+  "run_id": "phase7-investigation",
+  "mode": "graph",
+  "config_hash": "",
+  "target_commit": "887009334e17556880f62d58315f96c2b305aa05",
+  "parser_status": "not_run",
+  "diagnosis_status": "grounded_candidate",
+  "gate_status": "not_requested",
+  "verification_status": "verified",
+  "evidence": [],
+  "limitations": [],
+  "telemetry_available": true,
+  "input_tokens": 1464,
+  "output_tokens": 80,
+  "context_tokens": 0,
+  "bytes_read": 230,
+  "tool_calls": 0,
+  "model_calls": 4,
+  "iterations": 1,
+  "retries": 0,
+  "duration_seconds": 0.0,
+  "estimated_cost_usd": null,
+  "evidence_class": "deterministic",
+  "trace_path": "artifacts/runs/phase7-investigation/result.json",
+  "trace_hash": ""
+}
