@@ -16,10 +16,11 @@ Implementation: **Phase 4** (T4.002, extracted from gatekeeper)
 
 from __future__ import annotations
 
-import json
 import time
 from pathlib import Path
 from typing import Any
+
+from ex04.shared.json_utils import load_json
 
 
 def _default_config() -> dict[str, Any]:
@@ -62,11 +63,7 @@ class RateLimiter:
         if not config_file.exists():
             raise FileNotFoundError(f"Rate limits file not found: {path}")
 
-        try:
-            raw = config_file.read_text(encoding="utf-8")
-            self._limits = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON in {path}: {exc}") from exc
+        self._limits = load_json(config_file)
 
     def get_config(self, provider: str) -> dict[str, Any]:
         """Get rate limit config for a provider, with safe defaults.

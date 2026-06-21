@@ -8,15 +8,9 @@ Traceability: [PRD-CE §Metrics], [TODO T6.07]
 
 from __future__ import annotations
 
+from ex04.services.comparison.metrics_utils import pct_savings
 from ex04.shared.types import RunMetrics
 from ex04.shared.types_experiment import SignedMetrics
-
-
-def _pct(naive: float, guided: float) -> float | None:
-    """Return percentage saved, or None when naive is zero."""
-    if naive <= 0:
-        return None
-    return ((naive - guided) / naive) * 100
 
 
 class SignedMetricsCalculator:
@@ -39,7 +33,7 @@ class SignedMetricsCalculator:
         naive_tok = naive.tokens_used if naive.tokens_used > 0 else None
         guided_tok = guided.tokens_used if guided.tokens_used > 0 else None
         tok_delta = (guided_tok - naive_tok) if (naive_tok and guided_tok) else None
-        tok_pct = _pct(naive.tokens_used, guided.tokens_used)
+        tok_pct = pct_savings(naive.tokens_used, guided.tokens_used, None)
 
         return SignedMetrics(
             naive_tokens=naive_tok,
@@ -49,7 +43,7 @@ class SignedMetricsCalculator:
             naive_files=naive.files_read,
             guided_files=guided.files_read,
             file_delta=guided.files_read - naive.files_read,
-            file_savings_pct=_pct(naive.files_read, guided.files_read),
+            file_savings_pct=pct_savings(naive.files_read, guided.files_read, None),
             naive_iterations=naive.iterations,
             guided_iterations=guided.iterations,
             iteration_delta=guided.iterations - naive.iterations,

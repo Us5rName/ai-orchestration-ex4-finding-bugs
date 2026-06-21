@@ -15,11 +15,11 @@ Implementation: Phase 4 (T4.02)
 
 from __future__ import annotations
 
-import json
 import logging
 from collections import defaultdict
 from pathlib import Path
 
+from ex04.shared.json_utils import load_json
 from ex04.shared.types import Community, Entity, GraphData, Relationship
 
 logger = logging.getLogger(__name__)
@@ -38,10 +38,7 @@ class GraphParser:
         if not graph_path.exists():
             raise FileNotFoundError(f"Graph file not found: {graph_path}")
 
-        try:
-            raw = json.loads(graph_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON in {graph_path}: {exc}") from exc
+        raw = load_json(graph_path)
 
         nodes = raw.get("nodes", [])
         # node_link_data serialises edges under "links"; older graphs use "edges".
