@@ -1,0 +1,37 @@
+{
+  "loans.json": {
+    "mtime": 1782050248.9693983,
+    "ast_hash": "354d14d1d1ba968bfbee7271b3741575",
+    "semantic_hash": "354d14d1d1ba968bfbee7271b3741575"
+  },
+  "main.py": {
+    "mtime": 1782050248.9693983,
+    "ast_hash": "51d5d59b5ce49162764a85b06aa3beb8",
+    "semantic_hash": "51d5d59b5ce49162764a85b06aa3beb8"
+  },
+  "snippets/__init__.py": {
+    "mtime": 1782050248.9693983,
+    "ast_hash": "2ba9b967f14be16cd8c8cbe57a7f5c4e",
+    "semantic_hash": "2ba9b967f14be16cd8c8cbe57a7f5c4e"
+  },
+  "snippets/foobar.py": {
+    "mtime": 1782050248.9699976,
+    "ast_hash": "4ba81f0f9c1d54444e41e389eb5d05fd",
+    "semantic_hash": "4ba81f0f9c1d54444e41e389eb5d05fd"
+  },
+  "snippets/io.py": {
+    "mtime": 1782050248.9699976,
+    "ast_hash": "997faa3939651fcc76fc01df87e25db5",
+    "semantic_hash": "997faa3939651fcc76fc01df87e25db5"
+  },
+  "snippets/loop.py": {
+    "mtime": 1782050248.9701152,
+    "ast_hash": "2f835a45e5d93cf4e0d0fa737c1f9b5a",
+    "semantic_hash": "2f835a45e5d93cf4e0d0fa737c1f9b5a"
+  },
+  "README.md": {
+    "mtime": 1782050248.9693983,
+    "ast_hash": "9de26eb154c91fc94797de234d5596f7",
+    "semantic_hash": "9de26eb154c91fc94797de234d5596f7"
+  }
+}

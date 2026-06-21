@@ -51,7 +51,7 @@ class ComparisonRequest:
     max_files: int = request_field(20)
     max_bytes: int = request_field(524288)
     token_budget: int = request_field(8000)
-    max_tool_calls: int = request_field(10)
+    max_tool_calls: int = request_field(30)
     max_model_calls: int = request_field(5)
     max_iterations: int = request_field(3)
     max_retries: int = request_field(0)

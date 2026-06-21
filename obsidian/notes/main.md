@@ -1,14 +1,14 @@
 ---
-title: "snippets_foobar"
+title: "main"
 tags: [entity, code]
 date: 2026-06-22
 ---
 
-# snippets_foobar
+# main
 
 ## Properties
 - **Kind**: code
-- **File**: snippets/foobar.py
+- **File**: main.py
 - **Lines**: 1–1
 
 ## Related

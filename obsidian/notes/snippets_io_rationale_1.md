@@ -1,14 +1,14 @@
 ---
 title: "snippets_io_rationale_1"
 tags: [entity, rationale]
-date: 2026-06-21
+date: 2026-06-22
 ---
 
 # snippets_io_rationale_1
 
 ## Properties
 - **Kind**: rationale
-- **File**: .graphify/repos/andela/buggy-python/snippets/io.py
+- **File**: snippets/io.py
 - **Lines**: 1–1
 
 ## Related

@@ -10,7 +10,3 @@ flowchart LR
     agent --> comparison[Token comparison]
     graph --> diagrams[Reverse-engineering diagrams]
 ```
-
-The Phase 7 path is keyless and deterministic: Graphify supplies structural
-context, the vault renders navigable notes, and the agent/comparison runners
-use deterministic provider responses at the gatekeeper boundary.
