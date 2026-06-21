@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Version | 1.00 |
-| Date | 2026-06-20 |
+| Version | 1.04 |
+| Date | 2026-06-21 |
 | Scope | Phase 6-8 readiness assessment |
 
 ## Verified Strengths
@@ -61,4 +61,5 @@ Local keyless verification is complete. The 6 remaining tasks above have defined
 | 1.00 | 2026-06-20 | Initial evidence-backed self assessment. |
 | 1.01 | 2026-06-21 | Update for completed keyless deliverables (P8-R02/05/06/07, P6-R07/08, P7-R04). Update test count (531), coverage (95.35%), Graphify status (real run complete). |
 | 1.02 | 2026-06-21 | Add production-path repair semantics and clarify that clean-clone/remote-CI/PR evidence remain pending. |
+| 1.04 | 2026-06-21 | Sync header version to 1.04 per corrective commit; no content changes in this commit. Traceability: [TODO §11].
 | 1.03 | 2026-06-21 | Add Remaining Tasks section listing 6 open tasks with status; distinguish T6.05 closure-pending from 5 genuinely unimplemented; note this branch defines contracts only. Traceability: [TODO §11], [PLAN ADR-007/ADR-008/ADR-009]. |

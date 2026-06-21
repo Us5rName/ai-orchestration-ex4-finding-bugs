@@ -692,6 +692,94 @@ tests/unit/services/analysis/
 
 ---
 
+---
+
+### Prompt 46 — Remaining-Task Contract Definition
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only task; no production code)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Define full contracts, dependency plans, and implementation plans for the 6 remaining open tasks (T4.19, T5.03, T4.20, T6.05, T6.09, T8.13) in a single documentation-only commit. Lock contracts before implementation begins.
+
+**Context supplied**: Full task specification including 7 mandatory corrections (dependency graph, T6.05 redefinition as closure, FR-6.4, FR-8.x, graph/scoring semantics, stale PLAN corrections, wiki regeneration).
+
+**Key decisions**:
+- T6.05 status set to "In Progress" (not "Not Started") — core OrphanDetector implementation exists via T7.07; closure work remains
+- T4.19 GraphReader established as canonical graph read boundary (ADR-007)
+- Parity fingerprint defined for experimental comparison (ADR-008)
+- Self-grade scores evidence-derived with mandatory gate caps (ADR-009)
+- Execution order locked: T4.19 → T5.03 → T4.20 → T6.05 → T6.09 → T8.13
+- T8.13 implemented last because it evaluates the finalized architecture
+
+**Files changed** (23 files, 1724 insertions, 208 deletions):
+- `docs/PRD.md` — FR-6.4, FR-7.7, FR-8.1–FR-8.4 added; FR-7.5/7.6 marked implemented
+- `docs/PRD_comparison_experiment.md` — ParityFingerprint, InstrumentedCallResult, controlled/treatment classification
+- `docs/PRD_graph_guided_investigation.md` — GraphReader as canonical boundary, degree vs. BFS distinction
+- `docs/PRD_extension_analysis.md` — T6.05 In Progress, T6.05→FR-7.5→T7.07 traceability, EXT-3 weakness detector
+- `docs/PRD_artifact_provenance.md` — planned artifact paths for T6.05/T6.09/T8.13
+- `docs/PRD_self_grade.md` — **new file** — full self-grade contract
+- `docs/PLAN.md` — task dependency graph, ADR-007/008/009, stale paths corrected, planned SDK ops
+- `docs/TODO.md` — full contracts for 6 tasks, dependency Mermaid, statistics
+- `docs/EVIDENCE_MATRIX.md` — T6.05 core vs. closure distinction
+- `docs/SELF_ASSESSMENT.md` — remaining tasks table, contract-only branch note
+- `docs/PROMPT_LOG.md` (this document) — revision history entry
+- Generated wikis regenerated and verified in sync
+
+**Verification**: ruff 0 violations; validate_repo 19 checks passed; check_docs_sync clean; pre-commit (mypy + pytest ≥85%) passed.
+
+**Limitations**: Static keyless validation only. No CI run on remote. Some header metadata inconsistencies found in subsequent review (corrected in Prompt 47).
+
+**Actual outcome**: Branch feat/remaining-task-completion created and pushed. Commit 8ef07ad. 23 files changed, 1724 insertions, 208 deletions. Documentation-only — no production code.
+
+---
+
+### Prompt 47 — Reconcile Graph-Model and Remaining-Task Contracts
+
+**Date**: 2026-06-21
+**Model**: Claude 4.6 Sonnet
+**Effort**: Low (documentation-only corrective commit)
+**Branch**: feat/remaining-task-completion
+
+**Objective**: Apply 12 corrective documentation fixes identified in review of commit 8ef07ad before T4.19 implementation begins.
+
+**Context supplied**: Detailed 12-item review finding covering: (P0) missing graph model enrichment prerequisite; (P1) mutable GraphReader signatures; (P1) shallow WeaknessFinding; (P1) FR-7.5 status contradiction; (P1) stale header metadata; (P1) incomplete mandatory gate cap policy; (P1) incomplete prompt-log entry; (P1) optional vs. mandatory GraphReader migration for OrphanDetector; (P2) stale naïve-runner wording and TODO TOC; (P2) absolute filesystem wording; (P2/P3) misplaced self_grade_config_hash; (P2) T6.05 README wording.
+
+**Key decisions**:
+- T4.19a enrichment step documented as explicit prerequisite to T4.19 (Entity.id + label; Relationship.key/confidence/weight/source_anchor)
+- GraphReader return types changed to immutable (tuple, Mapping) throughout PLAN and TODO
+- WeaknessFinding replaced with EvidenceAnchor + RelationshipKey + WeaknessFinding using tuple fields
+- Unknown node in GraphReader: `node()` returns None, `edges_of()` returns empty tuple (decided, not deferred)
+- OrphanDetector internal delegation to GraphReader is mandatory post-T4.19; public API remains GraphData-accepting for compatibility
+- `self_grade_config_hash` moved to SelfGradeReport.provenance.config_hash; not a comparison-run manifest field
+- Mandatory gate ERROR/BLOCKED → assessment becomes INCOMPLETE; cap applied same as FAIL
+- Filesystem wording: "no unbounded or undisclosed discovery" replaces absolute prohibition
+- `graph_data: GraphData | None` explicitly documented with fallback behavior
+
+**Files changed**:
+- `docs/PLAN.md` — T4.19a enrichment prerequisite; immutable GraphReader signatures; WeaknessDetector consumes GraphReader; header v1.12
+- `docs/TODO.md` — T4.19a block; immutable GraphReader/WeaknessFinding contracts; EvidenceAnchor/RelationshipKey models; TOC links for T6.05/T6.09; OrphanDetector delegation wording; header v1.26
+- `docs/PRD_self_grade.md` — Mandatory Gate Cap Policy section (ERROR/BLOCKED/SKIPPED rules); header v1.1
+- `docs/PRD_graph_guided_investigation.md` — bounded filesystem wording; GraphData|None input; header v1.2
+- `docs/PRD_artifact_provenance.md` — self_grade_config_hash moved to SG provenance section; header v1.3
+- `docs/PRD.md` — FR-7.5 status "Partially Implemented"; header v1.03
+- `docs/PRD_extension_analysis.md` — version header added; date synced; header v1.2
+- `docs/PRD_comparison_experiment.md` — version header confirmed v1.1; date synced
+- `docs/EVIDENCE_MATRIX.md` — header v1.04 synced
+- `docs/SELF_ASSESSMENT.md` — header v1.04 synced
+- `docs/PROMPT_LOG.md` — full entries for Prompts 46 and 47 (this entry)
+- Generated wikis regenerated and verified
+
+**Verification**: ruff 0 violations; validate_repo passed; check_docs_sync clean; pre-commit passed.
+
+**Limitations**: Static keyless validation only. No CI run on remote.
+
+**Actual outcome**: Single documentation-only commit on feat/remaining-task-completion. All 12 corrective items addressed.
+
+---
+
+
 | Version | Date | Change |
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial prompt log — SDLC documentation phase |
@@ -723,4 +811,6 @@ tests/unit/services/analysis/
 | 1.26 | 2026-06-20 | Added Prompt 42 — OrphanDetector (FR-7.5) API design: added `orphan_detector.py` to Analysis Service sub-modules, `OrphanDetector` class with `find_orphans()`, `generate_stub()`, `detect_and_report()` methods, `OrphanReport` dataclass, `detect_orphans()` to Ex04SDK, OrphanDetector/OrphanReport to OOP Schema diagram. Updated PLAN.md monolith and all plan-wiki pages. (Traceability: [PRD FR-7.5], [TODO T6.05]) |
 | 1.27 | 2026-06-20 | Added Prompt 43 — Phase 6-8 recovery and finalization audit: preserved interrupted work, verified recovered commits, added mypy as a dev dependency, expanded generated wiki synchronization, added evidence matrix/self-assessment/blocked-operation/assets docs, and corrected T8.12 to pending until clean-clone verification is actually recorded. |
 | 1.28 | 2026-06-20 | Added Prompt 44 — Clean-clone verification: created an isolated worktree, ran dependency sync, keyless import, Ruff, mypy, pytest with coverage, docs sync, and repository validation; recorded results in `reports/clean_clone_verification.md`. |
+| 1.31 | 2026-06-21 | Added full Prompt 46 and Prompt 47 entries (corrective commit); previous v1.29 entry was only a revision-history line. Traceability: [TODO T4.19, T4.20, T5.03, T6.05, T6.09, T8.13].
+| 1.30 | 2026-06-21 | Added Prompt 46 entry with full context, decisions, files changed, verification, limitations, outcome.
 | 1.29 | 2026-06-21 | Added Prompt 45 — Remaining-task contract definition (feat/remaining-task-completion): define full contracts for T4.19 GraphReader, T5.03 parity helpers, T4.20 weakness detector, T6.05 orphan closure, T6.09 graph-diff, T8.13 self-grade; add ADR-007/ADR-008/ADR-009 and task dependency graph to PLAN; add FR-6.4/FR-7.7/FR-8.1–FR-8.4 to PRD; create PRD_self_grade.md; documentation-only commit. Claude 4.6 Sonnet, 2026-06-21. |

@@ -118,7 +118,7 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 | **PLAN Reference** | [PLAN §3.6 Analysis Service], [PLAN §11 Traceability Matrix — FR-7.5] |
 | **PRD Reference** | [PRD §5.7 FR-7.5], [PRD-EXT §EXT-1] |
 | **Traceability** | T6.05 → FR-7.5 → T7.07 (OrphanDetector implementation, Done) |
-| **Depends On** | T7.07 OrphanDetector (Done); optionally T4.19 for GraphReader integration |
+| **Depends On** | T7.07 OrphanDetector (Done); T4.19 for internal GraphReader delegation (public API remains GraphData-accepting for compatibility) |
 | **Estimate** | 60 min (closure only; core implementation exists) |
 
 **Selected Extension**: FR-7.5 Orphan Detection (formally selected for T6.05).
@@ -129,13 +129,13 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 - `tests/unit/services/analysis/test_orphan_detector.py` — unit tests
 
 **Remaining closure work**:
-1. Confirm or complete the public SDK path to `detect_orphans`.
+1. [x] Confirm or complete the public SDK path to `detect_orphans`. *(SDK exposure exists via T7.07)*
 2. Add deterministic JSON report to `artifacts/runs/<run-id>/reports/orphan_report.json`.
 3. Add Markdown report to `artifacts/runs/<run-id>/reports/orphan_report.md` (rendered from JSON).
 4. Persist reports through the artifact/provenance layer (ArtifactStore).
-5. After T4.19: reuse GraphReader for graph access where appropriate.
+5. After T4.19: OrphanDetector's internal graph queries shall delegate to GraphReader; the public API may continue accepting GraphData for backward compatibility.
 6. Add orphan report paths to run manifest (`extension_report_paths`).
-7. Add README usage section only after artifacts exist.
+7. Update README with real persisted JSON/Markdown report paths, generation command or SDK workflow, and verified evidence links — only after report persistence is implemented. (Note: existing README SDK usage for orphan detection is already present; the remaining work is linking to actual report artifacts.)
 8. Update evidence matrix with truthful evidence paths.
 9. Verify: happy path, empty graph, invalid threshold/input, and deterministic ordering all tested.
 

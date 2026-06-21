@@ -155,11 +155,46 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 | **Execution Order** | 1st of 6 remaining tasks |
 | **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (see below) |
 | **Depends On** | T4.02 GraphParser (Done) |
 | **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |
 
 **Purpose**: Provide a typed, read-only query facade over parsed `GraphData` so all graph consumers access graph structure through a single canonical boundary rather than rebuilding indexes independently. This is the graph read boundary mandated by [PLAN ADR-007].
+
+**T4.19a — Enrichment Prerequisite (must be completed before implementing GraphReader)**:
+
+The current `Entity` and `Relationship` types in `src/ex04/shared/types.py` do not carry the fields required by several GraphReader, WeaknessDetector, and GraphDiff contracts. T4.19 implementation must first extend these types — or introduce lossless wrappers — so that the single `GraphParser` path preserves all required information.
+
+Required enriched model (planned — not yet implemented):
+
+```python
+@dataclass
+class Entity:
+    id: str                              # stable graph node ID (not display name)
+    label: str                           # display name (was: name)
+    kind: str
+    file_path: str | None = None
+    line_range: tuple[int, int] | None = None
+    community: int | None = None
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+@dataclass
+class Relationship:
+    key: str                             # unique edge identity (enables parallel edges)
+    source_id: str                       # stable source entity ID
+    target_id: str                       # stable target entity ID
+    type: str = ""
+    confidence: str | None = None        # None = unknown; never upgraded to extracted fact
+    confidence_score: float | None = None
+    weight: float | None = None
+    source_anchor: str | None = None     # "file:start-end" relative path
+    metadata: Mapping[str, object] = field(default_factory=dict)
+```
+
+**One-parser-path rule**: All enrichment must happen inside the existing `GraphParser`. GraphReader and GraphDiff must not open or re-parse `graph.json` independently.
+
+**Without T4.19a**: T4.20 cannot detect low-confidence relationships; T6.09 cannot classify changed relationships by confidence/weight/anchor; T4.19 cannot distinguish stable ID from display name; parallel edges cannot be preserved.
 
 **Planned file**: `src/ex04/services/graph/reader.py`
 
@@ -182,22 +217,25 @@ class GraphReader:
     # Delegates to GraphParser — does not create a second raw-JSON parsing path.
 
     def node(self, node_id: str) -> Entity | None: ...
+    # Returns None for unknown node IDs. edges_of() returns empty tuple for unknown nodes.
     # Uses stable entity ID (not display name) as identity.
 
-    def all_nodes(self) -> list[Entity]: ...
-    # Deterministic ordering by stable entity ID.
+    def all_nodes(self) -> tuple[Entity, ...]: ...
+    # Deterministic ordering by stable entity ID. Immutable result.
 
     def edges_of(
         self,
         node_id: str,
-        direction: Literal["outgoing", "incoming", "both"] = "both",
-    ) -> list[Relationship]: ...
+        *,
+        direction: EdgeDirection = EdgeDirection.BOTH,
+    ) -> tuple[Relationship, ...]: ...
     # Preserves direction, type, and parallel relationships.
+    # Returns empty tuple for unknown node IDs — never raises.
 
-    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    def top_n_by_degree(self, n: int) -> tuple[tuple[Entity, int], ...]: ...
     # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
 
-    def communities(self) -> dict[str, list[Entity]]: ...
+    def communities(self) -> Mapping[str, tuple[Entity, ...]]: ...
     # Key: community name/ID. Entities within each community in stable order.
 ```
 
@@ -213,7 +251,7 @@ class GraphReader:
 **Edge cases to handle**:
 - Empty graph → valid reader with empty results.
 - Isolated nodes → included in `all_nodes()`, degree 0.
-- Unknown node ID in queries → return `None` or empty list, not raise.
+- Unknown node ID in `node()` → return `None` (decided: never raise). Unknown node in `edges_of()` → return empty tuple.
 - Duplicate display names → resolved by stable entity ID.
 - Edge-only malformed graphs → log warning; return best-effort results.
 - Invalid graph artifacts → raise `InvalidGraphError` with context.
@@ -682,18 +720,32 @@ signals_source.py — semantic-duplicate signal (AST-aware Python analysis)
 **Finding Contract**:
 
 ```python
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
+class EvidenceAnchor:
+    file_path: str
+    start_line: int | None
+    end_line: int | None
+    entity_id: str | None
+
+@dataclass(frozen=True, slots=True)
+class RelationshipKey:
+    source_id: str
+    target_id: str
+    relationship_type: str
+    parallel_key: str | None
+
+@dataclass(frozen=True, slots=True)
 class WeaknessFinding:
-    finding_id: str            # Stable, deterministic ID
-    signal: SignalType         # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
-    severity: Severity         # Enum: HIGH, MEDIUM, LOW, INFO
-    confidence: Confidence     # Enum: HIGH, MEDIUM, LOW, UNKNOWN
-    normalized_score: float    # In [0.0, 1.0]
-    affected_entities: list[str]  # Stable entity IDs
-    affected_relationships: list[str]  # Stable relationship IDs
-    evidence_anchors: list[str]  # "file:start-end" relative paths
-    limitations: list[str]     # What the finding does NOT prove
-    description: str           # Human-readable; no overclaiming
+    finding_id: str                          # Stable, deterministic ID
+    signal_type: SignalType                  # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
+    severity: Severity                       # Enum: HIGH, MEDIUM, LOW, INFO
+    confidence: Confidence                   # Enum: HIGH, MEDIUM, LOW, UNKNOWN
+    normalized_score: float                  # In [0.0, 1.0]
+    entity_ids: tuple[str, ...]              # Stable entity IDs (immutable)
+    relationship_keys: tuple[RelationshipKey, ...]  # Typed relationship identities
+    evidence: tuple[EvidenceAnchor, ...]     # Typed, typed evidence anchors
+    limitations: tuple[str, ...]             # What the finding does NOT prove
+    description: str                         # Human-readable; no overclaiming
 ```
 
 **Constraints**:

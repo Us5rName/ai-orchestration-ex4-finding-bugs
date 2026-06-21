@@ -3,11 +3,11 @@
 | Field | Value |
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.00 |
-| **Date** | 2026-06-19 |
+| **Version** | 1.26 |
+| **Date** | 2026-06-21 |
 | **Status** | Draft |
-| **PRD Reference** | `docs/PRD.md` v1.00 |
-| **PLAN Reference** | `docs/PLAN.md` v1.00 |
+| **PRD Reference** | `docs/PRD.md` v1.02 |
+| **PLAN Reference** | `docs/PLAN.md` v1.12 |
 
 ---
 
@@ -64,8 +64,8 @@
    - [T6.02 — Graph-Guided Runner](#t602--graph-guided-runner)
    - [T6.03 — Metrics Calculator](#t603--metrics-calculator)
    - [T6.04 — Comparison Report Generator](#t604--comparison-report-generator)
-   - [T6.05 — Implement an Additional Extension](#t605--implement-an-additional-extension)
-   - [T6.09 — Graph-Diff Comparison Report Section](#t609--graph-diff-comparison-report-section)
+   - [T6.05 — Orphan Detection Closure (FR-7.5)](#t605--orphan-detection-closure-fr-75)
+   - [T6.09 — Full Graph-Diff Comparison Report Section](#t609--full-graph-diff-comparison-report-section)
 8. [Phase 7 — End-to-End Execution](#8-phase-7--end-to-end-execution)
    - [T7.01 — Run Grphify on Target Codebase](#t701--run-grphify-on-target-codebase)
    - [T7.02 — Build Obsidian Vault](#t702--build-obsidian-vault)
@@ -748,11 +748,46 @@ uv run pytest tests/unit/services/graph/test_analyzer.py -v --cov=ex04.services.
 | **Execution Order** | 1st of 6 remaining tasks |
 | **PLAN Reference** | [PLAN §3.3 Graph Service], [PLAN ADR-007] |
 | **PRD Reference** | [PRD-GGI §GraphReader], [PRD §5.7 FR-7.7] |
+| **Prerequisite sub-step** | T4.19a — Enrich canonical graph model and parser (see below) |
 | **Depends On** | T4.02 GraphParser (Done) |
 | **Enables** | T4.20 WeaknessDetector, T6.09 GraphDiff, T6.05 GraphReader integration |
 | **Estimate** | 60 min |
 
 **Purpose**: Provide a typed, read-only query facade over parsed `GraphData` so all graph consumers access graph structure through a single canonical boundary rather than rebuilding indexes independently. This is the graph read boundary mandated by [PLAN ADR-007].
+
+**T4.19a — Enrichment Prerequisite (must be completed before implementing GraphReader)**:
+
+The current `Entity` and `Relationship` types in `src/ex04/shared/types.py` do not carry the fields required by several GraphReader, WeaknessDetector, and GraphDiff contracts. T4.19 implementation must first extend these types — or introduce lossless wrappers — so that the single `GraphParser` path preserves all required information.
+
+Required enriched model (planned — not yet implemented):
+
+```python
+@dataclass
+class Entity:
+    id: str                              # stable graph node ID (not display name)
+    label: str                           # display name (was: name)
+    kind: str
+    file_path: str | None = None
+    line_range: tuple[int, int] | None = None
+    community: int | None = None
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+@dataclass
+class Relationship:
+    key: str                             # unique edge identity (enables parallel edges)
+    source_id: str                       # stable source entity ID
+    target_id: str                       # stable target entity ID
+    type: str = ""
+    confidence: str | None = None        # None = unknown; never upgraded to extracted fact
+    confidence_score: float | None = None
+    weight: float | None = None
+    source_anchor: str | None = None     # "file:start-end" relative path
+    metadata: Mapping[str, object] = field(default_factory=dict)
+```
+
+**One-parser-path rule**: All enrichment must happen inside the existing `GraphParser`. GraphReader and GraphDiff must not open or re-parse `graph.json` independently.
+
+**Without T4.19a**: T4.20 cannot detect low-confidence relationships; T6.09 cannot classify changed relationships by confidence/weight/anchor; T4.19 cannot distinguish stable ID from display name; parallel edges cannot be preserved.
 
 **Planned file**: `src/ex04/services/graph/reader.py`
 
@@ -775,22 +810,25 @@ class GraphReader:
     # Delegates to GraphParser — does not create a second raw-JSON parsing path.
 
     def node(self, node_id: str) -> Entity | None: ...
+    # Returns None for unknown node IDs. edges_of() returns empty tuple for unknown nodes.
     # Uses stable entity ID (not display name) as identity.
 
-    def all_nodes(self) -> list[Entity]: ...
-    # Deterministic ordering by stable entity ID.
+    def all_nodes(self) -> tuple[Entity, ...]: ...
+    # Deterministic ordering by stable entity ID. Immutable result.
 
     def edges_of(
         self,
         node_id: str,
-        direction: Literal["outgoing", "incoming", "both"] = "both",
-    ) -> list[Relationship]: ...
+        *,
+        direction: EdgeDirection = EdgeDirection.BOTH,
+    ) -> tuple[Relationship, ...]: ...
     # Preserves direction, type, and parallel relationships.
+    # Returns empty tuple for unknown node IDs — never raises.
 
-    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
+    def top_n_by_degree(self, n: int) -> tuple[tuple[Entity, int], ...]: ...
     # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
 
-    def communities(self) -> dict[str, list[Entity]]: ...
+    def communities(self) -> Mapping[str, tuple[Entity, ...]]: ...
     # Key: community name/ID. Entities within each community in stable order.
 ```
 
@@ -806,7 +844,7 @@ class GraphReader:
 **Edge cases to handle**:
 - Empty graph → valid reader with empty results.
 - Isolated nodes → included in `all_nodes()`, degree 0.
-- Unknown node ID in queries → return `None` or empty list, not raise.
+- Unknown node ID in `node()` → return `None` (decided: never raise). Unknown node in `edges_of()` → return empty tuple.
 - Duplicate display names → resolved by stable entity ID.
 - Edge-only malformed graphs → log warning; return best-effort results.
 - Invalid graph artifacts → raise `InvalidGraphError` with context.
@@ -1275,18 +1313,32 @@ signals_source.py — semantic-duplicate signal (AST-aware Python analysis)
 **Finding Contract**:
 
 ```python
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
+class EvidenceAnchor:
+    file_path: str
+    start_line: int | None
+    end_line: int | None
+    entity_id: str | None
+
+@dataclass(frozen=True, slots=True)
+class RelationshipKey:
+    source_id: str
+    target_id: str
+    relationship_type: str
+    parallel_key: str | None
+
+@dataclass(frozen=True, slots=True)
 class WeaknessFinding:
-    finding_id: str            # Stable, deterministic ID
-    signal: SignalType         # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
-    severity: Severity         # Enum: HIGH, MEDIUM, LOW, INFO
-    confidence: Confidence     # Enum: HIGH, MEDIUM, LOW, UNKNOWN
-    normalized_score: float    # In [0.0, 1.0]
-    affected_entities: list[str]  # Stable entity IDs
-    affected_relationships: list[str]  # Stable relationship IDs
-    evidence_anchors: list[str]  # "file:start-end" relative paths
-    limitations: list[str]     # What the finding does NOT prove
-    description: str           # Human-readable; no overclaiming
+    finding_id: str                          # Stable, deterministic ID
+    signal_type: SignalType                  # Enum: HIGH_DEGREE, ISOLATED_COMPONENT, etc.
+    severity: Severity                       # Enum: HIGH, MEDIUM, LOW, INFO
+    confidence: Confidence                   # Enum: HIGH, MEDIUM, LOW, UNKNOWN
+    normalized_score: float                  # In [0.0, 1.0]
+    entity_ids: tuple[str, ...]              # Stable entity IDs (immutable)
+    relationship_keys: tuple[RelationshipKey, ...]  # Typed relationship identities
+    evidence: tuple[EvidenceAnchor, ...]     # Typed, typed evidence anchors
+    limitations: tuple[str, ...]             # What the finding does NOT prove
+    description: str                         # Human-readable; no overclaiming
 ```
 
 **Constraints**:
@@ -1594,7 +1646,7 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 | **PLAN Reference** | [PLAN §3.6 Analysis Service], [PLAN §11 Traceability Matrix — FR-7.5] |
 | **PRD Reference** | [PRD §5.7 FR-7.5], [PRD-EXT §EXT-1] |
 | **Traceability** | T6.05 → FR-7.5 → T7.07 (OrphanDetector implementation, Done) |
-| **Depends On** | T7.07 OrphanDetector (Done); optionally T4.19 for GraphReader integration |
+| **Depends On** | T7.07 OrphanDetector (Done); T4.19 for internal GraphReader delegation (public API remains GraphData-accepting for compatibility) |
 | **Estimate** | 60 min (closure only; core implementation exists) |
 
 **Selected Extension**: FR-7.5 Orphan Detection (formally selected for T6.05).
@@ -1605,13 +1657,13 @@ uv run pytest tests/unit/services/comparison/test_report_gen.py -v
 - `tests/unit/services/analysis/test_orphan_detector.py` — unit tests
 
 **Remaining closure work**:
-1. Confirm or complete the public SDK path to `detect_orphans`.
+1. [x] Confirm or complete the public SDK path to `detect_orphans`. *(SDK exposure exists via T7.07)*
 2. Add deterministic JSON report to `artifacts/runs/<run-id>/reports/orphan_report.json`.
 3. Add Markdown report to `artifacts/runs/<run-id>/reports/orphan_report.md` (rendered from JSON).
 4. Persist reports through the artifact/provenance layer (ArtifactStore).
-5. After T4.19: reuse GraphReader for graph access where appropriate.
+5. After T4.19: OrphanDetector's internal graph queries shall delegate to GraphReader; the public API may continue accepting GraphData for backward compatibility.
 6. Add orphan report paths to run manifest (`extension_report_paths`).
-7. Add README usage section only after artifacts exist.
+7. Update README with real persisted JSON/Markdown report paths, generation command or SDK workflow, and verified evidence links — only after report persistence is implemented. (Note: existing README SDK usage for orphan detection is already present; the remaining work is linking to actual report artifacts.)
 8. Update evidence matrix with truthful evidence paths.
 9. Verify: happy path, empty graph, invalid threshold/input, and deterministic ordering all tested.
 
@@ -2531,7 +2583,8 @@ The six remaining open tasks have explicit dependencies overriding the default p
 ```mermaid
 graph TD
     T402[T4.02 GraphParser - Done]
-    T402 --> T419[T4.19 GraphReader - Not Started]
+    T402 --> T419a[T4.19a Graph Model Enrichment - Not Started]
+    T419a --> T419[T4.19 GraphReader - Not Started]
     T419 --> T420[T4.20 WeaknessDetector - Not Started]
     T419 --> T609[T6.09 GraphDiff - Not Started]
     T707[T7.07 OrphanDetector - Done]
@@ -2626,4 +2679,5 @@ Stable repair task IDs for post-submission truthfulness repairs. Source: `/plan`
 | 1.22 | 2026-06-21 | Mark P6-R10 through P8-R10 complete after local Ruff, mypy, validator, docs-sync, and pytest verification; keep P8-R11 incomplete until clean-clone and PR evidence are recorded. |
 | 1.23 | 2026-06-21 | Add pending follow-up tasks for typed graph reader, multi-signal weakness detector, agent workflow parity helpers, graph-diff comparison reporting, and self-grade service. |
 | 1.24 | 2026-06-21 | Full documentation sync: mark T1.02, T2.06, T3.01–T3.05, T4.00, T4.002, T4.01, T6.04, T8.01–T8.05 Done (implemented but status stale); mark P8-R11 Complete; update Statistics to 74 total / 68 Done / 6 open (T4.19, T4.20, T5.03, T6.05, T6.09, T8.13). Traceability: [PRD §8], [PLAN §3], implementation verified in src/. |
+| 1.26 | 2026-06-21 | Reconcile graph-model and remaining-task contracts: add T4.19a enrichment prerequisite block; replace GraphReader/WeaknessFinding mutable types with immutable tuple/Mapping forms; add EvidenceAnchor and RelationshipKey typed models; fix T6.05 GraphReader delegation wording (mandatory internal, public compatible); fix T6.05 README wording; update TOC links for T6.05/T6.09; add T4.19a to Mermaid diagram; sync header to v1.26. Traceability: [PRD §5.7 FR-7.7], [PLAN §3.3 GraphReader], [PLAN ADR-007].
 | 1.25 | 2026-06-21 | Define full contracts for 6 remaining tasks: rewrite T4.19 (GraphReader facade), T4.20 (weakness detector), T5.03 (parity helpers), T6.05 (orphan closure — In Progress, not Not Started), T6.09 (graph-diff report), T8.13 (self-grade service); add explicit task dependency graph and execution order; update statistics to distinguish T6.05 closure-pending from 5 genuinely unimplemented tasks. Traceability: [PRD §5.6 FR-6.4], [PRD §5.7 FR-7.7], [PRD §5.8 FR-8.1–FR-8.4], [PLAN ADR-007/ADR-008/ADR-009]. |

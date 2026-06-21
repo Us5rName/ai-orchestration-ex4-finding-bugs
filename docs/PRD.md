@@ -3,10 +3,10 @@
 | Field | Value |
 |---|---|
 | **Project** | EX04 — Reverse Engineering, Debugging & Token-Efficient Agentic AI |
-| **Version** | 1.00 |
+| **Version** | 1.02 |
 | **Course** | AI Orchestration, שנה 3 |
 | **Instructor** | ד"ר יורם סגל |
-| **Date** | 2026-06-19 |
+| **Date** | 2026-06-21 |
 | **Status** | Draft |
 
 ---
@@ -250,7 +250,7 @@ The system will:
 | FR-7.2 | Candidate extension: Rank suspect nodes by centrality and proximity to failed tests (HW [§5.6]) | Should |
 | FR-7.3 | Candidate extension: Architecture comparison before/after fix using graphs or schemas (HW [§5.6]) | Could |
 | FR-7.4 | Candidate extension: Dynamic diff — generate a typed pre/post structural comparison of graph entities, relationships, and communities from `graph.json` snapshots before and after the fix (ASSIGNMENT.md [§5.6]) | Could |
-| FR-7.5 | **Implemented** — Orphan detection: identify unreachable/weakly-connected graph entities and generate deterministic JSON and Markdown reports with source anchors. Selected as the T6.05 additional extension. (ASSIGNMENT.md [§5.6]) | Must |
+| FR-7.5 | **Partially Implemented** — Orphan detection: identify unreachable/weakly-connected graph entities. Core algorithm, SDK exposure (`Ex04SDK.detect_orphans()`), and unit tests are implemented (T7.07 Done). Run-scoped JSON and Markdown reporting and closure evidence remain pending (T6.05 In Progress). Selected as the T6.05 additional extension. (ASSIGNMENT.md [§5.6]) | Must |
 | FR-7.6 | **Implemented** — Impact report: given changed symbols, traverse reverse-dependency edges and list all entities that would be affected by a change. (ASSIGNMENT.md [§5.6]) | Must |
 | FR-7.7 | **Multi-Signal Weakness Detection** — The system shall implement a configurable weakness detector over graph and source evidence, producing typed findings with stable IDs, severity, confidence, evidence anchors, and deterministic ranking. Required signals: (1) high-degree entity, (2) isolated or weakly-connected component, (3) ambiguous/unknown/low-confidence relationship, (4) broken dependency path, (5) semantic duplicate. Python semantic duplicate analysis shall use AST-aware methods, not regex. Findings shall not overstate evidence: missing source anchors are source-validation failures not broken dependency paths; high-degree nodes are not automatically cross-community bridges; isolated components are not automatically defects; graph reachability does not prove runtime impact. (Project-level engineering requirement supporting [PRD §5.7 FR-7.1] original extension.) | Should |
 
@@ -409,4 +409,5 @@ code/
 |---|---|---|
 | 1.00 | 2026-06-19 | Initial PRD creation |
 | 1.01 | 2026-06-19 | Add FR-7.4/7.5/7.6 (extension candidates), NFR-10 (per-step logging), C8/C9 (workflow and isolation constraints), slim D11, add §2.3 Evaluation Philosophy |
+| 1.03 | 2026-06-21 | Correct FR-7.5 status from "Implemented" to "Partially Implemented" — core algorithm and SDK exposure exist (T7.07); run-scoped JSON/Markdown reporting remains pending (T6.05). Traceability: [TODO T6.05], [PRD-EXT §EXT-1].
 | 1.02 | 2026-06-21 | Add FR-6.4 Experimental Parity; refine FR-7.4 for typed pre/post structural comparison; update FR-7.5 and FR-7.6 as implemented; add FR-7.7 Multi-Signal Weakness Detection; add §5.8 FR-8.1–FR-8.4 Self-Grade Service requirements. Traceability: [ASSIGNMENT.md §5.5–5.6], project engineering requirements supporting scientific validity. |

@@ -5,7 +5,8 @@
 | **Requirement ID** | PRD-GGI |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.4 (FR-4.x), §5.5 (FR-5.x) |
 | **Status** | Active |
-| **Date** | 2026-06-20 |
+| **Version** | 1.2 |
+| **Date** | 2026-06-21 |
 
 ---
 
@@ -31,7 +32,7 @@ Out of scope: LangGraph node internals, Graphify CLI invocation, vault build log
 | Input | Type | Description |
 |---|---|---|
 | `bug_report` | `str` | Natural-language bug description |
-| `graph_data` | `GraphData` | Parsed Graphify output with entities and relationships |
+| `graph_data` | `GraphData \| None` | Parsed Graphify output with entities and relationships. When `None`, investigation falls back to vault-only mode and limitations are recorded. |
 | `vault_path` | `Path` | Root of generated Obsidian vault |
 
 ---
@@ -68,7 +69,7 @@ The context builder shall use degree ranking to prioritize candidate entities, a
 
 - Graph entities used must have `file_path` and `line_range` populated (source-anchored).
 - Vault notes read must be traceable to vault path (index.md → hot.md → component note).
-- The set of entities selected must come exclusively from `graph_data` via `GraphReader` — no filesystem scan and no independent graph-index reconstruction.
+- The set of entities selected must come exclusively from `graph_data` via `GraphReader` — no unbounded or undisclosed filesystem discovery. Every source read must result from a bounded navigation operation and be recorded in the evidence trace. No independent graph-index reconstruction.
 - Source-anchor format: `<relative_path>:<start>-<end>` (relative to target root).
 - Direction-aware edge queries must preserve relationship direction and type.
 
@@ -87,7 +88,7 @@ The context builder shall use degree ranking to prioritize candidate entities, a
 
 | Condition | Behavior |
 |---|---|
-| `graph_data` is None | Fall back to vault-only or return result with `limitations` set |
+| `graph_data` is `None` | Fall back to vault-only context; record limitation "graph_data unavailable — graph-guided ranking disabled"; proceed with vault navigation only |
 | `vault_path` is None | Omit vault context; log limitation |
 | No entities above centrality threshold | Return top-N regardless of threshold |
 | Provider unavailable | Return `InvestigationResult` with `telemetry_available=False` |
@@ -106,7 +107,7 @@ The context builder shall use degree ranking to prioritize candidate entities, a
 - [ ] `GraphGuidedRunner.run` uses entity names, relationships, and vault notes.
 - [ ] `RunMetrics.files_read` counts only vault files used, not all vault files.
 - [ ] Source anchors in result map to real line ranges in `graph_data.entities`.
-- [ ] Tests confirm graph mode never reads from filesystem directly (only via graph_data).
+- [ ] Tests confirm graph mode never performs unbounded filesystem discovery — all source reads result from bounded navigation operations recorded in the evidence trace.
 
 ---
 
@@ -140,4 +141,5 @@ The context builder shall use degree ranking to prioritize candidate entities, a
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 7 finalization |
+| 1.2 | 2026-06-21 | Tighten filesystem wording: "no unbounded or undisclosed filesystem discovery" replaces absolute prohibition; reconcile `graph_data` input type as `GraphData | None` with explicit fallback behavior; update acceptance criteria accordingly. Traceability: [PRD §5.4 FR-4.2], [PLAN ADR-007].
 | 1.1 | 2026-06-21 | Add `GraphReader` as canonical graph access boundary; clarify degree vs. BFS semantics; remove overstated claim that degree centrality is simply more stable than BFS; add direction-aware edge query contract; prohibit independent graph-index reconstruction in consumers. Traceability: [PRD §5.4 FR-4.2], planned [PLAN ADR-007 GraphReader]. |

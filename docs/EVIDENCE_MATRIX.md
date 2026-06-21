@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| Version | 1.00 |
-| Date | 2026-06-20 |
+| Version | 1.04 |
+| Date | 2026-06-21 |
 | Scope | Phase 6-8 finalization evidence |
 
 ## Evidence Classes
@@ -58,4 +58,5 @@
 | 1.00 | 2026-06-20 | Initial Phase 6-8 evidence matrix. |
 | 1.01 | 2026-06-21 | Add P8-R02/05/06/07, P6-R07/08, P7-R04 rows. Update Graphify status (real run complete). |
 | 1.02 | 2026-06-21 | Add P6-R10 through P8-R10 repair rows and update coverage to 531 tests / 95.35%. |
+| 1.04 | 2026-06-21 | Sync header version to 1.04 per corrective commit; no evidence rows changed in this commit. Traceability: [PRD-EXT §EXT-1].
 | 1.03 | 2026-06-21 | Add T7.07→FR-7.5 (core complete) and T6.05→FR-7.5 (closure in progress) rows; distinguish core implementation evidence from closure/report-persistence evidence. Traceability: [TODO T6.05], [PRD-EXT §EXT-1]. |

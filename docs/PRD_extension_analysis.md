@@ -5,7 +5,8 @@
 | **Requirement ID** | PRD-EXT |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.7 (FR-7.4–7.6) |
 | **Status** | Active |
-| **Date** | 2026-06-20 |
+| **Version** | 1.2 |
+| **Date** | 2026-06-21 |
 
 ---
 
@@ -255,4 +256,5 @@ src/ex04/services/analysis/weakness_detector/
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 6-7 extensions |
+| 1.2 | 2026-06-21 | Add version header field; sync date to 2026-06-21; EvidenceAnchor/RelationshipKey/WeaknessFinding typed immutable models referenced in EXT-3 — see PLAN.md for full model. Traceability: [PLAN §3.6 weakness_detector], [TODO T4.20].
 | 1.1 | 2026-06-21 | Formally select FR-7.5 as T6.05 extension; add T6.05 traceability and closure work definition; add GraphReader integration requirement; update EXT-1 acceptance criteria to distinguish implemented vs. closure-pending items; add §EXT-3 for planned FR-7.7 weakness detection (T4.20). Traceability: [PRD §5.7 FR-7.5, FR-7.7], [TODO T6.05, T7.07, T4.20]. |

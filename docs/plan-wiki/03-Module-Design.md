@@ -15,7 +15,13 @@ Tasks are **independently verifiable and parallel by default**, except where exp
 ```
 T4.02 GraphParser (Done)
         ↓
-T4.19 GraphReader (builds read-only facade over GraphParser output)
+T4.19a Graph Model/Parser Enrichment (prerequisite sub-step of T4.19)
+   — extend Entity with stable `id`, `label`, community, metadata
+   — extend Relationship with `key`, `confidence`, `confidence_score`,
+     `weight`, `source_anchor`, metadata
+   — update GraphParser to preserve all fields; single parser path
+        ↓
+T4.19 GraphReader (builds read-only facade over enriched GraphParser output)
    ┌────┴─────────────┐
    ↓                  ↓
 T4.20              T6.09
@@ -38,7 +44,7 @@ T8.13 Self-Grade Service
 ```
 
 **Execution order for remaining tasks:**
-1. T4.19 — GraphReader (enables T4.20, T6.09, and T6.05 GraphReader integration)
+1. T4.19 (T4.19a first) — Graph model/parser enrichment, then GraphReader facade (enables T4.20, T6.09, and T6.05 GraphReader integration)
 2. T5.03 — Parity Helpers (early, so all comparison evidence is fair)
 3. T4.20 — WeaknessDetector
 4. T6.05 — Orphan Detection closure
@@ -321,13 +327,47 @@ class GraphAnalyzer:
     def detect_communities(self, graph: GraphData) -> list[Community]: ...
 
 # reader.py (planned)
+# T4.19a prerequisite: Entity must carry stable `id` + `label`; Relationship must carry
+# `key`, `confidence`, `confidence_score`, `weight`, `source_anchor`. GraphParser must
+# be extended to preserve these fields before GraphReader can honour all contracts.
+class EdgeDirection(str, Enum):
+    OUTGOING = "outgoing"
+    INCOMING = "incoming"
+    BOTH = "both"
+
 class GraphReader:
-    """Read-only typed query facade over parsed graph data."""
-    def node(self, node_id: str) -> Entity: ...
-    def all_nodes(self) -> list[Entity]: ...
-    def edges_of(self, node_id: str) -> list[Relationship]: ...
-    def top_n_by_degree(self, n: int) -> list[tuple[Entity, int]]: ...
-    def communities(self) -> dict[str, list[Entity]]: ...
+    """Read-only typed query facade over parsed graph data. [ADR-007]
+
+    Prerequisite (T4.19a): entity model must expose stable `id` distinct from display
+    `label`; relationship model must expose `key`, `confidence`, `confidence_score`,
+    `weight`, `source_anchor`. See T4.19a enrichment step in TODO.md.
+    """
+    def __init__(self, graph_data: GraphData) -> None: ...
+
+    @classmethod
+    def from_path(cls, graph_path: Path) -> "GraphReader": ...
+    # Delegates to GraphParser — no second raw-JSON parsing path.
+
+    def node(self, node_id: str) -> Entity | None: ...
+    # Returns None for unknown node IDs — never raises.
+
+    def all_nodes(self) -> tuple[Entity, ...]: ...
+    # Deterministic ordering by stable entity ID.
+
+    def edges_of(
+        self,
+        node_id: str,
+        *,
+        direction: EdgeDirection = EdgeDirection.BOTH,
+    ) -> tuple[Relationship, ...]: ...
+    # Preserves direction, type, and parallel relationships.
+    # Returns empty tuple for unknown node IDs — never raises.
+
+    def top_n_by_degree(self, n: int) -> tuple[tuple[Entity, int], ...]: ...
+    # Raises ValueError for n < 0. Deterministic tie-breaking (stable ID sort).
+
+    def communities(self) -> Mapping[str, tuple[Entity, ...]]: ...
+    # Key: community name/ID. Entities within each community in stable order.
 ```
 
 ### 3.4 Vault Service — Obsidian Management
@@ -519,10 +559,13 @@ class OrphanDetector:
     def generate_stub(self, entity: Entity) -> str: ...
     def detect_and_report(self, graph: GraphData, output_dir: Path) -> OrphanReport: ...
 
-# weakness_detector.py (planned)
+# weakness_detector/ package (planned — T4.20)
+# WeaknessDetector consumes GraphReader (not raw GraphData directly).
+# EvidenceAnchor and RelationshipKey are fully typed immutable dataclasses.
+# WeaknessFinding uses tuple fields to enforce deep immutability.
 class WeaknessDetector:
-    """Run deterministic graph/source weakness signals and rank findings."""
-    def detect(self, graph_data: GraphData) -> list[WeaknessFinding]: ...
+    """Run deterministic graph/source weakness signals and rank findings. [FR-7.7]"""
+    def detect(self, reader: "GraphReader") -> "WeaknessReport": ...
 ```
 
 ### 3.7 Comparison Service — Token Savings Proof

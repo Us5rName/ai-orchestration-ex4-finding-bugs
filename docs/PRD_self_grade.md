@@ -5,6 +5,7 @@
 | **Requirement ID** | PRD-SG |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.8 (FR-8.1–FR-8.4) |
 | **Status** | Planned |
+| **Version** | 1.1 |
 | **Date** | 2026-06-21 |
 
 ---
@@ -129,6 +130,21 @@ found, permission denied, unexpected exception). These must not be conflated.
 
 ---
 
+## Mandatory Gate Cap Policy
+
+A mandatory gate contributes to an admissible grade **only** when its status is `PASS`.
+
+| Gate Status | Effect on Final Score |
+|---|---|
+| `PASS` | No cap applied (gate passed) |
+| `FAIL` | Apply configured `mandatory_cap` |
+| `ERROR` | Mark assessment `INCOMPLETE`; apply same cap as `FAIL` (cap ≥ actual FAIL cap is not allowed) |
+| `BLOCKED` | Mark assessment `INCOMPLETE`; apply same cap as `FAIL` |
+| `SKIPPED` (required check) | Treated as `BLOCKED` — cap applies |
+| `SKIPPED` (optional check) | No cap applied; omit from denominator |
+
+**Rationale**: A mandatory correctness check that cannot execute (infrastructure error, blocked prerequisite) must not allow the raw score to stand. The grade becomes `INCOMPLETE` with the same cap applied as if the gate had explicitly failed. This prevents circumventing mandatory gates through execution errors.
+
 ## Score Calculation
 
 ```
@@ -162,10 +178,12 @@ Final score: 59
 | Check fails | Status=FAIL; earned points = 0 |
 | Command not found | Status=ERROR; earned points = 0; error message captured |
 | Timeout exceeded | Status=ERROR; earned points = 0; duration recorded |
-| Mandatory gate fails | Apply mandatory_cap to final score |
-| Multiple mandatory gates fail | Apply lowest mandatory_cap |
-| BLOCKED check | Status=BLOCKED; earned points = 0; blocking gate ID recorded |
-| SKIPPED check (required=True) | Counts as FAIL for scoring |
+| Mandatory gate FAIL | Apply mandatory_cap; final score ≤ mandatory_cap |
+| Mandatory gate ERROR or BLOCKED | Assessment marked INCOMPLETE; apply same cap as FAIL (no higher); a mandatory gate contributes to an admissible grade only when PASS |
+| Required check SKIPPED | Treated as BLOCKED; same cap applies |
+| Multiple mandatory gates fail/error/blocked | Apply lowest applicable mandatory_cap |
+| BLOCKED check (non-mandatory) | Status=BLOCKED; earned points = 0; blocking gate ID recorded |
+| SKIPPED check (required=True) | Treated as BLOCKED for scoring purposes |
 | SKIPPED check (required=False) | Omitted from score denominator |
 
 ---
@@ -261,4 +279,5 @@ The CLI must delegate entirely to the SDK. No grading logic in the CLI.
 
 | Version | Date | Change |
 |---|---|---|
+| 1.1 | 2026-06-21 | Add explicit Mandatory Gate Cap Policy section covering ERROR, BLOCKED, and required SKIPPED gate statuses; expand Behavior Table with INCOMPLETE assessment status. Traceability: [PRD §5.8 FR-8.3], [PLAN ADR-009].
 | 1.0 | 2026-06-21 | Initial creation defining self-grade contract for T8.13. Traceability: [PRD §5.8 FR-8.1–FR-8.4], [TODO T8.13], [PLAN §3.10]. |

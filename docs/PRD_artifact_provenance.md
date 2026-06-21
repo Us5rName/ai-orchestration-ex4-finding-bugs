@@ -5,7 +5,8 @@
 | **Requirement ID** | PRD-AP |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §9 (Repository Structure) |
 | **Status** | Active |
-| **Date** | 2026-06-20 |
+| **Version** | 1.3 |
+| **Date** | 2026-06-21 |
 
 ---
 
@@ -92,11 +93,38 @@ Every `artifacts/manifests/<run-id>_manifest.json` must contain:
 | `pre_graph_hash` | str \| null | SHA-256 of pre-fix graph.json |
 | `post_graph_hash` | str \| null | SHA-256 of post-fix graph.json |
 | `graph_diff_hash` | str \| null | SHA-256 of graph_diff.json |
-| `self_grade_config_hash` | str \| null | SHA-256 of self-grade rubric configuration (planned T8.13) |
+| `extension_report_paths` | list[str] \| null | Relative paths to extension reports (orphan, weakness, etc.) — already listed above for clarity |
+
+**Self-grade provenance** is stored in `artifacts/self_grade/<grade-id>/self_grade.json` under `provenance.config_hash`. It does not belong to the comparison-run manifest schema because self-grade is a repository-assessment operation, not a comparison run.
+
+A comparison manifest may include a reference field pointing to a self-grade report when that report is explicitly associated with the comparison, but it must not embed self-grade provenance as a native comparison field.
 
 **Note**: Self-grade artifacts (`artifacts/self_grade/<grade-id>/`) are repository-assessment artifacts. They are not attributed to either the naive or graph-guided comparison mode.
 
 ---
+
+## Self-Grade Artifact Provenance
+
+Self-grade artifacts are stored separately from comparison-run artifacts:
+
+```
+artifacts/self_grade/<grade-id>/
+    self_grade.json    # canonical grade report
+    self_grade.md      # Markdown rendering derived from JSON
+```
+
+The `self_grade.json` provenance block contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `grade_id` | str | UUID or timestamp-based unique ID |
+| `commit_sha` | str | HEAD commit SHA at grade time |
+| `dirty_worktree` | bool | Whether working tree had uncommitted changes |
+| `rubric_version` | str | Version from rubric configuration |
+| `config_hash` | str | SHA-256 of the full rubric configuration |
+| `tool_versions` | dict[str, str] | ruff, mypy, pytest, uv, python versions |
+
+Self-grade artifacts are **not** attributed to either the naive or graph-guided comparison mode. They represent repository-level assessment evidence.
 
 ## Invariants
 
@@ -166,4 +194,5 @@ Every `artifacts/manifests/<run-id>_manifest.json` must contain:
 |---|---|---|
 | 1.0 | 2026-06-20 | Initial creation for Phase 7 finalization |
 | 1.1 | 2026-06-21 | Align manifest naming, full controlled hashes, token telemetry preservation, and production report layout. |
+| 1.3 | 2026-06-21 | Move `self_grade_config_hash` out of comparison-run manifest into self-grade provenance section; add explicit Self-Grade Artifact Provenance section; clarify self-grade artifacts are not attributed to comparison modes. Traceability: [PRD §5.8 FR-8.4], [PRD-SG §Required Provenance Fields].
 | 1.2 | 2026-06-21 | Add planned artifact paths for extension reports (T6.05), graph-diff (T6.09), and self-grade (T8.13); add planned provenance fields `extension_report_paths`, `graph_diff_json_path`, `graph_diff_markdown_path`, `pre_graph_hash`, `post_graph_hash`, `graph_diff_hash`, `self_grade_config_hash`; clarify self-grade artifacts are not attributed to comparison modes. Traceability: [PRD §5.7 FR-7.5, FR-7.4], [PRD §5.8 FR-8.4]. |

@@ -5,7 +5,8 @@
 | **Requirement ID** | PRD-CE |
 | **Parent PRD** | [docs/PRD.md](PRD.md) §5.6 (FR-6.1–FR-6.4) |
 | **Status** | Active |
-| **Date** | 2026-06-20 |
+| **Version** | 1.1 |
+| **Date** | 2026-06-21 |
 
 ---
 
@@ -212,6 +213,7 @@ Planned artifact paths:
 
 | Version | Date | Change |
 |---|---|---|
+| 1.1 | 2026-06-21 | Add version header field; sync date to 2026-06-21. Traceability: [PRD §5.6 FR-6.4].
 | 1.0 | 2026-06-20 | Initial creation for Phase 6 finalization |
 | 1.1 | 2026-06-21 | Align with `ComparisonRequest`/`ComparisonOutcome`, grounded/verified semantics, and run-scoped reports. |
 | 1.2 | 2026-06-21 | Add controlled-vs-treatment field classification, parity fingerprint definition, shared `InstrumentedCallService`, pre-call mismatch rejection semantics, and graph-diff report integration. Traceability: [PRD §5.6 FR-6.4]. |
